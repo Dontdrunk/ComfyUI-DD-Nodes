@@ -11,6 +11,8 @@
 - 颜色选择器和手动参数输入
 - 分离的 RGBA 通道输出
 - 所有选项支持中文显示
+  ![1](https://github.com/user-attachments/assets/571724ce-2fc3-4471-a354-5c41c17cf133)
+
 
 ### 2. DD 尺寸计算器
 简单的图像尺寸计算器：
@@ -18,6 +20,7 @@
 - 输出宽度、高度和总像素数
 - 支持 1-8192 像素范围
 - 所有选项支持中文显示
+![2](https://github.com/user-attachments/assets/6f7d2e82-deec-4d21-b5be-87650db0357f)
 
 ## 安装
 

@@ -11,7 +11,8 @@
 - 颜色选择器和手动参数输入
 - 分离的 RGBA 通道输出
 - 所有选项支持中文显示
-  ![1](https://github.com/user-attachments/assets/571724ce-2fc3-4471-a354-5c41c17cf133)
+![12](https://github.com/user-attachments/assets/8448268a-7f61-477e-9539-3102814843fb)
+
 
 
 ### 2. DD 尺寸计算器

@@ -13,11 +13,12 @@ class ImageToVideo:
                     "max": 300.0, 
                     "step": 0.1
                 }),
-                "帧率": ("INT", {
-                    "default": 30,
-                    "min": 1,
-                    "max": 120,
-                    "step": 1
+                "帧率": ("FLOAT", {  # 修改为FLOAT类型
+                    "default": 30.0,
+                    "min": 1.0,
+                    "max": 120.0,
+                    "step": 0.1,
+                    "display": "slider"
                 }),
                 "批处理大小": ("INT", {
                     "default": 30,
@@ -29,7 +30,7 @@ class ImageToVideo:
             }
         }
     
-    RETURN_TYPES = ("IMAGE", "INT", "FLOAT", "INT")
+    RETURN_TYPES = ("IMAGE", "INT", "FLOAT", "FLOAT")  # 最后返回FLOAT类型帧率
     RETURN_NAMES = ("视频帧", "总帧数", "实际时长", "帧率")
     FUNCTION = "create_video_frames"
     CATEGORY = "DONTDRUNK"
@@ -41,8 +42,8 @@ class ImageToVideo:
 
     def create_video_frames(self, 图片, 时长, 帧率, 批处理大小):
         try:
-            # 计算需要的总帧数
-            total_frames = int(时长 * 帧率)
+            # 计算需要的总帧数（四舍五入处理）
+            total_frames = int(round(时长 * 帧率))
             actual_duration = total_frames / 帧率  # 实际时长（考虑帧数取整）
             
             # 初始化进度
@@ -73,7 +74,7 @@ class ImageToVideo:
             print(f"\n视频帧生成完成:")
             print(f"- 总帧数: {total_frames}")
             print(f"- 实际时长: {actual_duration:.3f} 秒")
-            print(f"- 帧率: {帧率} FPS")
+            print(f"- 帧率: {帧率:.2f} FPS")
             print(f"- 帧尺寸: {video_frames.shape[-2]}x{video_frames.shape[-1]}")
             
             return (video_frames, total_frames, actual_duration, 帧率)

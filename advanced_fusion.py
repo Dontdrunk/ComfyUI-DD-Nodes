@@ -1,9 +1,3 @@
-"""
-高级融合节点
-@author: DontDrunk
-支持多种融合模式
-"""
-
 import torch
 import numpy as np
 import cv2

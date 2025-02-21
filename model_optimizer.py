@@ -1,11 +1,3 @@
-"""
-UNET模型优化加载节点
-@author: DontDrunk
-支持标准和分步加载的模型优化器
-@last_modified: 2025-02-21 09:02:52
-@version: 1.1.1
-"""
-
 import torch
 import folder_paths
 import comfy.sd

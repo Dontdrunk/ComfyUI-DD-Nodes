@@ -22,7 +22,7 @@ class DDModelOptimizer:
                     "分步加载",
                 ],),
                 "优化模式": ([
-                    "默认加载",             # default
+                    "禁用优化",             # 改为更直观的名称
                     "FP8基础内存优化",      # fp8_e4m3fn
                     "FP8高速性能优化",      # fp8_e4m3fn_fast
                     "FP8稳定质量优化"       # fp8_e5m2
@@ -71,7 +71,7 @@ class DDModelOptimizer:
         
         options = {
             "加载模式": "标准加载",
-            "优化模式": "默认加载"
+            "优化模式": "禁用优化"  # 更改默认值的名称
         }
 
         if system_info["gpu_info"]:
@@ -89,7 +89,7 @@ class DDModelOptimizer:
             if 20 < file_size <= 24:  # 模型大小在20G-24G之间
                 print("模型大小区间: 20GB - 24GB")
                 if total_vram > 23:
-                    options["优化模式"] = "默认加载"
+                    options["优化模式"] = "禁用优化"
                 elif 11 < total_vram <= 23:
                     options["优化模式"] = "FP8稳定质量优化"
                 elif 7 < total_vram <= 11:
@@ -100,7 +100,7 @@ class DDModelOptimizer:
             elif 15 < file_size <= 20:  # 模型大小在15G-20G之间
                 print("模型大小区间: 15GB - 20GB")
                 if total_vram > 11:  # 包含了>23G和11G-23G的情况
-                    options["优化模式"] = "默认加载"
+                    options["优化模式"] = "禁用优化"
                 elif 7 < total_vram <= 11:
                     options["优化模式"] = "FP8稳定质量优化"
                 else:  # total_vram <= 7
@@ -109,13 +109,13 @@ class DDModelOptimizer:
             elif 10 < file_size <= 15:  # 模型大小在10G-15G之间
                 print("模型大小区间: 10GB - 15GB")
                 if total_vram > 7:  # 包含了>23G、11G-23G和7G-11G的情况
-                    options["优化模式"] = "默认加载"
+                    options["优化模式"] = "禁用优化"
                 else:  # total_vram <= 7
                     options["优化模式"] = "FP8稳定质量优化"
                     
             elif 1 < file_size <= 10:  # 模型大小在1G-10G之间
                 print("模型大小区间: 1GB - 10GB")
-                options["优化模式"] = "默认加载"  # 所有显存大小都使用默认加载
+                options["优化模式"] = "禁用优化"
             
             print(f"根据智能判断选择的优化模式: {options['优化模式']}")
                     
@@ -142,7 +142,7 @@ class DDModelOptimizer:
             模型文件: 要加载的模型文件名
             智能模式: 是否启用智能模式
             加载模式: 标准加载或分步加载
-            优化模式: 默认加载/FP8基础内存优化/FP8高速性能优化/FP8稳定质量优化
+            优化模式: 禁用优化/FP8基础内存优化/FP8高速性能优化/FP8稳定质量优化
         Returns:
             优化后的模型
         """
@@ -180,8 +180,8 @@ class DDModelOptimizer:
                 print("使用 FP8 稳定质量优化模式")
                 model_options["dtype"] = torch.float8_e5m2
             else:
-                print("使用默认加载模式")
-                needs_optimization = False  # 默认加载模式不需要优化处理
+                print("优化已禁用，使用原始加载模式")  # 更新提示文本
+                needs_optimization = False
 
             if 加载模式 == "标准加载":
                 print("使用标准加载模式...")

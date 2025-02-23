@@ -60,17 +60,14 @@ class DDModelOptimizer:
             # 安全获取文件大小
             if path_obj.exists():
                 file_size = path_obj.stat().st_size / (1024**3)  # GB
+                print(f"\n模型文件大小: {file_size:.2f}GB")
             else:
                 print(f"警告: 模型文件不存在: {model_path}")
                 file_size = 0
                 
-            is_flux = "FLUX" in path_obj.stem.upper()
-            
         except Exception as e:
             print(f"警告: 无法获取模型文件信息: {str(e)}")
-            # 使用保守的默认值
             file_size = 0
-            is_flux = False
         
         options = {
             "加载模式": "标准加载",
@@ -80,20 +77,47 @@ class DDModelOptimizer:
         if system_info["gpu_info"]:
             total_vram = system_info["gpu_info"]["total_memory"]
             free_vram = system_info["gpu_info"]["free_memory"]
+            print(f"GPU总显存: {total_vram:.2f}GB")
+            print(f"当前可用显存: {free_vram:.2f}GB")
             
             # 根据文件大小和可用显存决定加载模式
             if file_size > 0 and file_size > free_vram * 0.7:
                 options["加载模式"] = "分步加载"
+                print("由于模型大小超过可用显存的70%，选择分步加载模式")
             
-            # 根据显卡和模型类型决定优化模式
-            if is_flux:
-                if total_vram > 10:
+            # 根据模型大小和显存容量决定优化模式
+            if 20 < file_size <= 24:  # 模型大小在20G-24G之间
+                print("模型大小区间: 20GB - 24GB")
+                if total_vram > 23:
+                    options["优化模式"] = "默认加载"
+                elif 11 < total_vram <= 23:
+                    options["优化模式"] = "FP8稳定质量优化"
+                elif 7 < total_vram <= 11:
+                    options["优化模式"] = "FP8基础内存优化"
+                else:  # total_vram <= 7
                     options["优化模式"] = "FP8高速性能优化"
-                elif total_vram > 6:
+                    
+            elif 15 < file_size <= 20:  # 模型大小在15G-20G之间
+                print("模型大小区间: 15GB - 20GB")
+                if total_vram > 11:  # 包含了>23G和11G-23G的情况
+                    options["优化模式"] = "默认加载"
+                elif 7 < total_vram <= 11:
+                    options["优化模式"] = "FP8稳定质量优化"
+                else:  # total_vram <= 7
                     options["优化模式"] = "FP8基础内存优化"
-            else:
-                if total_vram > 6:
-                    options["优化模式"] = "FP8基础内存优化"
+                    
+            elif 10 < file_size <= 15:  # 模型大小在10G-15G之间
+                print("模型大小区间: 10GB - 15GB")
+                if total_vram > 7:  # 包含了>23G、11G-23G和7G-11G的情况
+                    options["优化模式"] = "默认加载"
+                else:  # total_vram <= 7
+                    options["优化模式"] = "FP8稳定质量优化"
+                    
+            elif 1 < file_size <= 10:  # 模型大小在1G-10G之间
+                print("模型大小区间: 1GB - 10GB")
+                options["优化模式"] = "默认加载"  # 所有显存大小都使用默认加载
+            
+            print(f"根据智能判断选择的优化模式: {options['优化模式']}")
                     
         return options
 

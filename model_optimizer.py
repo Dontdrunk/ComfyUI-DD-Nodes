@@ -16,7 +16,7 @@ class DDModelOptimizer:
         return {
             "required": {
                 "模型文件": (folder_paths.get_filename_list("diffusion_models"), ),
-                "智能模式": ("BOOLEAN", {"default": False}),  # 新增智能模式开关
+                "智能模式": ("BOOLEAN", {"default": False}),
                 "加载模式": ([
                     "标准加载",
                     "分步加载",
@@ -53,72 +53,72 @@ class DDModelOptimizer:
         return system_info
 
     def determine_smart_options(self, system_info, model_path):
-        """根据系统配置和模型智能确定最佳选项"""
+        """根据系统配置和模型智能确定最佳选项
+        
+        Args:
+            system_info: 系统信息
+            model_path: 模型路径
+        """
         try:
             # 将字符串路径转换为Path对象
             path_obj = Path(model_path)
             # 安全获取文件大小
             if path_obj.exists():
-                file_size = path_obj.stat().st_size / (1024**3)  # GB
-                print(f"\n模型文件大小: {file_size:.2f}GB")
+                model_size = path_obj.stat().st_size / (1024**3)  # GB
+                print(f"\n模型文件大小: {model_size:.2f}GB")
             else:
                 print(f"警告: 模型文件不存在: {model_path}")
-                file_size = 0
+                model_size = 0
                 
         except Exception as e:
             print(f"警告: 无法获取模型文件信息: {str(e)}")
-            file_size = 0
+            model_size = 0
         
         options = {
             "加载模式": "标准加载",
-            "优化模式": "禁用优化"  # 更改默认值的名称
+            "优化模式": "禁用优化"
         }
-
+        
+        # 获取显存和内存信息
+        vram = 0
+        ram = system_info["total_memory"]
+        
         if system_info["gpu_info"]:
-            total_vram = system_info["gpu_info"]["total_memory"]
-            free_vram = system_info["gpu_info"]["free_memory"]
-            print(f"GPU总显存: {total_vram:.2f}GB")
-            print(f"当前可用显存: {free_vram:.2f}GB")
+            vram = system_info["gpu_info"]["total_memory"]
+            print(f"GPU总显存: {vram:.2f}GB")
+            print(f"系统总内存: {ram:.2f}GB")
+        
+        # 设置缓冲系数
+        vram_scale_factor = 1.5
+        ram_scale_factor = 1.5
+        
+        # 决定加载模式
+        # 如果模型大小大于可用显存的70%或大于显存总量，使用分步加载
+        if model_size > vram * 0.7:
+            options["加载模式"] = "分步加载"
+            print("由于模型大小超过可用显存的70%，选择分步加载模式")
+        
+        # 应用新的优化规则
+        if model_size <= vram:
+            options["优化模式"] = "禁用优化"
+            print("模型完全适配显存，获得最佳质量")
             
-            # 根据文件大小和可用显存决定加载模式
-            if file_size > 0 and file_size > free_vram * 0.7:
-                options["加载模式"] = "分步加载"
-                print("由于模型大小超过可用显存的70%，选择分步加载模式")
+        elif model_size <= vram * vram_scale_factor and model_size <= ram:
+            options["优化模式"] = "禁用优化"
+            print("模型可通过显存+虚拟内存加载，保持最佳质量")
             
-            # 根据模型大小和显存容量决定优化模式
-            if 20 < file_size <= 24:  # 模型大小在20G-24G之间
-                print("模型大小区间: 20GB - 24GB")
-                if total_vram > 23:
-                    options["优化模式"] = "禁用优化"
-                elif 11 < total_vram <= 23:
-                    options["优化模式"] = "FP8稳定质量优化"
-                elif 7 < total_vram <= 11:
-                    options["优化模式"] = "FP8基础内存优化"
-                else:  # total_vram <= 7
-                    options["优化模式"] = "FP8高速性能优化"
-                    
-            elif 15 < file_size <= 20:  # 模型大小在15G-20G之间
-                print("模型大小区间: 15GB - 20GB")
-                if total_vram > 11:  # 包含了>23G和11G-23G的情况
-                    options["优化模式"] = "禁用优化"
-                elif 7 < total_vram <= 11:
-                    options["优化模式"] = "FP8稳定质量优化"
-                else:  # total_vram <= 7
-                    options["优化模式"] = "FP8基础内存优化"
-                    
-            elif 10 < file_size <= 15:  # 模型大小在10G-15G之间
-                print("模型大小区间: 10GB - 15GB")
-                if total_vram > 7:  # 包含了>23G、11G-23G和7G-11G的情况
-                    options["优化模式"] = "禁用优化"
-                else:  # total_vram <= 7
-                    options["优化模式"] = "FP8稳定质量优化"
-                    
-            elif 1 < file_size <= 10:  # 模型大小在1G-10G之间
-                print("模型大小区间: 1GB - 10GB")
-                options["优化模式"] = "禁用优化"
+        elif model_size > vram * vram_scale_factor and model_size <= ram:
+            options["优化模式"] = "FP8稳定质量优化"
+            print("模型显著超出显存但适配内存，启动质量优先优化")
             
-            print(f"根据智能判断选择的优化模式: {options['优化模式']}")
-                    
+        elif model_size > ram and model_size <= ram * ram_scale_factor:
+            options["优化模式"] = "FP8基础内存优化"
+            print("模型超出物理内存，启动内存优化")
+            
+        else:  # model_size > ram * ram_scale_factor
+            options["优化模式"] = "FP8高速性能优化"
+            print("模型严重超出物理内存，启动性能优先优化")
+        
         return options
 
     def show_step_progress(self, step_name, progress=0):
@@ -180,7 +180,7 @@ class DDModelOptimizer:
                 print("使用 FP8 稳定质量优化模式")
                 model_options["dtype"] = torch.float8_e5m2
             else:
-                print("优化已禁用，使用原始加载模式")  # 更新提示文本
+                print("优化已禁用，使用原始加载模式")
                 needs_optimization = False
 
             if 加载模式 == "标准加载":

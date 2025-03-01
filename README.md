@@ -1,4 +1,4 @@
-# ComfyUI-Dontdrunk-Nodes
+# ComfyUI-DD-Nodes
 
 一个全流程 AI 开发的 ComfyUI 自定义节点集合（完全汉化），由 Dontdrunk 开发维护。
 

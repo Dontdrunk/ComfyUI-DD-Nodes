@@ -1,16 +1,10 @@
-"""
-ComfyUI-Dontdrunk-Nodes
-这是一个由多个AI共同开发的节点库
-@author: DontDrunk
-@last_modified: 2025-02-21
-"""
-
 from .color_generator import NODE_CLASS_MAPPINGS as COLOR_NODES
 from .dimension_calculator import NODE_CLASS_MAPPINGS as DIMENSION_NODES
 from .image_to_video import NODE_CLASS_MAPPINGS as VIDEO_NODES
 from .advanced_fusion import NODE_CLASS_MAPPINGS as FUSION_NODES
 from .simple_latent import NODE_CLASS_MAPPINGS as LATENT_NODES
 from .model_optimizer import NODE_CLASS_MAPPINGS as OPTIMIZER_NODES
+from .sampling_optimizer import NODE_CLASS_MAPPINGS as SAMPLING_NODES
 
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
@@ -19,7 +13,8 @@ NODE_CLASS_MAPPINGS = {
     **VIDEO_NODES,
     **FUSION_NODES,
     **LATENT_NODES,
-    **OPTIMIZER_NODES
+    **OPTIMIZER_NODES,
+    **SAMPLING_NODES
 }
 
 # 节点显示名称映射
@@ -29,7 +24,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ImageToVideo": "DD 图片转视频",
     "DD-AdvancedFusion": "DD 高级融合",
     "DD-SimpleLatent": "DD 极简Latent",
-    "DD-ModelOptimizer": "DD 模型优化加载"
+    "DD-ModelOptimizer": "DD 模型优化加载",
+    "DD-SamplingOptimizer": "DD 采样优化器"
 }
 
 # 导出模块

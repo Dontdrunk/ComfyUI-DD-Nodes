@@ -33,7 +33,7 @@ class ImageToVideo:
     RETURN_TYPES = ("IMAGE", "INT", "FLOAT", "FLOAT")  # 最后返回FLOAT类型帧率
     RETURN_NAMES = ("视频帧", "总帧数", "实际时长", "帧率")
     FUNCTION = "create_video_frames"
-    CATEGORY = "DONTDRUNK"
+    CATEGORY = "🍺DD系列节点"
 
     def log_progress(self, current, total):
         """输出进度信息"""

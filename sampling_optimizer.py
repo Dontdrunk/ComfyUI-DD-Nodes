@@ -22,7 +22,7 @@ class DDSamplingOptimizer:
     RETURN_TYPES = ("MODEL", "CLIP",)
     RETURN_NAMES = ("优化模型", "优化CLIP",)
     FUNCTION = "optimize_sampling"
-    CATEGORY = "DONTDRUNK"
+    CATEGORY = "🍺DD系列节点"
 
     def log_progress(self, message):
         """输出进度信息"""

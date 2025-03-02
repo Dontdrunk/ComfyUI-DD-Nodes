@@ -33,7 +33,7 @@ class DDModelOptimizer:
     RETURN_TYPES = ("MODEL",)
     RETURN_NAMES = ("优化模型",)
     FUNCTION = "optimize_model"
-    CATEGORY = "DONTDRUNK"
+    CATEGORY = "🍺DD系列节点"
 
     def get_system_info(self):
         """获取系统配置信息"""

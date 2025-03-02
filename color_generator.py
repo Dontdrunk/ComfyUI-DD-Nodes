@@ -48,7 +48,7 @@ class ColorBackgroundGenerator:
     RETURN_TYPES = ("IMAGE", "INT", "INT", "INT", "FLOAT")
     RETURN_NAMES = ("图像", "红", "绿", "蓝", "透明度")
     FUNCTION = "generate_background"
-    CATEGORY = "DONTDRUNK"
+    CATEGORY = "🍺DD系列节点"
 
     def hex_to_rgba(self, hex_color):
         """将十六进制颜色转换为RGBA，忽略原始透明度"""

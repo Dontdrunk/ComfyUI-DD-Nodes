@@ -11,7 +11,7 @@ class DimensionCalculator:
     RETURN_TYPES = ("INT", "INT", "INT")
     RETURN_NAMES = ("宽度", "高度", "总像素")
     FUNCTION = "calculate_dimensions"
-    CATEGORY = "DONTDRUNK"
+    CATEGORY = "🍺DD系列节点"
 
     def calculate_dimensions(self, 宽度, 高度):
         pixels = 宽度 * 高度

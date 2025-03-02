@@ -30,7 +30,7 @@ class DDSimpleLatent:
     RETURN_TYPES = ("LATENT",)
     RETURN_NAMES = ("潜空间",)
     FUNCTION = "generate"
-    CATEGORY = "DD高级处理"
+    CATEGORY = "🍺DD系列节点"
 
     def generate(self, 宽度, 高度):
         # 确保尺寸是 8 的倍数

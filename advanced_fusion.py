@@ -43,7 +43,7 @@ class DDAdvancedFusion:
             }
         }
 
-    CATEGORY = "DD高级处理"
+    CATEGORY = "🍺DD系列节点"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("融合结果",)
     FUNCTION = "fusion_process"

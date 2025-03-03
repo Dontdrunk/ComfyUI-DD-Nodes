@@ -2,6 +2,7 @@ import torch
 import comfy.model_management
 from comfy.latent_formats import Wan21
 import nodes
+import re
 
 class DDEmptyWan21LatentVideo:
     """为Wan2.1模型创建空Latent视频，支持预设分辨率和标准化处理"""
@@ -13,17 +14,17 @@ class DDEmptyWan21LatentVideo:
             "832X480 （横屏26 : 15）",
             "544X416 （横屏4 : 3）",
             "640X360 （横屏16 : 9）",
-            "1088X832（横屏4 : 3）",
-            "1280X720（横屏16 : 9）",
+            "1088X832 （横屏4 : 3）",
+            "1280X720 （横屏16 : 9）",
             "480X832 （竖屏15 : 26）",
             "416X544 （竖屏3 : 4）",
             "360X640 （竖屏9 : 16）",
-            "832X1088（竖屏3 : 4）",
-            "720X1280（竖屏9 : 16）",
-            "480X480   (方屏1 : 1)",
-            "624X624   (方屏1 : 1)",
-            "960X960   (方屏1 : 1)",
-            "1280X1280 (方屏1 : 1)"
+            "832X1088 （竖屏3 : 4）",
+            "720X1280 （竖屏9 : 16）",
+            "480X480 （方屏1 : 1）",
+            "624X624 （方屏1 : 1）",
+            "960X960 （方屏1 : 1）",
+            "1280X1280 （方屏1 : 1）"
         ]
         
         return {
@@ -48,15 +49,11 @@ class DDEmptyWan21LatentVideo:
         try:
             # 如果使用预设分辨率，则解析预设的宽高
             if 使用预设分辨率:
-                # 从预设字符串中提取宽度和高度
-                dimensions = 预设分辨率.split(" ")[0]
-                # 处理可能的不同分隔符
-                if "×" in dimensions:
-                    宽度, 高度 = map(int, dimensions.split("×"))
-                elif "X" in dimensions:
-                    宽度, 高度 = map(int, dimensions.split("X"))
-                elif "x" in dimensions:
-                    宽度, 高度 = map(int, dimensions.split("x"))
+                # 使用正则表达式提取分辨率
+                resolution_match = re.match(r'(\d+)X(\d+)', 预设分辨率)
+                if resolution_match:
+                    宽度 = int(resolution_match.group(1))
+                    高度 = int(resolution_match.group(2))
             
             # 确保宽高是8的倍数
             宽度 = (宽度 // 8) * 8

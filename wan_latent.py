@@ -5,33 +5,33 @@ import nodes
 import re
 
 class DDEmptyWan21LatentVideo:
-    """为Wan2.1模型创建空Latent视频，支持预设分辨率和标准化处理"""
+    """为Wan2.1模型创建空Latent视频，支持推荐分辨率和标准化处理"""
     
     @classmethod
     def INPUT_TYPES(cls):
-        # Wan2.1支持的预设分辨率列表
+        # Wan2.1支持的推荐分辨率列表，使用Unicode符号增强视觉效果
         wan_resolutions = [
-            "832X480 （横屏26 : 15）",
-            "544X416 （横屏4 : 3）",
-            "640X360 （横屏16 : 9）",
-            "1088X832 （横屏4 : 3）",
-            "1280X720 （横屏16 : 9）",
-            "480X832 （竖屏15 : 26）",
-            "416X544 （竖屏3 : 4）",
-            "360X640 （竖屏9 : 16）",
-            "832X1088 （竖屏3 : 4）",
-            "720X1280 （竖屏9 : 16）",
-            "480X480 （方屏1 : 1）",
-            "624X624 （方屏1 : 1）",
-            "960X960 （方屏1 : 1）",
-            "1280X1280 （方屏1 : 1）"
+            "🖥️ 横屏 832×480  (26:15)",
+            "🖥️ 横屏 544×416  (4:3)",
+            "🖥️ 横屏 640×360  (16:9)",
+            "🖥️ 横屏 1088×832 (4:3)",
+            "🖥️ 横屏 1280×720 (16:9)",
+            "📱 竖屏 480×832  (15:26)",
+            "📱 竖屏 416×544  (3:4)",
+            "📱 竖屏 360×640  (9:16)",
+            "📱 竖屏 832×1088 (3:4)",
+            "📱 竖屏 720×1280 (9:16)",
+            "⬛ 方屏 480×480  (1:1)",
+            "⬛ 方屏 624×624  (1:1)",
+            "⬛ 方屏 960×960  (1:1)",
+            "⬛ 方屏 1280×1280 (1:1)"
         ]
         
         return {
             "required": {
-                "使用预设分辨率": ("BOOLEAN", {"default": True}),
+                "使用推荐分辨率": ("BOOLEAN", {"default": True}),
                 "应用标准化": ("BOOLEAN", {"default": True}),
-                "预设分辨率": (wan_resolutions, {"default": "832X480 （横屏26 : 15）"}),
+                "推荐分辨率": (wan_resolutions, {"default": "🖥️ 横屏 832×480  (26:15)"}),
                 "宽度": ("INT", {"default": 832, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
                 "高度": ("INT", {"default": 480, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
                 "帧数": ("INT", {"default": 81, "min": 1, "max": nodes.MAX_RESOLUTION, "step": 4}),
@@ -44,13 +44,13 @@ class DDEmptyWan21LatentVideo:
     FUNCTION = "generate_latent"
     CATEGORY = "🍺DD系列节点"
 
-    def generate_latent(self, 使用预设分辨率, 应用标准化, 预设分辨率, 宽度, 高度, 帧数, 批次大小=1):
+    def generate_latent(self, 使用推荐分辨率, 应用标准化, 推荐分辨率, 宽度, 高度, 帧数, 批次大小=1):
         """生成Wan2.1空Latent视频"""
         try:
-            # 如果使用预设分辨率，则解析预设的宽高
-            if 使用预设分辨率:
-                # 使用正则表达式提取分辨率
-                resolution_match = re.match(r'(\d+)X(\d+)', 预设分辨率)
+            # 如果使用推荐分辨率，则解析推荐的宽高
+            if 使用推荐分辨率:
+                # 使用正则表达式提取分辨率，适应新格式
+                resolution_match = re.search(r'(\d+)×(\d+)', 推荐分辨率)
                 if resolution_match:
                     宽度 = int(resolution_match.group(1))
                     高度 = int(resolution_match.group(2))

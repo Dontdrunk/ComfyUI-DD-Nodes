@@ -96,7 +96,8 @@ Wan2.1的定制优化Latent节点
 - 支持图像和视频混合输入
 - 完全保留图像质量和透明通道
 
-![统一尺寸示例](https://github.com/user-attachments/assets/统一尺寸示例.png)
+![演示](https://github.com/user-attachments/assets/076b0493-4e10-4229-a08f-e97c0a9771ff)
+
 
 </details>
 

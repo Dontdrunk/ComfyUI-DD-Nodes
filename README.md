@@ -160,17 +160,14 @@ MIT License
 
 ## 请作者喝杯咖啡 ☕
 
-<details>
-  <summary>💰 点击展开打赏二维码（不打赏作者就要摆烂啦~）</summary>
-
-如果这个项目帮助到了您：
-1. 请给我买杯咖啡，让我继续熬夜码代码 ☕
+亲爱的老铁，如果这个项目对您有帮助：
+1. 听说的项目的成长需要Money来维持 
 2. 不打赏的话，作者可能会：
    - 🦥 躺平摆烂
    - 😴 睡大觉
-   - 🎮 玩游戏
-   - 🎵 听歌发呆
+   - 🎮 玩游戏去了
+   - 🎵 听歌发呆中...
 
-![收款码](https://github.com/user-attachments/assets/bbac4007-2984-4bee-b55c-1b2cea331d8b)
+您的支持就是作者继续咕咕咕的动力！╭(●｀∀´●)╯
+![收款码](https://github.com/user-attachments/assets/77c99c94-3854-4c12-81cf-09c9f76099ac)
 
-</details>

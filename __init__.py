@@ -5,7 +5,6 @@ from .node.advanced_fusion import NODE_CLASS_MAPPINGS as FUSION_NODES
 from .node.simple_latent import NODE_CLASS_MAPPINGS as LATENT_NODES
 from .node.model_optimizer import NODE_CLASS_MAPPINGS as OPTIMIZER_NODES
 from .node.sampling_optimizer import NODE_CLASS_MAPPINGS as SAMPLING_NODES
-from .node.wan_latent import NODE_CLASS_MAPPINGS as WAN_NODES
 from .node.image_resize import NODE_CLASS_MAPPINGS as RESIZE_NODES
 
 # 节点类映射
@@ -30,7 +29,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-SimpleLatent": "DD 极简Latent",
     "DD-ModelOptimizer": "DD 模型优化加载",
     "DD-SamplingOptimizer": "DD 采样优化器",
-    "DDEmptyWan21LatentVideo": "DD空Latent视频(Wan2.1)",
     "DD-ImageUniformSize": "DD 图像统一尺寸"
 }
 

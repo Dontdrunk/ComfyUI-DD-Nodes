@@ -17,9 +17,7 @@
 - 显著减少首次采样的延迟
 - 支持SD1.5丶SDXL丶FLUX.1丶Wan2.1在内的几乎所有模型
 
-Wan2.1的定制优化Latent节点
-- 可自由选择适配分辨率
-- 改进了Latent使结果获得更好的质量和遵从度。
+[Wan2.1潜空间节点已删除，现在官方已经优化的很好了】
 
 ![131231](https://github.com/user-attachments/assets/99bc5279-b926-40c0-a34e-d85310e9b885)
 

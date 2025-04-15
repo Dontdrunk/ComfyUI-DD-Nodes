@@ -1,11 +1,10 @@
 import torch
 import comfy.model_management
-from comfy.latent_formats import Wan21
 import nodes
 import re
 
 class DDEmptyWan21LatentVideo:
-    """为Wan2.1模型创建空Latent视频，支持推荐分辨率和标准化处理"""
+    """为Wan2.1模型创建空Latent视频，支持推荐分辨率"""
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -25,7 +24,6 @@ class DDEmptyWan21LatentVideo:
         return {
             "required": {
                 "使用推荐分辨率": ("BOOLEAN", {"default": True}),
-                "应用标准化": ("BOOLEAN", {"default": True}),
                 "推荐分辨率": (wan_resolutions, {"default": "🖥️ 横屏 832×480  (26:15)"}),
                 "宽度": ("INT", {"default": 832, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
                 "高度": ("INT", {"default": 480, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 16}),
@@ -39,8 +37,8 @@ class DDEmptyWan21LatentVideo:
     FUNCTION = "generate_latent"
     CATEGORY = "🍺DD系列节点"
 
-    def generate_latent(self, 使用推荐分辨率, 应用标准化, 推荐分辨率, 宽度, 高度, 帧数, 批次大小=1):
-        """生成Wan2.1空Latent视频"""
+    def generate_latent(self, 使用推荐分辨率, 推荐分辨率, 宽度, 高度, 帧数, 批次大小=1):
+        """生成Wan2.1空Latent视频 - 移除了标准化处理，效果更好"""
         try:
             # 如果使用推荐分辨率，则解析推荐的宽高
             if 使用推荐分辨率:
@@ -57,23 +55,11 @@ class DDEmptyWan21LatentVideo:
             # 计算正确的时间维度
             time_dim = ((帧数 - 1) // 4) + 1
             
-            # 创建空的latent
+            # 创建空的latent - 直接生成零张量，不应用标准化处理（与官方EmptyHunyuanLatentVideo一致）
             latent = torch.zeros(
                 [批次大小, 16, time_dim, 高度 // 8, 宽度 // 8], 
                 device=comfy.model_management.intermediate_device()
             )
-            
-            # 如果需要归一化，应用Wan21格式的均值和标准差
-            if 应用标准化:
-                # 初始化Wan21格式以获取均值和标准差
-                wan_format = Wan21()
-                
-                # 获取正确设备和dtype的均值和标准差
-                latents_mean = wan_format.latents_mean.to(latent.device, latent.dtype)
-                latents_std = wan_format.latents_std.to(latent.device, latent.dtype)
-                
-                # 应用归一化: (latent - mean) / std
-                latent = (latent - latents_mean) * wan_format.scale_factor / latents_std
             
             return ({"samples": latent},)
         

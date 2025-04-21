@@ -7,19 +7,27 @@ class DDImageSizeLimiter:
     """
     DD 限制图像大小 - 确保图像和遮罩的尺寸在指定的最大和最小范围内
     当图像尺寸超出限制时自动调整，保持原始宽高比
+    支持多个图像和遮罩输入，可选择输出其中一对
     """
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "图像": ("IMAGE",),
+                "图像1": ("IMAGE",),
                 "最大长宽": ("INT", {"default": 2048, "min": 64, "max": 8192, "step": 8}),
                 "最小长宽": ("INT", {"default": 256, "min": 8, "max": 4096, "step": 8}),
                 "缩放方法": (["双线性插值", "邻近-精确", "区域", "双三次插值", "lanczos"], {"default": "双线性插值"}),
+                "选择输出": ("INT", {"default": 1, "min": 1, "max": 4, "step": 1}),
             },
             "optional": {
-                "遮罩": ("MASK",),
+                "遮罩1": ("MASK",),
+                "图像2": ("IMAGE",),
+                "遮罩2": ("MASK",),
+                "图像3": ("IMAGE",),
+                "遮罩3": ("MASK",),
+                "图像4": ("IMAGE",),
+                "遮罩4": ("MASK",),
             }
         }
 
@@ -137,7 +145,7 @@ class DDImageSizeLimiter:
                 new_width = int(new_height * aspect_ratio)
             else:
                 new_width = min_size
-                new_height = int(new_width / aspect_ratio)
+                new_height = int(new_width * aspect_ratio)
         
         # 图像尺寸已在合适范围内
         else:
@@ -150,30 +158,48 @@ class DDImageSizeLimiter:
             
         return new_width, new_height
 
-    def limit_image_size(self, 图像, 最大长宽, 最小长宽, 缩放方法, 遮罩=None):
+    def limit_image_size(self, 图像1, 最大长宽, 最小长宽, 缩放方法, 选择输出, 
+                  遮罩1=None, 图像2=None, 遮罩2=None, 图像3=None, 遮罩3=None, 图像4=None, 遮罩4=None):
         """
-        限制图像和遮罩的尺寸，使其在指定的最大和最小范围内
+        限制多组图像和遮罩的尺寸，使其在指定的最大和最小范围内，并选择输出其中一组
         
         Args:
-            图像: 输入图像，形状为[B,H,W,C]
+            图像1-4: 输入的图像组，形状为[B,H,W,C]
+            遮罩1-4: 可选的输入遮罩组，形状为[B,H,W]
             最大长宽: 图像尺寸的最大限制
             最小长宽: 图像尺寸的最小限制
             缩放方法: 用于调整大小的插值方法
-            遮罩: 可选的输入遮罩，形状为[B,H,W]
+            选择输出: 选择输出第几组图像和遮罩（1-4）
             
         Returns:
-            调整大小后的图像和遮罩，以及原始和新的尺寸信息
+            选定的调整大小后的图像和遮罩，以及原始和新的尺寸信息
         """
+        # 创建图像和遮罩的列表
+        图像列表 = [图像1, 图像2, 图像3, 图像4]
+        遮罩列表 = [遮罩1, 遮罩2, 遮罩3, 遮罩4]
+        
+        # 确定要处理的图像和遮罩索引
+        选择索引 = int(选择输出) - 1  # 转换为0-3的索引
+        
+        # 检查所选索引处是否有图像
+        if 选择索引 > 0 and 图像列表[选择索引] is None:
+            print(f"[限制图像大小] 警告：图像{选择索引+1}不存在，默认使用图像1")
+            选择索引 = 0
+        
+        # 获取要处理的图像和遮罩
+        当前图像 = 图像列表[选择索引]
+        当前遮罩 = 遮罩列表[选择索引]
+        
         # 对单张图像进行处理
-        if len(图像.shape) == 3:  # [H,W,C]
-            图像 = 图像.unsqueeze(0)  # 添加批次维度 [1,H,W,C]
+        if len(当前图像.shape) == 3:  # [H,W,C]
+            当前图像 = 当前图像.unsqueeze(0)  # 添加批次维度 [1,H,W,C]
         
         # 处理遮罩
-        if 遮罩 is not None and len(遮罩.shape) == 2:  # [H,W]
-            遮罩 = 遮罩.unsqueeze(0)  # 添加批次维度 [1,H,W]
+        if 当前遮罩 is not None and len(当前遮罩.shape) == 2:  # [H,W]
+            当前遮罩 = 当前遮罩.unsqueeze(0)  # 添加批次维度 [1,H,W]
         
         # 获取原始尺寸
-        batch_size, height, width, channels = 图像.shape
+        batch_size, height, width, channels = 当前图像.shape
         原始宽度, 原始高度 = width, height
         
         # 计算新尺寸
@@ -181,29 +207,29 @@ class DDImageSizeLimiter:
         
         # 检查是否需要调整大小
         if 新宽度 != 原始宽度 or 新高度 != 原始高度:
-            print(f"[限制图像大小] 调整尺寸: {原始宽度}x{原始高度} -> {新宽度}x{新高度}")
+            print(f"[限制图像大小] 调整图像{选择索引+1}尺寸: {原始宽度}x{原始高度} -> {新宽度}x{新高度}")
             
             # 获取插值方法
             interpolation = self.INTERPOLATION_MAP.get(缩放方法, cv2.INTER_LINEAR)
             
             # 调整图像大小
-            调整后图像 = self._resize_batch(图像, (新高度, 新宽度), interpolation)
+            调整后图像 = self._resize_batch(当前图像, (新高度, 新宽度), interpolation)
             
             # 如果有遮罩，也调整遮罩大小
             调整后遮罩 = None
-            if 遮罩 is not None:
+            if 当前遮罩 is not None:
                 # 对遮罩使用邻近插值以保持边缘清晰
                 mask_interpolation = cv2.INTER_NEAREST_EXACT
-                调整后遮罩 = self._resize_batch(遮罩, (新高度, 新宽度), mask_interpolation)
+                调整后遮罩 = self._resize_batch(当前遮罩, (新高度, 新宽度), mask_interpolation)
         else:
-            print(f"[限制图像大小] 尺寸已在范围内 {原始宽度}x{原始高度}，无需调整")
-            调整后图像 = 图像
-            调整后遮罩 = 遮罩
+            print(f"[限制图像大小] 图像{选择索引+1}尺寸已在范围内 {原始宽度}x{原始高度}，无需调整")
+            调整后图像 = 当前图像
+            调整后遮罩 = 当前遮罩
             
         # 处理空遮罩情况
         if 调整后遮罩 is None:
             # 创建一个空遮罩
-            调整后遮罩 = torch.ones((batch_size, 新高度, 新宽度), device=图像.device)
+            调整后遮罩 = torch.ones((batch_size, 新高度, 新宽度), device=当前图像.device)
             
         return (调整后图像, 调整后遮罩, 原始宽度, 原始高度, 新宽度, 新高度)
 

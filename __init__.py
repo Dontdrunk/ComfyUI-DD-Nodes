@@ -8,6 +8,9 @@ from .node.sampling_optimizer import NODE_CLASS_MAPPINGS as SAMPLING_NODES
 from .node.image_resize import NODE_CLASS_MAPPINGS as RESIZE_NODES
 from .node.mask_resize import NODE_CLASS_MAPPINGS as MASK_RESIZE_NODES
 from .node.image_size_limiter import NODE_CLASS_MAPPINGS as SIZE_LIMITER_NODES
+from .node.model_switcher import NODE_CLASS_MAPPINGS as MODEL_SWITCHER_NODES
+from .node.condition_switcher import NODE_CLASS_MAPPINGS as CONDITION_SWITCHER_NODES
+from .node.latent_switcher import NODE_CLASS_MAPPINGS as LATENT_SWITCHER_NODES
 
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
@@ -21,6 +24,9 @@ NODE_CLASS_MAPPINGS = {
     **RESIZE_NODES,
     **MASK_RESIZE_NODES,
     **SIZE_LIMITER_NODES,
+    **MODEL_SWITCHER_NODES,
+    **CONDITION_SWITCHER_NODES,
+    **LATENT_SWITCHER_NODES,
 }
 
 # 节点显示名称映射
@@ -35,6 +41,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ImageUniformSize": "DD 图像统一尺寸",
     "DD-MaskUniformSize": "DD 遮罩统一尺寸",
     "DD-ImageSizeLimiter": "DD 限制图像大小",
+    "DD-ModelSwitcher": "DD 模型切换",
+    "DD-ConditionSwitcher": "DD 条件切换",
+    "DD-LatentSwitcher": "DD 潜空间切换",
 }
 
 # 导出模块

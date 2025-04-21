@@ -17,9 +17,7 @@
 - 显著减少首次采样的延迟
 - 支持SD1.5丶SDXL丶FLUX.1丶Wan2.1在内的几乎所有模型
 
-【Wan2.1潜空间节点已删除，现在官方已经优化的很好了】
-
-![131231](https://github.com/user-attachments/assets/99bc5279-b926-40c0-a34e-d85310e9b885)
+![2131](https://github.com/user-attachments/assets/85c3f36b-f51a-4651-b4f7-9ff0d9f78170)
 
 </details>
 
@@ -100,7 +98,8 @@
 - 可选的阈值处理功能，确保遮罩二值化
 - 优化的内存使用，支持大批量处理
 
-![演示](https://github.com/user-attachments/assets/076b0493-4e10-4229-a08f-e97c0a9771ff)
+![2](https://github.com/user-attachments/assets/58629a1d-f331-4fd6-aabe-de7158d6fdda)
+
 
 </details>
 
@@ -114,6 +113,9 @@
 - 同时处理图像和对应的遮罩
 - 输出原始尺寸和调整后的尺寸信息
 - 自动将尺寸调整为8的倍数，兼容AI模型要求
+
+![3](https://github.com/user-attachments/assets/5ce80d29-9112-4d17-9666-eab40b840668)
+
 
 </details>
 

@@ -127,6 +127,22 @@
 
 </details>
 
+<details>
+  <summary>DD 对齐工具</summary>
+
+基于[ComfyUI-Align](https://github.com/Moooonet/ComfyUI-Align)项目优化的图像对齐工具：
+- 支持快捷键快速调出对齐界面
+- 完整的节点对齐与分布功能（左、右、上、下、中心对齐）
+- 节点大小调整功能（水平、垂直拉伸）
+- 丰富的节点颜色设置选项（包括固定颜色和随机颜色）
+- 直观的图标展示系统，便于操作
+- 支持节点固定、静音、旁路等操作
+- 可自定义的快捷键和间距设置
+
+![对齐工具](https://github.com/user-attachments/assets/图片ID将在上传后更新)
+
+</details>
+
 ## 安装
 
 1. 将文件复制到 ComfyUI 的 custom_nodes 目录
@@ -134,6 +150,11 @@
 3. 重启 ComfyUI
 
 ## 版本历史
+- v1.8.0（2025-04-22）
+  - 添加DD对齐工具，基于[ComfyUI-Align](https://github.com/Moooonet/ComfyUI-Align)项目
+  - 增加随机颜色功能，使对齐线更易区分
+  - 优化图标展示，提升用户体验
+  - 保留原有的精确对齐功能
 - v1.7.0（2025-04-21）
   - 添加遮罩统一尺寸节点
   - 支持多种缩放算法和适配模式

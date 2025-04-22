@@ -112,8 +112,9 @@
 - 同时处理图像和对应的遮罩
 - 输出原始尺寸和调整后的尺寸信息
 - 自动将尺寸调整为8的倍数，兼容AI模型要求
+- 条件切换器：根据条件自动选择不同分支进行处理
 
-![3](https://github.com/user-attachments/assets/5ce80d29-9112-4d17-9666-eab40b840668)
+![3](https://github.com/user-attachments/assets/d2fac125-fad3-4f51-9b91-39d0be4c7753)
 
 </details>
 
@@ -124,6 +125,9 @@
 - 条件切换器：根据条件自动选择不同分支进行处理
 - 支持多种切换条件和触发模式
 - 简化工作流程，提高处理灵活性
+
+![2](https://github.com/user-attachments/assets/54690c0c-3627-4970-9bc0-ef58ca4be2f7)
+
 
 </details>
 
@@ -139,7 +143,7 @@
 - 支持节点固定、静音、旁路等操作
 - 可自定义的快捷键和间距设置
 
-![对齐工具](https://github.com/user-attachments/assets/图片ID将在上传后更新)
+![1](https://github.com/user-attachments/assets/2012dba6-82d3-4f09-be6e-b10175a3b478)
 
 </details>
 
@@ -152,7 +156,7 @@
 ## 版本历史
 - v1.8.0（2025-04-22）
   - 添加DD对齐工具，基于[ComfyUI-Align](https://github.com/Moooonet/ComfyUI-Align)项目
-  - 增加随机颜色功能，使对齐线更易区分
+  - 增加随机颜色功能，可以让节点更加花里胡哨
   - 优化图标展示，提升用户体验
   - 保留原有的精确对齐功能
 - v1.7.0（2025-04-21）

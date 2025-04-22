@@ -193,7 +193,7 @@
 
 ## 许可证
 
-MIT License
+GPL-3.0 license
 
 1. 听说项目的成长需要Money来维持 
 2. 不打赏的话，作者可能会：

@@ -52,18 +52,19 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 # Web扩展目录
 WEB_DIRECTORY = os.path.join(os.path.dirname(os.path.realpath(__file__)), "js")
 
-# 注册Node对齐工具的前端扩展
-def register_align_web_extensions():
-    """注册节点对齐工具的前端扩展"""
-    js_path = os.path.join(WEB_DIRECTORY, "align")
-    if os.path.exists(js_path):
+# 统一注册前端扩展
+def register_web_extensions():
+    """统一注册所有前端扩展"""
+    index_js_path = os.path.join(WEB_DIRECTORY, "index.js")
+    
+    if os.path.exists(index_js_path):
         return [
             {
-                "name": "DD-Nodes-Align", 
-                "display_name": "🍺DD-节点对齐工具",
+                "name": "DD-Nodes", 
+                "display_name": "🍺DD系列节点",
                 "author": "Dontdrunk",
-                "js": os.path.join("js", "align", "index.js"),
-                "description": "节点对齐、调整大小和颜色设置工具，支持Alt+A快捷键呼出"
+                "js": "js/index.js",
+                "description": "DD系列前端扩展集合"
             }
         ]
     return []
@@ -72,4 +73,4 @@ def register_align_web_extensions():
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
 
 # 前端扩展注册
-WEB_EXTENSIONS = register_align_web_extensions()
+WEB_EXTENSIONS = register_web_extensions()

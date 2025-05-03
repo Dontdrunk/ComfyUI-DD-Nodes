@@ -2006,7 +2006,7 @@ app.registerExtension({
         step: 1
       },
       tooltip: "对齐节点时的最小水平间距（像素）",
-      category: ["对齐", "间距", "水平"],
+      category: ["🍺节点对齐", "间距", "水平"],
       onChange: (value) => {
         if (AlignerPlugin && AlignerPlugin.CONFIG) {
           AlignerPlugin.CONFIG.horizontalMinSpacing = value;
@@ -2024,7 +2024,7 @@ app.registerExtension({
         step: 1
       },
       tooltip: "对齐节点时的最小垂直间距（像素）",
-      category: ["对齐", "间距", "垂直"],
+      category: ["🍺节点对齐", "间距", "垂直"],
       onChange: (value) => {
         if (AlignerPlugin && AlignerPlugin.CONFIG) {
           AlignerPlugin.CONFIG.verticalMinSpacing = value;
@@ -2037,7 +2037,7 @@ app.registerExtension({
       type: "text",
       defaultValue: DEFAULT_CONFIG.shortcut,
       tooltip: "打开对齐工具的快捷键（例如：'alt+a'、'shift+s'等）",
-      category: ["对齐", "常规"],
+      category: ["🍺节点对齐", "常规"],
       onChange: (value) => {
         if (AlignerPlugin && AlignerPlugin.CONFIG) {
           AlignerPlugin.CONFIG.shortcut = value;
@@ -2050,7 +2050,7 @@ app.registerExtension({
       type: "boolean",
       defaultValue: DEFAULT_CONFIG.applyToPanel,
       tooltip: "选中时，颜色将应用到节点面板（背景区域）",
-      category: ["对齐", "颜色应用", "面板"],
+      category: ["🍺节点对齐", "颜色应用", "面板"],
       onChange: (value) => {
         if (AlignerPlugin && AlignerPlugin.CONFIG) {
           AlignerPlugin.CONFIG.applyToPanel = value;
@@ -2063,7 +2063,7 @@ app.registerExtension({
       type: "boolean",
       defaultValue: DEFAULT_CONFIG.applyToHeader,
       tooltip: "选中时，颜色将应用到节点标题",
-      category: ["对齐", "颜色应用", "标题"],
+      category: ["🍺节点对齐", "颜色应用", "标题"],
       onChange: (value) => {
         if (AlignerPlugin && AlignerPlugin.CONFIG) {
           AlignerPlugin.CONFIG.applyToHeader = value;

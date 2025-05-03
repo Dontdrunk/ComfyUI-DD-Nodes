@@ -12,9 +12,6 @@ from .node.model_switcher import NODE_CLASS_MAPPINGS as MODEL_SWITCHER_NODES
 from .node.condition_switcher import NODE_CLASS_MAPPINGS as CONDITION_SWITCHER_NODES
 from .node.latent_switcher import NODE_CLASS_MAPPINGS as LATENT_SWITCHER_NODES
 
-import os
-import folder_paths
-
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
     **COLOR_NODES,
@@ -49,28 +46,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-LatentSwitcher": "DD 潜空间切换",
 }
 
-# Web扩展目录
-WEB_DIRECTORY = os.path.join(os.path.dirname(os.path.realpath(__file__)), "js")
-
-# 统一注册前端扩展
-def register_web_extensions():
-    """统一注册所有前端扩展"""
-    index_js_path = os.path.join(WEB_DIRECTORY, "index.js")
-    
-    if os.path.exists(index_js_path):
-        return [
-            {
-                "name": "DD-Nodes", 
-                "display_name": "🍺DD系列节点",
-                "author": "Dontdrunk",
-                "js": "js/index.js",
-                "description": "DD系列前端扩展集合"
-            }
-        ]
-    return []
-
-# 导出模块
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
 
-# 前端扩展注册
-WEB_EXTENSIONS = register_web_extensions()
+WEB_DIRECTORY =  "js"

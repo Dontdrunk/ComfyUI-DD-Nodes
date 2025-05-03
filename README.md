@@ -127,11 +127,10 @@
 
 ![2](https://github.com/user-attachments/assets/54690c0c-3627-4970-9bc0-ef58ca4be2f7)
 
-
 </details>
 
 <details>
-  <summary>DD 对齐工具</summary>
+  <summary>DD 节点对齐</summary>
 
 基于[ComfyUI-Align](https://github.com/Moooonet/ComfyUI-Align)项目优化的图像对齐工具：
 - 支持快捷键快速调出对齐界面
@@ -146,6 +145,17 @@
 
 </details>
 
+<details>
+  <summary>DD 节点连线动画</summary>
+
+为 ComfyUI 节点连线提供多种炫酷动画效果，支持自定义风格和实时切换：
+- 支持“流动”、“波浪”、“律动”、“脉冲”等多种动画风格
+- 动画参数可自定义（线宽、速度、特效等）
+- 兼容直线、折线、贝塞尔曲线等多种连线类型
+- 动画效果与设置项实时同步，体验丝滑
+
+</details>
+
 ## 安装
 
 1. 将文件复制到 ComfyUI 的 custom_nodes 目录
@@ -153,6 +163,10 @@
 3. 重启 ComfyUI
 
 ## 版本历史
+- v1.9.0（2025-05-03）
+  - 动画系统大幅升级：
+    - 强大的前端动画高级连线功能（低特效模式下完全使用CPU进行动画渲染，不会损耗显卡性能。）
+    - 支持多种路径类型（直线、折线、贝塞尔曲线）下的动画一致性。
 - v1.8.0（2025-04-22）
   - 添加DD对齐工具，基于[ComfyUI-Align](https://github.com/Moooonet/ComfyUI-Align)项目
   - 增加随机颜色功能，可以让节点更加花里胡哨

@@ -13,6 +13,7 @@ export class ConnectionAnimation {
         this.effectExtra = true;
         this.renderStyle = "曲线"; // 新增：动画渲染路径样式
         this.useGradient = true; // 新增：是否启用连线渐变
+        this.circuitBoardMap = null; // 新增：电路板风格连线映射
     }
 
     setEnabled(e) {
@@ -70,9 +71,686 @@ export class ConnectionAnimation {
     }
     setRenderStyle(style) {
         this.renderStyle = style || "曲线";
+        // 支持电路板1和电路板2
+        if ((this.renderStyle === "电路板1" || this.renderStyle === "电路板2") && this.canvas) {
+            // 修复：每次切换都强制重建MapLinks
+            this.circuitBoardMap = null;
+            this._initCircuitBoardMap();
+        } else {
+            this.circuitBoardMap = null;
+        }
     }
     setUseGradient(flag) {
         this.useGradient = !!flag;
+        if (this.canvas) {
+            this.canvas.setDirty(true, true);
+        }
+    }
+
+    _initCircuitBoardMap() {
+        // 根据风格选择不同的MapLinks实现
+        if (!this.circuitBoardMap) {
+            let MapLinks;
+            if (this.renderStyle === "电路板2") {
+                MapLinks = this._createMapLinks2Class();
+            } else {
+                MapLinks = this._createMapLinksClass();
+            }
+            this.circuitBoardMap = new MapLinks(this.canvas);
+            this.circuitBoardMap.lineSpace = Math.floor(3 + this.lineWidth);
+        }
+    }
+
+    _createMapLinksClass() {
+        // 从CircuitBoardLines.js中提取的精简版MapLinks类
+        const EPSILON = 1e-6;
+        const INSIDE = 1;
+        const OUTSIDE = 0;
+        
+        function clipT(num, denom, c) {
+            const tE = c[0], tL = c[1];
+            if (Math.abs(denom) < EPSILON)
+                return num < 0;
+            const t = num / denom;
+            if (denom > 0) {
+                if (t > tL) return 0;
+                if (t > tE) c[0] = t;
+            } else {
+                if (t < tE) return 0;
+                if (t < tL) c[1] = t;
+            }
+            return 1;
+        }
+        
+        function liangBarsky(a, b, box, da, db) {
+            const x1 = a[0], y1 = a[1];
+            const x2 = b[0], y2 = b[1];
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            if (da === undefined || db === undefined) {
+                da = a;
+                db = b;
+            } else {
+                da[0] = a[0];
+                da[1] = a[1];
+                db[0] = b[0];
+                db[1] = b[1];
+            }
+            if (Math.abs(dx) < EPSILON &&
+                Math.abs(dy) < EPSILON &&
+                x1 >= box[0] &&
+                x1 <= box[2] &&
+                y1 >= box[1] &&
+                y1 <= box[3]) {
+                return INSIDE;
+            }
+            const c = [0, 1];
+            if (clipT(box[0] - x1, dx, c) &&
+                clipT(x1 - box[2], -dx, c) &&
+                clipT(box[1] - y1, dy, c) &&
+                clipT(y1 - box[3], -dy, c)) {
+                const tE = c[0], tL = c[1];
+                if (tL < 1) {
+                    db[0] = x1 + tL * dx;
+                    db[1] = y1 + tL * dy;
+                }
+                if (tE > 0) {
+                    da[0] += tE * dx;
+                    da[1] += tE * dy;
+                }
+                return INSIDE;
+            }
+            return OUTSIDE;
+        }
+        
+        return class MapLinks {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.nodesByRight = [];
+                this.nodesById = [];
+                this.lastPathId = 10000000;
+                this.paths = [];
+                this.lineSpace = 5;
+                this.maxDirectLineDistance = Number.MAX_SAFE_INTEGER;
+                this.debug = false;
+            }
+
+            isInsideNode(xy) {
+                for (let i = 0; i < this.nodesByRight.length; ++i) {
+                    const nodeI = this.nodesByRight[i];
+                    if (nodeI.node.isPointInside(xy[0], xy[1])) {
+                        return nodeI.node;
+                    }
+                }
+                return null;
+            }
+
+            findClippedNode(outputXY, inputXY) {
+                let closestDistance = Number.MAX_SAFE_INTEGER;
+                let closest = null;
+
+                for (let i = 0; i < this.nodesByRight.length; ++i) {
+                    const node = this.nodesByRight[i];
+                    const clipA = [-1, -1];
+                    const clipB = [-1, -1];
+                    const clipped = liangBarsky(
+                        outputXY,
+                        inputXY,
+                        node.area,
+                        clipA,
+                        clipB,
+                    );
+
+                    if (clipped === INSIDE) {
+                        const centerX = (node.area[0] + ((node.area[2] - node.area[0]) / 2));
+                        const centerY = (node.area[1] + ((node.area[3] - node.area[1]) / 2));
+                        const dist = Math.sqrt(((centerX - outputXY[0]) ** 2) + ((centerY - outputXY[1]) ** 2));
+                        if (dist < closestDistance) {
+                            closest = {
+                                start: clipA,
+                                end: clipB,
+                                node,
+                            };
+                            closestDistance = dist;
+                        }
+                    }
+                }
+                return { clipped: closest, closestDistance };
+            }
+
+            testPath(path) {
+                const len1 = (path.length - 1);
+                for (let p = 0; p < len1; ++p) {
+                    const { clipped } = this.findClippedNode(path[p], path[p + 1]);
+                    if (clipped) {
+                        return clipped;
+                    }
+                }
+                return null;
+            }
+
+            mapFinalLink(outputXY, inputXY) {
+                const { clipped } = this.findClippedNode(outputXY, inputXY);
+                if (!clipped) {
+                    const dist = Math.sqrt(((outputXY[0] - inputXY[0]) ** 2) + ((outputXY[1] - inputXY[1]) ** 2));
+                    if (dist < this.maxDirectLineDistance) {
+                        // 直接连接，没有阻塞
+                        return { path: [outputXY, inputXY] };
+                    }
+                }
+
+                const horzDistance = inputXY[0] - outputXY[0];
+                const vertDistance = inputXY[1] - outputXY[1];
+                const horzDistanceAbs = Math.abs(horzDistance);
+                const vertDistanceAbs = Math.abs(vertDistance);
+
+                if (horzDistanceAbs > vertDistanceAbs) {
+                    // 水平距离大于垂直距离
+                    const goingLeft = inputXY[0] < outputXY[0];
+                    const pathStraight45 = [
+                        outputXY,
+                        [inputXY[0] - (goingLeft ? -vertDistanceAbs : vertDistanceAbs), outputXY[1]],
+                        inputXY,
+                    ];
+                    if (!this.testPath(pathStraight45)) {
+                        return { path: pathStraight45 };
+                    }
+
+                    const path45Straight = [
+                        outputXY,
+                        [outputXY[0] + (goingLeft ? -vertDistanceAbs : vertDistanceAbs), inputXY[1]],
+                        inputXY,
+                    ];
+                    if (!this.testPath(path45Straight)) {
+                        return { path: path45Straight };
+                    }
+                } else {
+                    // 垂直距离大于水平距离
+                    const goingUp = inputXY[1] < outputXY[1];
+                    const pathStraight45 = [
+                        outputXY,
+                        [outputXY[0], inputXY[1] + (goingUp ? horzDistanceAbs : -horzDistanceAbs)],
+                        inputXY,
+                    ];
+                    if (!this.testPath(pathStraight45)) {
+                        return { path: pathStraight45 };
+                    }
+
+                    const path45Straight = [
+                        outputXY,
+                        [inputXY[0], outputXY[1] - (goingUp ? horzDistanceAbs : -horzDistanceAbs)],
+                        inputXY,
+                    ];
+                    if (!this.testPath(path45Straight)) {
+                        return { path: path45Straight };
+                    }
+                }
+
+                const path90Straight = [
+                    outputXY,
+                    [outputXY[0], inputXY[1]],
+                    inputXY,
+                ];
+                const clippedVert = this.testPath(path90Straight);
+                if (!clippedVert) {
+                    return { path: path90Straight };
+                }
+
+                const pathStraight90 = [
+                    outputXY,
+                    [inputXY[0], outputXY[1]],
+                    inputXY,
+                ];
+                const clippedHorz = this.testPath(pathStraight90);
+                if (!clippedHorz) {
+                    return { path: pathStraight90 };
+                }
+
+                // --- 修复：兜底始终返回一条L型折线路径，避免连线消失 ---
+                // 优先用L型（先水平后垂直）
+                const fallbackL1 = [outputXY, [inputXY[0], outputXY[1]], inputXY];
+                // 或者先垂直后水平
+                const fallbackL2 = [outputXY, [outputXY[0], inputXY[1]], inputXY];
+                // 任选一种
+                return { path: fallbackL1 };
+            }
+
+            mapLinks(nodesByExecution) {
+                if (!this.canvas.graph.links) {
+                    return;
+                }
+
+                this.links = [];
+                this.lastPathId = 1000000;
+                this.nodesByRight = [];
+                this.nodesById = {};
+                this.nodesByRight = nodesByExecution.map((node) => {
+                    const barea = new Float32Array(4);
+                    node.getBounding(barea); 
+                    const area = [
+                        barea[0],
+                        barea[1],
+                        barea[0] + barea[2],
+                        barea[1] + barea[3],
+                    ];
+                    const linesArea = Array.from(area);
+                    linesArea[0] -= 5;
+                    linesArea[1] -= 1;
+                    linesArea[2] += 3;
+                    linesArea[3] += 3;
+                    const obj = {
+                        node,
+                        area,
+                        linesArea,
+                    };
+                    this.nodesById[node.id] = obj;
+                    return obj;
+                });
+
+                // 计算每个连线的路径
+                this.paths = [];
+                const links = this.canvas.graph.links;
+                Object.values(links).forEach(link => {
+                    const originNode = this.canvas.graph.getNodeById(link.origin_id);
+                    const targetNode = this.canvas.graph.getNodeById(link.target_id);
+                    
+                    if (!originNode || !targetNode) return;
+                    
+                    const outputPos = originNode.getConnectionPos(false, link.origin_slot);
+                    const inputPos = targetNode.getConnectionPos(true, link.target_slot);
+                    
+                    const originNodeInfo = this.nodesById[originNode.id];
+                    const targetNodeInfo = this.nodesById[targetNode.id];
+                    
+                    if (!originNodeInfo || !targetNodeInfo) return;
+                    
+                    const outputXY = [originNodeInfo.linesArea[2], outputPos[1]];
+                    const inputXY = [targetNodeInfo.linesArea[0] - 1, inputPos[1]];
+                    
+                    const { path } = this.mapFinalLink(outputXY, inputXY);
+                    
+                    // 添加完整的路径
+                    if (path) {
+                        this.paths.push({
+                            path: [outputPos, ...path, inputPos], 
+                            originNode,
+                            targetNode,
+                            originSlot: link.origin_slot,
+                            targetSlot: link.target_slot,
+                            baseColor: link.color
+                        });
+                    }
+                });
+            }
+
+            // 绘制电路板风格连线
+            drawLinks(ctx, baseColor) {
+                ctx.save();
+                const cornerRadius = this.lineSpace;
+
+                for (const pathI of this.paths) {
+                    const path = pathI.path;
+                    if (path.length <= 1) {
+                        continue;
+                    }
+                    
+                    ctx.beginPath();
+                    
+                    // 获取连线颜色
+                    const originNode = pathI.originNode;
+                    const slotColor = pathI.baseColor || 
+                        (originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                         originNode.outputs[pathI.originSlot].color) ||
+                        (this.canvas.default_connection_color_byType && 
+                         originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                         this.canvas.default_connection_color_byType[originNode.outputs[pathI.originSlot].type]) ||
+                        (this.canvas.default_connection_color && this.canvas.default_connection_color.input_on) ||
+                        baseColor || "#FFFFFF";
+                    
+                    // 修复：电路板风格也支持渐变
+                    let strokeStyle = slotColor;
+                    if (this.canvas._connectionAnimation && this.canvas._connectionAnimation.useGradient) {
+                        // 取首尾点
+                        const from = path[0];
+                        const to = path[path.length - 1];
+                        strokeStyle = this.canvas._connectionAnimation._makeFancyGradient(ctx, from, to, slotColor);
+                    }
+                    
+                    ctx.strokeStyle = strokeStyle;
+                    ctx.lineWidth = 3;
+                    
+                    let isPrevDotRound = false;
+                    for (let p = 0; p < path.length; ++p) {
+                        const pos = path[p];
+
+                        if (p === 0) {
+                            ctx.moveTo(pos[0], pos[1]);
+                        }
+                        const prevPos = pos;
+                        const cornerPos = path[p + 1];
+                        const nextPos = path[p + 2];
+
+                        let drawn = false;
+                        if (nextPos) {
+                            const xDiffBefore = cornerPos[0] - prevPos[0];
+                            const yDiffBefore = cornerPos[1] - prevPos[1];
+                            const xDiffAfter = nextPos[0] - cornerPos[0];
+                            const yDiffAfter = nextPos[1] - cornerPos[1];
+                            const isBeforeStraight = xDiffBefore === 0 || yDiffBefore === 0;
+                            const isAfterStraight = xDiffAfter === 0 || yDiffAfter === 0;
+                            
+                            if (isBeforeStraight || isAfterStraight) {
+                                const beforePos = [
+                                    cornerPos[0],
+                                    cornerPos[1],
+                                ];
+                                const afterPos = [
+                                    cornerPos[0],
+                                    cornerPos[1],
+                                ];
+
+                                if (isBeforeStraight) {
+                                    const xSignBefore = Math.sign(xDiffBefore);
+                                    const ySignBefore = Math.sign(yDiffBefore);
+                                    beforePos[0] = cornerPos[0] - cornerRadius * xSignBefore;
+                                    beforePos[1] = cornerPos[1] - cornerRadius * ySignBefore;
+                                }
+                                if (isAfterStraight) {
+                                    const xSignAfter = Math.sign(xDiffAfter);
+                                    const ySignAfter = Math.sign(yDiffAfter);
+                                    afterPos[0] = cornerPos[0] + cornerRadius * xSignAfter;
+                                    afterPos[1] = cornerPos[1] + cornerRadius * ySignAfter;
+                                }
+
+                                if (isPrevDotRound
+                                    && Math.abs(isPrevDotRound[0] - beforePos[0]) <= cornerRadius
+                                    && Math.abs(isPrevDotRound[1] - beforePos[1]) <= cornerRadius
+                                ) {
+                                    ctx.lineTo(cornerPos[0], cornerPos[1]);
+                                } else {
+                                    ctx.lineTo(beforePos[0], beforePos[1]);
+                                    ctx.quadraticCurveTo(cornerPos[0], cornerPos[1], afterPos[0], afterPos[1]);
+                                }
+                                isPrevDotRound = beforePos;
+                                drawn = true;
+                            }
+                        }
+                        if (p > 0 && !drawn) {
+                            if (!isPrevDotRound) {
+                                ctx.lineTo(pos[0], pos[1]);
+                            }
+                            isPrevDotRound = false;
+                        }
+                    }
+
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+                
+                ctx.restore();
+            }
+        };
+    }
+
+    _createMapLinks2Class() {
+        // 递归避障算法，参考CS/CircuitBoardLines.js的mapLink
+        const EPSILON = 1e-6;
+        const INSIDE = 1;
+        const OUTSIDE = 0;
+        function clipT(num, denom, c) {
+            const tE = c[0], tL = c[1];
+            if (Math.abs(denom) < EPSILON) return num < 0;
+            const t = num / denom;
+            if (denom > 0) {
+                if (t > tL) return 0;
+                if (t > tE) c[0] = t;
+            } else {
+                if (t < tE) return 0;
+                if (t < tL) c[1] = t;
+            }
+            return 1;
+        }
+        function liangBarsky(a, b, box, da, db) {
+            const x1 = a[0], y1 = a[1];
+            const x2 = b[0], y2 = b[1];
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            if (da === undefined || db === undefined) {
+                da = a;
+                db = b;
+            } else {
+                da[0] = a[0];
+                da[1] = a[1];
+                db[0] = b[0];
+                db[1] = b[1];
+            }
+            if (Math.abs(dx) < EPSILON && Math.abs(dy) < EPSILON && x1 >= box[0] && x1 <= box[2] && y1 >= box[1] && y1 <= box[3]) {
+                return INSIDE;
+            }
+            const c = [0, 1];
+            if (clipT(box[0] - x1, dx, c) && clipT(x1 - box[2], -dx, c) && clipT(box[1] - y1, dy, c) && clipT(y1 - box[3], -dy, c)) {
+                const tE = c[0], tL = c[1];
+                if (tL < 1) {
+                    db[0] = x1 + tL * dx;
+                    db[1] = y1 + tL * dy;
+                }
+                if (tE > 0) {
+                    da[0] += tE * dx;
+                    da[1] += tE * dy;
+                }
+                return INSIDE;
+            }
+            return OUTSIDE;
+        }
+        return class MapLinks2 {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.nodesByRight = [];
+                this.nodesById = [];
+                this.lastPathId = 10000000;
+                this.paths = [];
+                this.lineSpace = 5;
+                this.maxDirectLineDistance = Number.MAX_SAFE_INTEGER;
+                this.debug = false;
+            }
+            isInsideNode(xy) {
+                for (let i = 0; i < this.nodesByRight.length; ++i) {
+                    const nodeI = this.nodesByRight[i];
+                    if (nodeI.node.isPointInside(xy[0], xy[1])) {
+                        return nodeI.node;
+                    }
+                }
+                return null;
+            }
+            findClippedNode(outputXY, inputXY) {
+                let closestDistance = Number.MAX_SAFE_INTEGER;
+                let closest = null;
+                for (let i = 0; i < this.nodesByRight.length; ++i) {
+                    const node = this.nodesByRight[i];
+                    const clipA = [-1, -1];
+                    const clipB = [-1, -1];
+                    const clipped = liangBarsky(outputXY, inputXY, node.area, clipA, clipB);
+                    if (clipped === INSIDE) {
+                        const centerX = (node.area[0] + ((node.area[2] - node.area[0]) / 2));
+                        const centerY = (node.area[1] + ((node.area[3] - node.area[1]) / 2));
+                        const dist = Math.sqrt(((centerX - outputXY[0]) ** 2) + ((centerY - outputXY[1]) ** 2));
+                        if (dist < closestDistance) {
+                            closest = {
+                                start: clipA,
+                                end: clipB,
+                                node,
+                            };
+                            closestDistance = dist;
+                        }
+                    }
+                }
+                return { clipped: closest, closestDistance };
+            }
+            testPath(path) {
+                const len1 = (path.length - 1);
+                for (let p = 0; p < len1; ++p) {
+                    const { clipped } = this.findClippedNode(path[p], path[p + 1]);
+                    if (clipped) {
+                        return clipped;
+                    }
+                }
+                return null;
+            }
+            mapFinalLink(outputXY, inputXY) {
+                // 递归避障主入口
+                const { clipped } = this.findClippedNode(outputXY, inputXY);
+                if (!clipped) {
+                    const dist = Math.sqrt(((outputXY[0] - inputXY[0]) ** 2) + ((outputXY[1] - inputXY[1]) ** 2));
+                    if (dist < this.maxDirectLineDistance) {
+                        return { path: [outputXY, inputXY] };
+                    }
+                }
+                // 递归避障
+                const isBlocked = {};
+                const path = this.mapLink(outputXY, inputXY, null, isBlocked, null);
+                return { path };
+            }
+            mapLink(outputXY, inputXY, targetNodeInfo, isBlocked, lastDirection) {
+                // 递归避障算法，参考CS/CircuitBoardLines.js
+                const { clippedHorz, clippedVert, path } = this._try90and45(outputXY, inputXY);
+                if (path) return path;
+                const horzDistance = inputXY[0] - outputXY[0];
+                const vertDistance = inputXY[1] - outputXY[1];
+                const horzDistanceAbs = Math.abs(horzDistance);
+                const vertDistanceAbs = Math.abs(vertDistance);
+                let blockedNodeId, linesArea, pathAvoidNode, lastPathLocation, thisDirection;
+                if (horzDistanceAbs > vertDistanceAbs) {
+                    blockedNodeId = clippedHorz && clippedHorz.node.node.id;
+                    linesArea = clippedHorz && clippedHorz.node.linesArea;
+                    const horzEdge = horzDistance <= 0 ? (linesArea[2]) : (linesArea[0] - 1);
+                    pathAvoidNode = [ [outputXY[0], outputXY[1]], [horzEdge, outputXY[1]] ];
+                    if (horzDistance <= 0) linesArea[2] += this.lineSpace;
+                    else linesArea[0] -= this.lineSpace;
+                    const vertDistanceViaBlockTop = Math.abs(inputXY[1] - linesArea[1]) + Math.abs(linesArea[1] - outputXY[1]);
+                    const vertDistanceViaBlockBottom = Math.abs(inputXY[1] - linesArea[3]) + Math.abs(linesArea[3] - outputXY[1]);
+                    lastPathLocation = [ horzEdge, vertDistanceViaBlockTop <= vertDistanceViaBlockBottom ? (linesArea[1]) : (linesArea[3]) ];
+                    const unblockNotPossible1 = this.testPath([...pathAvoidNode, lastPathLocation]);
+                    if (unblockNotPossible1) {
+                        lastPathLocation = [ horzEdge, vertDistanceViaBlockTop > vertDistanceViaBlockBottom ? (linesArea[1]) : (linesArea[3]) ];
+                    }
+                    if (lastPathLocation[1] < outputXY[1]) {
+                        linesArea[1] -= this.lineSpace;
+                        lastPathLocation[1] -= 1;
+                    } else {
+                        linesArea[3] += this.lineSpace;
+                        lastPathLocation[1] += 1;
+                    }
+                    thisDirection = 'vert';
+                } else {
+                    blockedNodeId = clippedVert && clippedVert.node.node.id;
+                    linesArea = clippedVert && clippedVert.node.linesArea;
+                    const vertEdge = vertDistance <= 0 ? (linesArea[3] + 1) : (linesArea[1] - 1);
+                    pathAvoidNode = [ [outputXY[0], outputXY[1]], [outputXY[0], vertEdge] ];
+                    if (vertDistance <= 0) linesArea[3] += this.lineSpace;
+                    else linesArea[1] -= this.lineSpace;
+                    const horzDistanceViaBlockLeft = Math.abs(inputXY[0] - linesArea[0]) + Math.abs(linesArea[0] - outputXY[0]);
+                    const horzDistanceViaBlockRight = Math.abs(inputXY[0] - linesArea[2]) + Math.abs(linesArea[2] - outputXY[0]);
+                    lastPathLocation = [ horzDistanceViaBlockLeft <= horzDistanceViaBlockRight ? (linesArea[0] - 1) : (linesArea[2]), vertEdge ];
+                    const unblockNotPossible1 = this.testPath([...pathAvoidNode, lastPathLocation]);
+                    if (unblockNotPossible1) {
+                        lastPathLocation = [ horzDistanceViaBlockLeft > horzDistanceViaBlockRight ? (linesArea[0]) : (linesArea[2]), vertEdge ];
+                    }
+                    if (lastPathLocation[0] < outputXY[0]) {
+                        linesArea[0] -= this.lineSpace;
+                    } else {
+                        linesArea[2] += this.lineSpace;
+                    }
+                    thisDirection = 'horz';
+                }
+                if (blockedNodeId && isBlocked[blockedNodeId] > 3) {
+                    return [outputXY, inputXY];
+                }
+                if (blockedNodeId) {
+                    if (isBlocked[blockedNodeId]) ++isBlocked[blockedNodeId];
+                    else isBlocked[blockedNodeId] = 1;
+                }
+                const nextPath = this.mapLink(lastPathLocation, inputXY, targetNodeInfo, isBlocked, thisDirection);
+                return [...pathAvoidNode, lastPathLocation, ...nextPath.slice(1)];
+            }
+            _try90and45(outputXY, inputXY) {
+                // 复用电路板1的90/45度分支
+                const horzDistance = inputXY[0] - outputXY[0];
+                const vertDistance = inputXY[1] - outputXY[1];
+                const horzDistanceAbs = Math.abs(horzDistance);
+                const vertDistanceAbs = Math.abs(vertDistance);
+                if (horzDistanceAbs > vertDistanceAbs) {
+                    const goingLeft = inputXY[0] < outputXY[0];
+                    const pathStraight45 = [ outputXY, [inputXY[0] - (goingLeft ? -vertDistanceAbs : vertDistanceAbs), outputXY[1]], inputXY ];
+                    if (!this.testPath(pathStraight45)) return { path: pathStraight45 };
+                    const path45Straight = [ outputXY, [outputXY[0] + (goingLeft ? -vertDistanceAbs : vertDistanceAbs), inputXY[1]], inputXY ];
+                    if (!this.testPath(path45Straight)) return { path: path45Straight };
+                } else {
+                    const goingUp = inputXY[1] < outputXY[1];
+                    const pathStraight45 = [ outputXY, [outputXY[0], inputXY[1] + (goingUp ? horzDistanceAbs : -horzDistanceAbs)], inputXY ];
+                    if (!this.testPath(pathStraight45)) return { path: pathStraight45 };
+                    const path45Straight = [ outputXY, [inputXY[0], outputXY[1] - (goingUp ? horzDistanceAbs : -horzDistanceAbs)], inputXY ];
+                    if (!this.testPath(path45Straight)) return { path: path45Straight };
+                }
+                const path90Straight = [ outputXY, [outputXY[0], inputXY[1]], inputXY ];
+                const clippedVert = this.testPath(path90Straight);
+                if (!clippedVert) return { path: path90Straight };
+                const pathStraight90 = [ outputXY, [inputXY[0], outputXY[1]], inputXY ];
+                const clippedHorz = this.testPath(pathStraight90);
+                if (!clippedHorz) return { path: pathStraight90 };
+                return { clippedHorz, clippedVert };
+            }
+            mapLinks(nodesByExecution) {
+                if (!this.canvas.graph.links) return;
+                this.links = [];
+                this.lastPathId = 1000000;
+                this.nodesByRight = [];
+                this.nodesById = {};
+                this.nodesByRight = nodesByExecution.map((node) => {
+                    const barea = new Float32Array(4);
+                    node.getBounding(barea);
+                    const area = [ barea[0], barea[1], barea[0] + barea[2], barea[1] + barea[3] ];
+                    const linesArea = Array.from(area);
+                    linesArea[0] -= 5;
+                    linesArea[1] -= 1;
+                    linesArea[2] += 3;
+                    linesArea[3] += 3;
+                    const obj = { node, area, linesArea };
+                    this.nodesById[node.id] = obj;
+                    return obj;
+                });
+                this.paths = [];
+                const links = this.canvas.graph.links;
+                Object.values(links).forEach(link => {
+                    const originNode = this.canvas.graph.getNodeById(link.origin_id);
+                    const targetNode = this.canvas.graph.getNodeById(link.target_id);
+                    if (!originNode || !targetNode) return;
+                    const outputPos = originNode.getConnectionPos(false, link.origin_slot);
+                    const inputPos = targetNode.getConnectionPos(true, link.target_slot);
+                    const originNodeInfo = this.nodesById[originNode.id];
+                    const targetNodeInfo = this.nodesById[targetNode.id];
+                    if (!originNodeInfo || !targetNodeInfo) return;
+                    const outputXY = [originNodeInfo.linesArea[2], outputPos[1]];
+                    const inputXY = [targetNodeInfo.linesArea[0] - 1, inputPos[1]];
+                    const { path } = this.mapFinalLink(outputXY, inputXY);
+                    if (path) {
+                        this.paths.push({
+                            path: [outputPos, ...path, inputPos],
+                            originNode,
+                            targetNode,
+                            originSlot: link.origin_slot,
+                            targetSlot: link.target_slot,
+                            baseColor: link.color
+                        });
+                    }
+                });
+            }
+            drawLinks(ctx, baseColor) {
+                // 复用电路板1的drawLinks
+                if (typeof this.__proto__.__proto__.drawLinks === 'function') {
+                    return this.__proto__.__proto__.drawLinks.call(this, ctx, baseColor);
+                }
+            }
+        };
     }
 
     initOverrides(canvas) {
@@ -87,6 +765,13 @@ export class ConnectionAnimation {
         if (!this.canvas || !this.canvas.graph || !this.enabled) return;
         const links = this.canvas.graph.links;
         if (!links) return;
+
+        // 修复：支持电路板1和电路板2
+        if (this.renderStyle === "电路板1" || this.renderStyle === "电路板2") {
+            this._drawCircuitBoardStyle(ctx);
+            return;
+        }
+
         const now = performance.now();
         const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
         let phaseSpeed = speedMap[this.speed] || 0.002;
@@ -133,6 +818,377 @@ export class ConnectionAnimation {
                 this.drawPulse(ctx, from, to, baseColor, now, pathPoints);
             }
         });
+        ctx.restore();
+    }
+
+    // 新增：绘制电路板风格连线
+    _drawCircuitBoardStyle(ctx) {
+        if (!this.circuitBoardMap) {
+            this._initCircuitBoardMap();
+        }
+
+        // 获取节点执行顺序（适用于电路板风格的路由算法）
+        const nodesByExecution = this.canvas.graph.computeExecutionOrder() || [];
+        
+        // 计算所有连线的电路板风格路径
+        this.circuitBoardMap.lineSpace = Math.floor(3 + this.lineWidth); // 线间距随线宽调整
+        this.circuitBoardMap.mapLinks(nodesByExecution);
+        
+        // 应用电路板风格动画效果
+        ctx.save();
+        // 只在无动画时绘制静态线，否则只绘制动画
+        if (this.effect !== "流动" && this.effect !== "波浪" && this.effect !== "律动" && this.effect !== "脉冲") {
+            this.circuitBoardMap.drawLinks(ctx);
+        } else if (this.effect === "流动") {
+            this._drawCircuitBoardFlow(ctx);
+        } else if (this.effect === "波浪") {
+            this._drawCircuitBoardWave(ctx);
+        } else if (this.effect === "律动") {
+            this._drawCircuitBoardRhythm(ctx);
+        } else if (this.effect === "脉冲") {
+            this._drawCircuitBoardPulse(ctx);
+        }
+        
+        ctx.restore();
+    }
+
+    // 电路板风格 + 流动动画（速度与主样式同步）
+    _drawCircuitBoardFlow(ctx) {
+        ctx.save();
+        ctx.shadowBlur = 0;
+        const dashLen = 24, gapLen = 18;
+        const dashCycleLen = dashLen + gapLen;
+        const now = performance.now();
+        if (!this._startTime) this._startTime = now;
+        // 与主样式同步速度
+        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+        const phaseSpeed = speedMap[this.speed] || 0.002;
+        this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+        const dashOffset = -this._phase * dashCycleLen;
+        for (const pathI of this.circuitBoardMap.paths) {
+            const path = pathI.path;
+            if (path.length <= 1) continue;
+            // 获取颜色
+            const originNode = pathI.originNode;
+            const slotColor = pathI.baseColor || 
+                (originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 originNode.outputs[pathI.originSlot].color) ||
+                (this.canvas.default_connection_color_byType && 
+                 originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 this.canvas.default_connection_color_byType[originNode.outputs[pathI.originSlot].type]) ||
+                (this.canvas.default_connection_color && this.canvas.default_connection_color.input_on) ||
+                "#FFFFFF";
+            ctx.save();
+            // 修复：使用_makeFancyGradient创建渐变
+            const from = path[0];
+            const to = path[path.length - 1];
+            const strokeStyle = this.useGradient ? this._makeFancyGradient(ctx, from, to, slotColor) : slotColor;
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = this.lineWidth + 0.5;
+            ctx.setLineDash([dashLen, gapLen]);
+            ctx.lineDashOffset = dashOffset;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 8 + this.lineWidth * 1.5;
+            }
+            ctx.beginPath();
+            ctx.moveTo(path[0][0], path[0][1]);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i][0], path[i][1]);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+        ctx.restore();
+    }
+
+    // 电路板风格 + 波浪动画（同步主样式参数并增加小球）
+    _drawCircuitBoardWave(ctx) {
+        ctx.save();
+        ctx.shadowBlur = 0;
+        const now = performance.now();
+        if (!this._startTime) this._startTime = now;
+        // 与主样式同步速度
+        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+        const phaseSpeed = speedMap[this.speed] || 0.002;
+        this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+        for (const pathI of this.circuitBoardMap.paths) {
+            const path = pathI.path;
+            if (path.length <= 1) continue;
+            // 获取颜色
+            const originNode = pathI.originNode;
+            const slotColor = pathI.baseColor || 
+                (originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 originNode.outputs[pathI.originSlot].color) ||
+                (this.canvas.default_connection_color_byType && 
+                 originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 this.canvas.default_connection_color_byType[originNode.outputs[pathI.originSlot].type]) ||
+                (this.canvas.default_connection_color && this.canvas.default_connection_color.input_on) ||
+                "#FFFFFF";
+            // 采样整条折线路径
+            const sampleCount = Math.max(40, Math.floor(this.lineWidth * 18));
+            const points = [];
+            let totalLen = 0;
+            const segLens = [];
+            for (let i = 1; i < path.length; i++) {
+                const dx = path[i][0] - path[i-1][0];
+                const dy = path[i][1] - path[i-1][1];
+                const len = Math.hypot(dx, dy);
+                segLens.push(len);
+                totalLen += len;
+            }
+            // 波浪参数与主样式同步
+            const amplitude = 8 * this.lineWidth / 3;
+            const freq = 1 + this.lineWidth / 8;
+            // 沿路径采样
+            for (let s = 0; s <= sampleCount; s++) {
+                const t = s / sampleCount;
+                let dist = t * totalLen;
+                let segIdx = 0;
+                while (segIdx < segLens.length && dist > segLens[segIdx]) {
+                    dist -= segLens[segIdx];
+                    segIdx++;
+                }
+                if (segIdx >= segLens.length) {
+                    points.push(path[path.length-1]);
+                    continue;
+                }
+                const segT = segLens[segIdx] === 0 ? 0 : dist / segLens[segIdx];
+                const x = path[segIdx][0] + (path[segIdx+1][0] - path[segIdx][0]) * segT;
+                const y = path[segIdx][1] + (path[segIdx+1][1] - path[segIdx][1]) * segT;
+                // 法线方向
+                const dx = path[segIdx+1][0] - path[segIdx][0];
+                const dy = path[segIdx+1][1] - path[segIdx][0];
+                const len = Math.hypot(dx, dy);
+                let nx = 0, ny = 0;
+                if (len > 0) { nx = -dy/len; ny = dx/len; }
+                // 波浪
+                const wave = Math.sin(2 * Math.PI * (freq * t + this._phase)) * amplitude;
+                points.push([x + nx * wave, y + ny * wave]);
+            }
+            ctx.save();
+            
+            // 修复：使用_makeFancyGradient创建渐变
+            const from = path[0];
+            const to = path[path.length - 1];
+            const strokeStyle = this.useGradient ? this._makeFancyGradient(ctx, from, to, slotColor) : slotColor;
+            ctx.strokeStyle = strokeStyle;
+            
+            ctx.lineWidth = this.lineWidth + 0.5;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 8 + this.lineWidth * 1.5;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i][0], points[i][1]);
+            }
+            ctx.stroke();
+            ctx.restore();
+            // 小球动画
+            const ballT = this._phase % 1;
+            let ballDist = ballT * totalLen;
+            let segIdx = 0;
+            while (segIdx < segLens.length && ballDist > segLens[segIdx]) {
+                ballDist -= segLens[segIdx];
+                segIdx++;
+            }
+            if (segIdx >= segLens.length) segIdx = segLens.length - 1;
+            const segT = segLens[segIdx] === 0 ? 0 : ballDist / segLens[segIdx];
+            const bx = path[segIdx][0] + (path[segIdx+1][0] - path[segIdx][0]) * segT;
+            const by = path[segIdx][1] + (path[segIdx+1][1] - path[segIdx][1]) * segT;
+            // 法线方向
+            const dx = path[segIdx+1][0] - path[segIdx][0];
+            const dy = path[segIdx+1][1] - path[segIdx][0];
+            const len = Math.hypot(dx, dy);
+            let nx = 0, ny = 0;
+            if (len > 0) { nx = -dy/len; ny = dx/len; }
+            const wave = Math.sin(2 * Math.PI * (freq * (ballT) + this._phase)) * amplitude;
+            const wx = bx + nx * wave;
+            const wy = by + ny * wave;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(wx, wy, 6 + this.lineWidth * 1.5, 0, 2 * Math.PI);
+            ctx.fillStyle = strokeStyle; // 修复：使用渐变颜色
+            ctx.globalAlpha = 0.95;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 16 + this.lineWidth * 2;
+            }
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.restore();
+    }
+
+    // 电路板风格 + 律动动画（主线+小球）
+    _drawCircuitBoardRhythm(ctx) {
+        let period = 3000;
+        if (this.speed === 1) period = 6000;
+        else if (this.speed === 2) period = 3000;
+        else if (this.speed === 3) period = 1500;
+        const now = performance.now();
+        const t = ((now % period) / period);
+        for (const pathI of this.circuitBoardMap.paths) {
+            const path = pathI.path;
+            if (path.length <= 1) continue;
+            // 获取颜色
+            const originNode = pathI.originNode;
+            const slotColor = pathI.baseColor || 
+                (originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 originNode.outputs[pathI.originSlot].color) ||
+                (this.canvas.default_connection_color_byType && 
+                 originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 this.canvas.default_connection_color_byType[originNode.outputs[pathI.originSlot].type]) ||
+                (this.canvas.default_connection_color && this.canvas.default_connection_color.input_on) ||
+                "#FFFFFF";
+            // 修复：使用_makeFancyGradient创建渐变
+            const from = path[0];
+            const to = path[path.length - 1];
+            const strokeStyle = this.useGradient ? this._makeFancyGradient(ctx, from, to, slotColor) : slotColor;
+            
+            // 主线
+            ctx.save();
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = this.lineWidth + 0.5;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 8 + this.lineWidth * 1.5;
+            }
+            ctx.beginPath();
+            ctx.moveTo(path[0][0], path[0][1]);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i][0], path[i][1]);
+            }
+            ctx.stroke();
+            ctx.restore();
+            // 小球沿路径运动
+            // 采样折线路径
+            const sampleCount = Math.max(40, Math.floor(this.lineWidth * 18));
+            let totalLen = 0;
+            const segLens = [];
+            for (let i = 1; i < path.length; i++) {
+                const dx = path[i][0] - path[i-1][0];
+                const dy = path[i][1] - path[i-1][1];
+                const len = Math.hypot(dx, dy);
+                segLens.push(len);
+                totalLen += len;
+            }
+            let dist = t * totalLen;
+            let segIdx = 0;
+            while (segIdx < segLens.length && dist > segLens[segIdx]) {
+                dist -= segLens[segIdx];
+                segIdx++;
+            }
+            if (segIdx >= segLens.length) segIdx = segLens.length - 1;
+            const segT = segLens[segIdx] === 0 ? 0 : dist / segLens[segIdx];
+            const x = path[segIdx][0] + (path[segIdx+1][0] - path[segIdx][0]) * segT;
+            const y = path[segIdx][1] + (path[segIdx+1][1] - path[segIdx][1]) * segT;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, 6 + this.lineWidth * 1.5, 0, 2 * Math.PI);
+            ctx.fillStyle = strokeStyle; // 使用渐变颜色
+            ctx.globalAlpha = 0.95;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 16 + this.lineWidth * 2;
+            }
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // 电路板风格 + 脉冲动画（主线+脉冲高亮带）
+    _drawCircuitBoardPulse(ctx) {
+        ctx.save();
+        let period = 2000;
+        if (this.speed === 1) period = 4000;
+        else if (this.speed === 2) period = 2000;
+        else if (this.speed === 3) period = 1000;
+        const now = performance.now();
+        const t = ((now % period) / period); // 0~1
+        const waveCenter = t;
+        const waveWidth = 0.1;
+        for (const pathI of this.circuitBoardMap.paths) {
+            const path = pathI.path;
+            if (path.length <= 1) continue;
+            // 获取颜色
+            const originNode = pathI.originNode;
+            const slotColor = pathI.baseColor || 
+                (originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 originNode.outputs[pathI.originSlot].color) ||
+                (this.canvas.default_connection_color_byType && 
+                 originNode.outputs && originNode.outputs[pathI.originSlot] && 
+                 this.canvas.default_connection_color_byType[originNode.outputs[pathI.originSlot].type]) ||
+                (this.canvas.default_connection_color && this.canvas.default_connection_color.input_on) ||
+                "#FFFFFF";
+                
+            // 修复：使用_makeFancyGradient创建渐变
+            const from = path[0];
+            const to = path[path.length - 1];
+            const strokeStyle = this.useGradient ? this._makeFancyGradient(ctx, from, to, slotColor) : slotColor;
+            
+            // 主线
+            ctx.save();
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = this.lineWidth + 0.5;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 8 + this.lineWidth * 1.5;
+            }
+            ctx.beginPath();
+            ctx.moveTo(path[0][0], path[0][1]);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i][0], path[i][1]);
+            }
+            ctx.stroke();
+            ctx.restore();
+            // 脉冲高亮带
+            const sampleCount = Math.max(40, Math.floor(this.lineWidth * 18));
+            let totalLen = 0;
+            const segLens = [];
+            for (let i = 1; i < path.length; i++) {
+                const dx = path[i][0] - path[i-1][0];
+                const dy = path[i][1] - path[i-1][1];
+                const len = Math.hypot(dx, dy);
+                segLens.push(len);
+                totalLen += len;
+            }
+            ctx.save();
+            ctx.strokeStyle = strokeStyle; // 修复：使用渐变颜色
+            ctx.lineWidth = this.lineWidth * 2.2;
+            ctx.globalAlpha = 0.92;
+            if (this.effectExtra) {
+                ctx.shadowColor = slotColor;
+                ctx.shadowBlur = 24 + this.lineWidth * 2;
+            }
+            ctx.beginPath();
+            let started = false;
+            for (let s = 0; s <= sampleCount; s++) {
+                const tt = s / sampleCount;
+                let dist = tt * totalLen;
+                let segIdx = 0;
+                while (segIdx < segLens.length && dist > segLens[segIdx]) {
+                    dist -= segLens[segIdx];
+                    segIdx++;
+                }
+                if (segIdx >= segLens.length) segIdx = segLens.length - 1;
+                const segT = segLens[segIdx] === 0 ? 0 : dist / segLens[segIdx];
+                const x = path[segIdx][0] + (path[segIdx+1][0] - path[segIdx][0]) * segT;
+                const y = path[segIdx][1] + (path[segIdx+1][1] - path[segIdx][1]) * segT;
+                let d = Math.abs(tt - waveCenter);
+                if (d > 0.5) d = 1 - d;
+                if (d < waveWidth/2) {
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                } else {
+                    started = false;
+                }
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
         ctx.restore();
     }
 

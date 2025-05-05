@@ -11,9 +11,9 @@ export class ConnectionAnimation {
         this._animating = false;
         this.speed = 2; // 1~3
         this.effectExtra = true;
-        this.renderStyle = "曲线"; // 新增：动画渲染路径样式
-        this.useGradient = true; // 新增：是否启用连线渐变
-        this.circuitBoardMap = null; // 新增：电路板风格连线映射
+        this.renderStyle = "曲线"; 
+        this.useGradient = true; 
+        this.circuitBoardMap = null; 
     }
 
     setEnabled(e) {

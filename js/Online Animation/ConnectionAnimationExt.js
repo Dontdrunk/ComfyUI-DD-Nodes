@@ -107,6 +107,22 @@ app.registerExtension({
             },
         },
         {
+            id: "ConnectionAnimation.samplingLevel",
+            name: "采样强度",
+            type: "slider",
+            defaultValue: 2,
+            attrs: { min: 1, max: 3, step: 1 },
+            tooltip: "控制所有动画效果的采样点数量，1=极致性能，3=极致流畅。采样点越少性能越高，采样点越多动画越细腻。",
+            category: ["🍺连线动画", "3·设置", "采样强度"],
+            onChange(value) {
+                const connectionAnim = app.canvas?._connectionAnimation;
+                if (connectionAnim) {
+                    connectionAnim.setSamplingLevel(value);
+                    app.graph.setDirtyCanvas(true, true);
+                }
+            },
+        },
+        {
             id: "ConnectionAnimation.effectExtra",
             name: "动效开关",
             type: "boolean",

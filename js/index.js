@@ -1,1 +1,3 @@
-import './Online Animation/ConnectionAnimationExt.js';
+// ComfyUI-DD-Nodes 前端插件入口
+import "./Online Animation/ConnectionAnimationExt.js";
+import "./Intelligent Layout/LayoutExt.js";

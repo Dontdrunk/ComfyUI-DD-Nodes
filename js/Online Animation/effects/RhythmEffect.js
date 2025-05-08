@@ -2,7 +2,6 @@ import { BaseEffect } from './BaseEffect.js';
 
 /**
  * 律动效果 - 小球沿路径移动的动画
- * 优化版本，特别增强了低速下的平滑度
  */
 export class RhythmEffect extends BaseEffect {
     constructor(animationManager) {

@@ -2,7 +2,6 @@ import { BaseEffect } from './BaseEffect.js';
 
 /**
  * 脉冲效果 - 发光带沿路径移动的动画
- * 修复：电路板模式下静态线始终用原始折线路径，动画脉冲带采样点可变
  */
 export class PulseEffect extends BaseEffect {
     constructor(animationManager) {

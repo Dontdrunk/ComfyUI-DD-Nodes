@@ -21,7 +21,7 @@ function handleShortcut(e) {
   if (!app.canvas) return;
   
   const layoutPanel = getOrCreateLayoutInstance();
-  if (!layoutPanel || !layoutPanel.enabled) return;
+  if (!layoutPanel) return;
   
   const shortcut = layoutPanel.shortcut;
   const [mod, key] = shortcut.split('+');
@@ -64,12 +64,11 @@ export const layoutExt = {
     const layoutPanel = getOrCreateLayoutInstance();
     if (!layoutPanel) return;
     
-    // 应用初始设置
+    // 应用初始设置 - 功能始终启用
     const applySettings = () => {
-      const enabled = app.extensionManager.setting.get("LayoutPanel.enabled", DEFAULT_CONFIG.enabled);
+      // 默认始终启用，不再依赖设置
+      layoutPanel.setEnabled(true);
       const shortcut = app.extensionManager.setting.get("LayoutPanel.shortcut", DEFAULT_CONFIG.shortcut);
-      
-      layoutPanel.setEnabled(enabled);
       layoutPanel.setShortcut(shortcut);
     };
     
@@ -91,25 +90,12 @@ app.registerExtension({
     const layoutPanel = getOrCreateLayoutInstance();
     if (!layoutPanel) return;
     
-    // 应用已保存的设置
-    layoutPanel.setEnabled(app.extensionManager.setting.get("LayoutPanel.enabled") ?? DEFAULT_CONFIG.enabled);
+    // 始终启用布局功能，不再依赖设置
+    layoutPanel.setEnabled(true);
     layoutPanel.setShortcut(app.extensionManager.setting.get("LayoutPanel.shortcut") ?? DEFAULT_CONFIG.shortcut);
   },
   settings: [
-    {
-      id: "LayoutPanel.enabled",
-      name: "布局功能",
-      type: "boolean",
-      defaultValue: DEFAULT_CONFIG.enabled,
-      tooltip: "开启或关闭智能布局功能",
-      category: ["🍺智能布局", "1·功能", "功能开关"],
-      onChange(value) {
-        const layoutPanel = getOrCreateLayoutInstance();
-        if (layoutPanel) {
-          layoutPanel.setEnabled(value);
-        }
-      }
-    },
+    // 移除启用/禁用设置选项
     {
       id: "LayoutPanel.shortcut",
       name: "开关快捷键",

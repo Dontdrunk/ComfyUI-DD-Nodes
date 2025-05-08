@@ -49,7 +49,15 @@ export class ConnectionAnimation {
                 }
             } else {
                 if (this._originalDrawConnections) {
-                    this.canvas.drawConnections = this._originalDrawConnections;
+                    // 兼容性修改：检查当前的 drawConnections 是否是我们设置的函数
+                    // 如果是，才恢复原始函数，否则可能是其他插件（如 cg-use-everywhere）设置的
+                    const currentDrawConnections = this.canvas.drawConnections;
+                    const isOurFunction = currentDrawConnections.toString().includes('self.drawAnimation');
+                    if (isOurFunction) {
+                        this.canvas.drawConnections = this._originalDrawConnections;
+                    }
+                    // 不再需要保持引用
+                    this._originalDrawConnections = null;
                 }
                 this._animating = false;
             }

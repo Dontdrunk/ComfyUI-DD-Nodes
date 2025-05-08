@@ -28,7 +28,8 @@ export class RetroCoin {
     // 使用外部样式模块注入样式
     injectStyles('layout-coin-styles', coinStyles);
     
-    container.addEventListener('click', () => this.flip());
+    // 移除点击呼出/翻转功能，只允许通过面板按钮或快捷键触发
+    // container.addEventListener('click', () => this.flip());
     return container;
   }
 

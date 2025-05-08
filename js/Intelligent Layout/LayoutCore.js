@@ -11,7 +11,8 @@ document.addEventListener('mousemove', (e) => {
 
 export class LayoutPanel {
   constructor() {
-    this.enabled = false;
+    // 默认启用功能，但UI面板不可见
+    this.enabled = true;
     this.shortcut = 'alt+l';
     this.position = { left: 32, top: 120 }; // 默认位置，将被鼠标位置覆盖
     this.visible = false;
@@ -22,8 +23,9 @@ export class LayoutPanel {
   }
   
   setEnabled(enabled) {
-    this.enabled = !!enabled;
-    if (this.enabled && !this.container) {
+    // 始终保持功能启用
+    this.enabled = true;
+    if (!this.container) {
       this._createPanel();
     }
   }
@@ -34,12 +36,7 @@ export class LayoutPanel {
     }
   }
   
-  // 保留此方法以兼容现有代码，但在显示面板时将忽略预设位置
-  setPosition(position) {
-    if (!position) return;
-    this.position = position;
-  }
-  
+  // 只有通过toggle方法才能控制面板显示/隐藏，确保只能通过快捷键激活
   toggle() {
     if (this.visible) {
       this.hide();
@@ -105,7 +102,7 @@ export class LayoutPanel {
     this.container.style.transform = 'translate(-50%, -50%)';
     this.container.style.zIndex = 99999;
     this.container.style.display = 'none';
-    this.container.style.pointerEvents = 'auto';
+    this.container.style.pointerEvents = 'none'; // 默认禁用事件，确保只有在面板显示时才能交互
     this.container.style.transition = 'opacity 0.3s, transform 0.3s';
     this.container.style.opacity = '0';
     
@@ -189,6 +186,11 @@ export class LayoutPanel {
     // 使用外部样式模块注入样式
     injectStyles('layout-panel-styles', layoutPanelStyles);
     
+    // 添加面板点击事件，阻止冒泡
+    this.container.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    
     // 添加到文档
     document.body.appendChild(this.container);
   }
@@ -266,8 +268,7 @@ export class LayoutPanel {
   
   // 不再需要此方法，因为我们总是使用鼠标位置
   _updatePosition() {
-    if (!this.container) return;
-    this._showAtMousePosition();
+    // 已弃用：彻底移除
   }
   
   // 设置随机节点颜色
@@ -534,6 +535,6 @@ export class LayoutPanel {
 }
 
 export const DEFAULT_CONFIG = {
-  enabled: true,
+  enabled: true,  // 默认启用
   shortcut: 'alt+l'
 };

@@ -59,6 +59,13 @@ const AUTO_LAYOUT_CONFIG = {
     "output": [
       "Save", "Output", "Preview", "Display", "Show"
     ]
+  },
+  
+  // 特定节点顺序规则 - 明确定义哪些节点类型应该放在其他节点下方
+  nodeOrder: {
+    // VAEDecode应该在KSampler下方
+    "VAEDecode": ["KSampler", "SamplerAdvanced", "Sample", "Sampler", "Sampling"],
+    "ImageUpscale": ["VAEDecode"] // 图像放大应该在VAE解码下方
   }
 };
 
@@ -214,14 +221,24 @@ export class AutoLayoutEngine {
         modules[module].push(nodeId);
       }
       
-      // 按工作流顺序排列模块，现在采用5列布局，使节点分布更均衡
+      // 调整列布局 - 将latent分组移到samplers分组所在的列，以便VAEDecode能放在KSampler下方
       const columns = [
-        ["loaders"], // 第1列：专门放置模型加载器
+        ["loaders"], // 第1列：模型加载器
         ["condition", "control"], // 第2列：条件和控制模块
-        ["samplers", "transform"], // 第3列：采样器和变换
-        ["latent", "effects", "math"], // 第4列：潜变量、特效和数学运算
+        ["samplers", "latent"], // 第3列：采样器和潜变量（包括VAE解码）
+        ["transform", "effects", "math"], // 第4列：变换、特效和数学运算
         ["image", "utils", "generator", "output", "other"] // 第5列：图像处理、工具和其他
       ];
+      
+      // 特定节点顺序映射表
+      const nodeTypeMapping = {};
+      for (const nodeId in graph.nodes) {
+        const node = graph.nodes[nodeId].node;
+        const nodeType = node.type;
+        if (nodeType) {
+          nodeTypeMapping[nodeId] = nodeType;
+        }
+      }
       
       let xOffset = 0;
       
@@ -244,12 +261,42 @@ export class AutoLayoutEngine {
             maxWidth = Math.max(maxWidth, node.size[0]);
           });
           
-          // 对于长列(第5列)，使用更紧凑的垂直间距
+          // 对于长列，使用更紧凑的垂直间距
           const verticalSpacing = columnIndex === 4 ? 
             this.config.verticalSpacing * 0.8 : this.config.verticalSpacing;
           
-          // 按照节点ID排序，保持稳定排列
-          moduleNodes.sort((a, b) => a.localeCompare(b));
+          // 特殊处理：如果当前模块是samplers或latent，进行特殊排序
+          if (moduleName === "samplers" || moduleName === "latent") {
+            // 按照特定规则排序
+            moduleNodes.sort((aId, bId) => {
+              const aType = nodeTypeMapping[aId] || "";
+              const bType = nodeTypeMapping[bId] || "";
+              
+              // 实现特定的排序规则
+              // 1. 如果是KSampler类节点，总是排在前面
+              // 2. 如果是VAEDecode类节点，总是排在KSampler后面
+              
+              const isASampler = aType.includes("KSampler") || aType.includes("Sampler"); 
+              const isBSampler = bType.includes("KSampler") || bType.includes("Sampler");
+              
+              const isAVAEDecode = aType.includes("VAEDecode");
+              const isBVAEDecode = bType.includes("VAEDecode");
+              
+              // K采样器应该排在最前面
+              if (isASampler && !isBSampler) return -1;
+              if (!isASampler && isBSampler) return 1;
+              
+              // VAE解码应该排在K采样器之后，其他节点之前
+              if (isAVAEDecode && !isBVAEDecode && !isBSampler) return -1;
+              if (!isAVAEDecode && isBVAEDecode && !isASampler) return 1;
+              
+              // 如果都是采样器或都是VAE解码，则按字母顺序排列
+              return aId.localeCompare(bId);
+            });
+          } else {
+            // 默认按照节点ID排序，保持稳定排列
+            moduleNodes.sort((a, b) => a.localeCompare(b));
+          }
           
           // 排列模块内的节点
           moduleNodes.forEach(nodeId => {

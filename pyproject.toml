@@ -3,13 +3,13 @@ name = "comfyui-dd-nodes"
 description = "Advanced utility nodes for ComfyUI with intelligent layout and animation features."
 version = "2.1.0"
 license = {file = "LICENSE"}
-dependencies = ["git+https://github.com/1761696257/ComfyUI-DD-Nodes.git"]
+dependencies = ["git+https://github.com/Dontdrunk/ComfyUI-DD-Nodes.git"]
 
 [project.urls]
-Repository = "https://github.com/1761696257/ComfyUI-DD-Nodes"
+Repository = "https://github.com/Dontdrunk/ComfyUI-DD-Nodes"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "1761696257"
+PublisherId = "Dontdrunk"
 DisplayName = "ComfyUI-DD-Nodes"
 Icon = ""

@@ -154,5 +154,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-SamplingOptimizer": "DD 采样优化器"
+    "DD-SamplingOptimizer": "DD Sampling Optimizer"
 }

@@ -59,5 +59,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ConditionSwitcher": "DD 条件切换"
+    "DD-ConditionSwitcher": "DD Condition Switcher"
 }

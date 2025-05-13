@@ -1,5 +1,9 @@
 # ComfyUI-DD-Nodes
 
+<div align="right">
+  <b>中文</b> | <a href="https://github.com/Dontdrunk/ComfyUI-DD-Nodes/blob/main/README-EN.md">English</a>
+</div>
+
 一个全流程 AI 开发的 ComfyUI 自定义节点集合（完全汉化），由 Dontdrunk 开发维护。
 
 ## 当前节点列表
@@ -100,12 +104,29 @@
 </details>
 
 ## 安装
-
+方法1
 1. 将文件复制到 ComfyUI 的 custom_nodes 目录
 2. 安装依赖：`pip install -r requirements.txt`
 3. 重启 ComfyUI
 
+方法2（推荐）
+使用Manager或启动器进行安装
+
+## 语言切换
+
+本扩展现已支持 ComfyUI 原生国际化（i18n）系统，可在中英文间切换：
+
+1. 切换语言：在 ComfyUI 界面右上角设置菜单中选择语言选项
+2. 选择中文（zh）或英文（en）
+3. 暂时只支持节点翻译，暂不支持前端功能翻译切换
+
 ## 版本历史
+- v2.2.0  （2025-05-13）
+- 添加对 ComfyUI 原生国际化（i18n）系统的支持
+- 现在可以无缝切换中文和英文界面
+- 所有节点名称、描述、参数和输出均支持双语
+- 删除了智能布局的模块化功能（未来可能采用自定义模板）
+
 - v2.1.2  （2025-05-12）
 - 近一步提升动画性能与效果并修复部分动画的路径BUG。
 

@@ -256,7 +256,7 @@ NODE_CLASS_MAPPINGS = {
     "DD-ImageUniformSize": DDImageUniformSize
 }
 
-# 节点显示名称映射
+# 节点显示名称映射 - 使用英文（中文通过locales提供）
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ImageUniformSize": "DD 图像统一尺寸"
+    "DD-ImageUniformSize": "DD Image Uniform Size"
 }

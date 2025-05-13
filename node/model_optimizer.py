@@ -239,5 +239,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ModelOptimizer": "DD 模型优化加载"
+    "DD-ModelOptimizer": "DD Model Optimizer"
 }

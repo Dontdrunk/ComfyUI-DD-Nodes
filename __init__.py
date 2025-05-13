@@ -29,21 +29,21 @@ NODE_CLASS_MAPPINGS = {
     **LATENT_SWITCHER_NODES,
 }
 
-# 节点显示名称映射
+# 节点显示名称映射（使用英文作为默认，中文通过locales提供）
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ColorBackgroundGenerator": "DD 颜色背景生成器",
-    "DD-DimensionCalculator": "DD 尺寸计算器",
-    "DD-ImageToVideo": "DD 图片转视频",
-    "DD-AdvancedFusion": "DD 高级融合",
-    "DD-SimpleLatent": "DD 极简Latent",
-    "DD-ModelOptimizer": "DD 模型优化加载",
-    "DD-SamplingOptimizer": "DD 采样优化器",
-    "DD-ImageUniformSize": "DD 图像统一尺寸",
-    "DD-MaskUniformSize": "DD 遮罩统一尺寸",
-    "DD-ImageSizeLimiter": "DD 限制图像大小",
-    "DD-ModelSwitcher": "DD 模型切换",
-    "DD-ConditionSwitcher": "DD 条件切换",
-    "DD-LatentSwitcher": "DD 潜空间切换",
+    "DD-ColorBackgroundGenerator": "DD Color Background Generator",
+    "DD-DimensionCalculator": "DD Dimension Calculator",
+    "DD-ImageToVideo": "DD Image To Video",
+    "DD-AdvancedFusion": "DD Advanced Fusion",
+    "DD-SimpleLatent": "DD Simple Latent",
+    "DD-ModelOptimizer": "DD Model Optimizer",
+    "DD-SamplingOptimizer": "DD Sampling Optimizer",
+    "DD-ImageUniformSize": "DD Image Uniform Size",
+    "DD-MaskUniformSize": "DD Mask Uniform Size",
+    "DD-ImageSizeLimiter": "DD Image Size Limiter",
+    "DD-ModelSwitcher": "DD Model Switcher",
+    "DD-ConditionSwitcher": "DD Condition Switcher",
+    "DD-LatentSwitcher": "DD Latent Switcher",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-dd-nodes"
 description = "Advanced utility nodes for ComfyUI with intelligent layout and animation features."
-version = "2.1.2"
+version = "2.2.0"
 license = {file = "LICENSE"}
 dependencies = ["git+https://github.com/Dontdrunk/ComfyUI-DD-Nodes.git"]
 

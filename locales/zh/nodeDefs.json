@@ -1,0 +1,338 @@
+{
+  "DD-ColorBackgroundGenerator": {
+    "display_name": "DD 颜色背景生成器",
+    "description": "生成纯色背景图像",
+    "inputs": {
+      "图层设置": {
+        "name": "图层设置",
+        "tooltip": "控制图层的属性设置"
+      },
+      "宽度": {
+        "name": "宽度",
+        "tooltip": "图像宽度（像素）"
+      },
+      "高度": {
+        "name": "高度",
+        "tooltip": "图像高度（像素）"
+      },
+      "颜色模式": {
+        "name": "颜色模式",
+        "tooltip": "选择颜色表示模式（HSLA, HSVA, CMYK）"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像",
+        "tooltip": "生成的背景图像"
+      }
+    }
+  },
+  "DD-DimensionCalculator": {
+    "display_name": "DD 尺寸计算器",
+    "description": "计算和调整图像尺寸比例",
+    "inputs": {
+      "原始宽度": {
+        "name": "原始宽度",
+        "tooltip": "原始图像的宽度"
+      },
+      "原始高度": {
+        "name": "原始高度",
+        "tooltip": "原始图像的高度"
+      },
+      "缩放比例": {
+        "name": "缩放比例",
+        "tooltip": "调整大小的缩放比例"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "宽度",
+        "tooltip": "计算后的宽度"
+      },
+      "1": {
+        "name": "高度",
+        "tooltip": "计算后的高度"
+      }
+    }
+  },
+  "DD-ImageToVideo": {
+    "display_name": "DD 图片转视频",
+    "description": "将图像转换为视频帧",
+    "inputs": {
+      "图像": {
+        "name": "图像",
+        "tooltip": "输入的图像"
+      },
+      "帧率": {
+        "name": "帧率",
+        "tooltip": "视频的每秒帧数"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "视频帧",
+        "tooltip": "生成的视频帧序列"
+      }
+    }
+  },
+  "DD-AdvancedFusion": {
+    "display_name": "DD 高级融合",
+    "description": "高级图像融合技术",
+    "inputs": {
+      "图像A": {
+        "name": "图像A",
+        "tooltip": "第一个输入图像"
+      },
+      "图像B": {
+        "name": "图像B",
+        "tooltip": "第二个输入图像"
+      },
+      "融合强度": {
+        "name": "融合强度",
+        "tooltip": "控制融合效果的强度"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "融合图像",
+        "tooltip": "融合后的图像"
+      }
+    }
+  },
+  "DD-SimpleLatent": {
+    "display_name": "DD 极简Latent",
+    "description": "简化的潜空间操作节点",
+    "inputs": {
+      "模型": {
+        "name": "模型",
+        "tooltip": "输入的模型"
+      },
+      "提示词": {
+        "name": "提示词",
+        "tooltip": "生成图像的提示词"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "潜空间",
+        "tooltip": "生成的潜空间表示"
+      }
+    }
+  },
+  "DD-ModelOptimizer": {
+    "display_name": "DD 模型优化加载",
+    "description": "优化模型加载和性能",
+    "inputs": {
+      "模型文件": {
+        "name": "模型文件",
+        "tooltip": "要加载的模型文件"
+      },
+      "智能模式": {
+        "name": "智能模式",
+        "tooltip": "是否使用智能优化模式"
+      },
+      "加载模式": {
+        "name": "加载模式",
+        "tooltip": "选择模型加载方式"
+      },
+      "优化模式": {
+        "name": "优化模式",
+        "tooltip": "选择模型优化方式"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "优化模型",
+        "tooltip": "优化后的模型"
+      }
+    }
+  },
+  "DD-SamplingOptimizer": {
+    "display_name": "DD 采样优化器",
+    "description": "优化采样过程性能",
+    "inputs": {
+      "模型": {
+        "name": "模型",
+        "tooltip": "要优化的模型"
+      },
+      "CLIP模型": {
+        "name": "CLIP模型",
+        "tooltip": "CLIP文本编码器"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "优化模型",
+        "tooltip": "优化后的模型"
+      },
+      "1": {
+        "name": "优化CLIP",
+        "tooltip": "优化后的CLIP"
+      }
+    }
+  },
+  "DD-ImageUniformSize": {
+    "display_name": "DD 图像统一尺寸",
+    "description": "统一调整图像尺寸",
+    "inputs": {
+      "图像": {
+        "name": "图像",
+        "tooltip": "要调整的图像"
+      },
+      "宽度": {
+        "name": "宽度",
+        "tooltip": "目标宽度"
+      },
+      "高度": {
+        "name": "高度",
+        "tooltip": "目标高度"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像",
+        "tooltip": "调整尺寸后的图像"
+      }
+    }
+  },
+  "DD-MaskUniformSize": {
+    "display_name": "DD 遮罩统一尺寸",
+    "description": "统一调整遮罩尺寸",
+    "inputs": {
+      "遮罩": {
+        "name": "遮罩",
+        "tooltip": "要调整的遮罩"
+      },
+      "宽度": {
+        "name": "宽度",
+        "tooltip": "目标宽度"
+      },
+      "高度": {
+        "name": "高度",
+        "tooltip": "目标高度"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "遮罩",
+        "tooltip": "调整尺寸后的遮罩"
+      }
+    }
+  },
+  "DD-ImageSizeLimiter": {
+    "display_name": "DD 限制图像大小",
+    "description": "限制图像尺寸在特定范围内",
+    "inputs": {
+      "图像": {
+        "name": "图像",
+        "tooltip": "输入图像"
+      },
+      "最大尺寸": {
+        "name": "最大尺寸",
+        "tooltip": "图像的最大边长"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像",
+        "tooltip": "调整后的图像"
+      }
+    }
+  },
+  "DD-ModelSwitcher": {
+    "display_name": "DD 模型切换",
+    "description": "在多个模型之间进行切换",
+    "inputs": {
+      "模型1": {
+        "name": "模型1",
+        "tooltip": "第一个模型"
+      },
+      "模型2": {
+        "name": "模型2",
+        "tooltip": "第二个模型"
+      },
+      "选择输出": {
+        "name": "选择输出",
+        "tooltip": "选择输出哪个模型(1-4)"
+      },
+      "模型3": {
+        "name": "模型3",
+        "tooltip": "第三个模型(可选)"
+      },
+      "模型4": {
+        "name": "模型4",
+        "tooltip": "第四个模型(可选)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "模型",
+        "tooltip": "选中的模型"
+      }
+    }
+  },
+  "DD-ConditionSwitcher": {
+    "display_name": "DD 条件切换",
+    "description": "在多个条件之间进行切换",
+    "inputs": {
+      "条件1": {
+        "name": "条件1",
+        "tooltip": "第一个条件"
+      },
+      "条件2": {
+        "name": "条件2",
+        "tooltip": "第二个条件"
+      },
+      "选择输出": {
+        "name": "选择输出",
+        "tooltip": "选择输出哪个条件(1-4)"
+      },
+      "条件3": {
+        "name": "条件3",
+        "tooltip": "第三个条件(可选)"
+      },
+      "条件4": {
+        "name": "条件4",
+        "tooltip": "第四个条件(可选)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "条件",
+        "tooltip": "选中的条件"
+      }
+    }
+  },
+  "DD-LatentSwitcher": {
+    "display_name": "DD 潜空间切换",
+    "description": "在多个潜空间之间进行切换",
+    "inputs": {
+      "潜空间1": {
+        "name": "潜空间1",
+        "tooltip": "第一个潜空间"
+      },
+      "潜空间2": {
+        "name": "潜空间2",
+        "tooltip": "第二个潜空间"
+      },
+      "选择输出": {
+        "name": "选择输出",
+        "tooltip": "选择输出哪个潜空间(1-4)"
+      },
+      "潜空间3": {
+        "name": "潜空间3",
+        "tooltip": "第三个潜空间(可选)"
+      },
+      "潜空间4": {
+        "name": "潜空间4",
+        "tooltip": "第四个潜空间(可选)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "潜空间",
+        "tooltip": "选中的潜空间"
+      }
+    }
+  }
+}

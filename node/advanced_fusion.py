@@ -231,7 +231,7 @@ NODE_CLASS_MAPPINGS = {
     "DD-AdvancedFusion": DDAdvancedFusion
 }
 
-# 节点显示名称映射
+# 节点显示名称映射 - 使用英文（中文通过locales提供）
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-AdvancedFusion": "DD 高级融合"
+    "DD-AdvancedFusion": "DD Advanced Fusion"
 }

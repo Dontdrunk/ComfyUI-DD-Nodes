@@ -88,5 +88,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ImageToVideo": "DD 图片转视频帧"
+    "DD-ImageToVideo": "DD Image To Video"
 }

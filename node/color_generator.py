@@ -232,3 +232,8 @@ class ColorBackgroundGenerator:
 NODE_CLASS_MAPPINGS = {
     "DD-ColorBackgroundGenerator": ColorBackgroundGenerator
 }
+
+# 节点显示名称映射 - 使用英文（中文通过locales提供）
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "DD-ColorBackgroundGenerator": "DD Color Background Generator"
+}

@@ -1,0 +1,338 @@
+{
+  "DD-ColorBackgroundGenerator": {
+    "display_name": "DD Color Background Generator",
+    "description": "Generate solid color background images",
+    "inputs": {
+      "图层设置": {
+        "name": "Layer Settings",
+        "tooltip": "Control layer properties"
+      },
+      "宽度": {
+        "name": "Width",
+        "tooltip": "Image width in pixels"
+      },
+      "高度": {
+        "name": "Height",
+        "tooltip": "Image height in pixels"
+      },
+      "颜色模式": {
+        "name": "Color Mode",
+        "tooltip": "Select color representation mode (HSLA, HSVA, CMYK)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "IMAGE",
+        "tooltip": "Generated background image"
+      }
+    }
+  },
+  "DD-DimensionCalculator": {
+    "display_name": "DD Dimension Calculator",
+    "description": "Calculate and adjust image dimension ratios",
+    "inputs": {
+      "原始宽度": {
+        "name": "Original Width",
+        "tooltip": "Width of the original image"
+      },
+      "原始高度": {
+        "name": "Original Height",
+        "tooltip": "Height of the original image"
+      },
+      "缩放比例": {
+        "name": "Scale Ratio",
+        "tooltip": "Scaling ratio for resizing"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Width",
+        "tooltip": "Calculated width"
+      },
+      "1": {
+        "name": "Height",
+        "tooltip": "Calculated height"
+      }
+    }
+  },
+  "DD-ImageToVideo": {
+    "display_name": "DD Image To Video",
+    "description": "Convert images to video frames",
+    "inputs": {
+      "图像": {
+        "name": "Image",
+        "tooltip": "Input image"
+      },
+      "帧率": {
+        "name": "FPS",
+        "tooltip": "Frames per second for the video"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Video Frames",
+        "tooltip": "Generated video frame sequence"
+      }
+    }
+  },
+  "DD-AdvancedFusion": {
+    "display_name": "DD Advanced Fusion",
+    "description": "Advanced image fusion techniques",
+    "inputs": {
+      "图像A": {
+        "name": "Image A",
+        "tooltip": "First input image"
+      },
+      "图像B": {
+        "name": "Image B",
+        "tooltip": "Second input image"
+      },
+      "融合强度": {
+        "name": "Fusion Strength",
+        "tooltip": "Controls the strength of the fusion effect"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Fused Image",
+        "tooltip": "The resulting fused image"
+      }
+    }
+  },
+  "DD-SimpleLatent": {
+    "display_name": "DD Simple Latent",
+    "description": "Simplified latent space operation node",
+    "inputs": {
+      "模型": {
+        "name": "Model",
+        "tooltip": "Input model"
+      },
+      "提示词": {
+        "name": "Prompt",
+        "tooltip": "Text prompt for image generation"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "LATENT",
+        "tooltip": "Generated latent representation"
+      }
+    }
+  },
+  "DD-ModelOptimizer": {
+    "display_name": "DD Model Optimizer",
+    "description": "Optimize model loading and performance",
+    "inputs": {
+      "模型文件": {
+        "name": "Model File",
+        "tooltip": "Model file to load"
+      },
+      "智能模式": {
+        "name": "Smart Mode",
+        "tooltip": "Whether to use smart optimization mode"
+      },
+      "加载模式": {
+        "name": "Loading Mode",
+        "tooltip": "Select model loading method"
+      },
+      "优化模式": {
+        "name": "Optimization Mode",
+        "tooltip": "Select model optimization method"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "MODEL",
+        "tooltip": "Optimized model"
+      }
+    }
+  },
+  "DD-SamplingOptimizer": {
+    "display_name": "DD Sampling Optimizer",
+    "description": "Optimize sampling process performance",
+    "inputs": {
+      "模型": {
+        "name": "Model",
+        "tooltip": "Model to optimize"
+      },
+      "CLIP模型": {
+        "name": "CLIP Model",
+        "tooltip": "CLIP text encoder"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "MODEL",
+        "tooltip": "Optimized model"
+      },
+      "1": {
+        "name": "CLIP",
+        "tooltip": "Optimized CLIP"
+      }
+    }
+  },
+  "DD-ImageUniformSize": {
+    "display_name": "DD Image Uniform Size",
+    "description": "Uniformly resize images",
+    "inputs": {
+      "图像": {
+        "name": "Image",
+        "tooltip": "Image to resize"
+      },
+      "宽度": {
+        "name": "Width",
+        "tooltip": "Target width"
+      },
+      "高度": {
+        "name": "Height",
+        "tooltip": "Target height"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "IMAGE",
+        "tooltip": "Resized image"
+      }
+    }
+  },
+  "DD-MaskUniformSize": {
+    "display_name": "DD Mask Uniform Size",
+    "description": "Uniformly resize masks",
+    "inputs": {
+      "遮罩": {
+        "name": "Mask",
+        "tooltip": "Mask to resize"
+      },
+      "宽度": {
+        "name": "Width",
+        "tooltip": "Target width"
+      },
+      "高度": {
+        "name": "Height",
+        "tooltip": "Target height"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "MASK",
+        "tooltip": "Resized mask"
+      }
+    }
+  },
+  "DD-ImageSizeLimiter": {
+    "display_name": "DD Image Size Limiter",
+    "description": "Limit image dimensions within a specific range",
+    "inputs": {
+      "图像": {
+        "name": "Image",
+        "tooltip": "Input image"
+      },
+      "最大尺寸": {
+        "name": "Max Size",
+        "tooltip": "Maximum dimension of the image"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "IMAGE",
+        "tooltip": "Resized image"
+      }
+    }
+  },
+  "DD-ModelSwitcher": {
+    "display_name": "DD Model Switcher",
+    "description": "Switch between multiple models",
+    "inputs": {
+      "模型1": {
+        "name": "Model 1",
+        "tooltip": "First model"
+      },
+      "模型2": {
+        "name": "Model 2",
+        "tooltip": "Second model"
+      },
+      "选择输出": {
+        "name": "Select Output",
+        "tooltip": "Choose which model to output (1-4)"
+      },
+      "模型3": {
+        "name": "Model 3",
+        "tooltip": "Third model (optional)"
+      },
+      "模型4": {
+        "name": "Model 4",
+        "tooltip": "Fourth model (optional)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "MODEL",
+        "tooltip": "Selected model"
+      }
+    }
+  },
+  "DD-ConditionSwitcher": {
+    "display_name": "DD Condition Switcher",
+    "description": "Switch between multiple conditions",
+    "inputs": {
+      "条件1": {
+        "name": "Condition 1",
+        "tooltip": "First condition"
+      },
+      "条件2": {
+        "name": "Condition 2",
+        "tooltip": "Second condition"
+      },
+      "选择输出": {
+        "name": "Select Output",
+        "tooltip": "Choose which condition to output (1-4)"
+      },
+      "条件3": {
+        "name": "Condition 3",
+        "tooltip": "Third condition (optional)"
+      },
+      "条件4": {
+        "name": "Condition 4",
+        "tooltip": "Fourth condition (optional)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "CONDITIONING",
+        "tooltip": "Selected condition"
+      }
+    }
+  },
+  "DD-LatentSwitcher": {
+    "display_name": "DD Latent Switcher",
+    "description": "Switch between multiple latent spaces",
+    "inputs": {
+      "潜空间1": {
+        "name": "Latent 1",
+        "tooltip": "First latent space"
+      },
+      "潜空间2": {
+        "name": "Latent 2",
+        "tooltip": "Second latent space"
+      },
+      "选择输出": {
+        "name": "Select Output",
+        "tooltip": "Choose which latent space to output (1-4)"
+      },
+      "潜空间3": {
+        "name": "Latent 3",
+        "tooltip": "Third latent space (optional)"
+      },
+      "潜空间4": {
+        "name": "Latent 4",
+        "tooltip": "Fourth latent space (optional)"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "LATENT",
+        "tooltip": "Selected latent space"
+      }
+    }
+  }
+}

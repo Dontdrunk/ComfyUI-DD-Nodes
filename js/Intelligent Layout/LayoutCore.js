@@ -1,7 +1,73 @@
 // 智能布局核心模块
-import { RetroCoin } from "./coin.js";
-import { layoutPanelStyles, injectStyles } from "./styles.js";
-import { AutoLayoutEngine, LayoutTools } from "./layoutAlgorithms.js";
+
+// 布局面板相关样式
+const layoutPanelStyles = `
+  .layout-panel {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  /* 按钮彩虹动画 */
+  @keyframes rainbow {
+    0% { background-position: 0% 82% }
+    50% { background-position: 100% 19% }
+    100% { background-position: 0% 82% }
+  }
+  .layout-btn-rainbow:hover {
+    background-image: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3) !important;
+    background-size: 1800% 1800% !important;
+    animation: rainbow 6s ease infinite !important;
+  }
+  
+  /* 按钮水波纹效果 */
+  .layout-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, .5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+  }
+  
+  .layout-btn:active::after {
+    animation: ripple 0.6s ease-out;
+  }
+  
+  @keyframes ripple {
+    0% {
+      transform: scale(0, 0) translate(-50%, -50%);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(20, 20) translate(-50%, -50%);
+      opacity: 0;
+    }
+  }
+`;
+
+// 工具函数：向页面注入样式
+function injectStyles(styleId, styleContent) {
+  // 如果已经存在相同ID的样式，则不重复注入
+  if (document.getElementById(styleId)) return;
+  
+  const styleElement = document.createElement('style');
+  styleElement.id = styleId;
+  styleElement.textContent = styleContent;
+  document.head.appendChild(styleElement);
+}
+
+// 工具函数：移除已注入的样式
+function removeStyles(styleId) {
+  const styleElement = document.getElementById(styleId);
+  if (styleElement && styleElement.parentNode) {
+    styleElement.parentNode.removeChild(styleElement);
+  }
+}
 
 // 跟踪鼠标位置
 let mousePosition = { x: 0, y: 0 };
@@ -11,15 +77,12 @@ document.addEventListener('mousemove', (e) => {
 
 export class LayoutPanel {
   constructor() {
-    // 默认启用功能，但UI面板不可见
     this.enabled = true;
-    this.shortcut = 'alt+l';
+    this.shortcut = 'alt+x';
     this.position = { left: 32, top: 120 }; // 默认位置，将被鼠标位置覆盖
     this.visible = false;
-    this.coin = null;
     this.container = null;
     this.buttonsContainer = null;
-    this.layoutButtonsContainer = null; // 自动排布按钮容器
   }
   
   setEnabled(enabled) {
@@ -92,10 +155,9 @@ export class LayoutPanel {
   
   _createPanel() {
     if (this.container) return;
-    
-    // 创建容器
+      // 创建容器
     this.container = document.createElement('div');
-    this.container.className = 'layout-coin-panel';
+    this.container.className = 'layout-panel';
     this.container.style.position = 'fixed';
     this.container.style.left = `${mousePosition.x}px`;
     this.container.style.top = `${mousePosition.y}px`;
@@ -117,16 +179,6 @@ export class LayoutPanel {
     this.container.style.flexDirection = 'column';
     this.container.style.alignItems = 'center';
     this.container.style.gap = '16px';
-    
-    // 创建硬币
-    this.coin = new RetroCoin({
-      onFlip: (side) => {
-        console.log(`硬币翻转到: ${side}`);
-        // 这里可以添加翻转后的回调，如执行布局操作
-      }
-    });
-    
-    this.container.appendChild(this.coin.element);
     
     // 创建按钮容器 - 居中对齐
     this.buttonsContainer = document.createElement('div');
@@ -158,31 +210,6 @@ export class LayoutPanel {
     // 添加按钮容器到主容器
     this.container.appendChild(this.buttonsContainer);
     
-    // 创建自动排布按钮容器
-    this.layoutButtonsContainer = document.createElement('div');
-    this.layoutButtonsContainer.className = 'layout-auto-buttons-container';
-    this.layoutButtonsContainer.style.display = 'flex';
-    this.layoutButtonsContainer.style.justifyContent = 'center';
-    this.layoutButtonsContainer.style.width = '100%';
-    this.layoutButtonsContainer.style.gap = '8px';
-    this.layoutButtonsContainer.style.flexWrap = 'wrap';
-    
-    // 只保留模块排布按钮
-    const moduleBtn = this._createButton('模块排布', 'layout', '#FF9800');
-    moduleBtn.style.flex = '1 1 auto';
-    moduleBtn.style.minWidth = '200px'; // 增加宽度，使单个按钮更加突出
-    moduleBtn.title = '按功能模块整齐排布节点';
-    moduleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this._applyModuleLayout();
-    });
-    
-    // 添加按钮到自动排布容器
-    this.layoutButtonsContainer.appendChild(moduleBtn);
-    
-    // 添加自动排布按钮容器到主容器
-    this.container.appendChild(this.layoutButtonsContainer);
-    
     // 使用外部样式模块注入样式
     injectStyles('layout-panel-styles', layoutPanelStyles);
     
@@ -194,8 +221,7 @@ export class LayoutPanel {
     // 添加到文档
     document.body.appendChild(this.container);
   }
-  
-  // 创建按钮辅助方法 - 更美观的按钮
+    // 创建按钮辅助方法 - 更美观的按钮
   _createButton(text, type, bgColor) {
     const button = document.createElement('button');
     button.className = `layout-btn layout-btn-${type}`;
@@ -205,7 +231,6 @@ export class LayoutPanel {
     // 添加更现代的按钮样式
     const isPrimary = type === 'pick';
     const isRainbow = type === 'rainbow';
-    const isLayout = type === 'layout';
     
     // 基础样式
     Object.assign(button.style, {
@@ -220,7 +245,7 @@ export class LayoutPanel {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
       textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-      minWidth: isLayout ? '100px' : '120px',
+      minWidth: '120px',
       textAlign: 'center',
       position: 'relative',
       overflow: 'hidden',
@@ -386,33 +411,6 @@ export class LayoutPanel {
     }
   }
   
-  // 应用模块排布布局
-  _applyModuleLayout() {
-    try {
-      const app = this._getComfyUIApp();
-      if (!app) {
-        this._showNotification("无法获取ComfyUI应用实例", "error");
-        return;
-      }
-      
-      // 创建布局引擎并应用模块排布
-      const layoutEngine = new AutoLayoutEngine(app);
-      const result = layoutEngine.applyModuleLayout();
-      
-      if (result) {
-        this._showNotification("已应用模块排布，节点按功能分组排列", "info");
-      } else {
-        this._showNotification("无法应用模块排布，请至少选择两个节点", "warn");
-      }
-      
-      // 应用后隐藏面板
-      setTimeout(() => this.hide(), 300);
-    } catch (error) {
-      console.error("应用模块排布失败:", error);
-      this._showNotification("应用模块排布失败: " + error.message, "error");
-    }
-  }
-  
   // 获取ComfyUI应用实例
   _getComfyUIApp() {
     if (window.app?.canvas && window.app?.graph) {
@@ -536,5 +534,5 @@ export class LayoutPanel {
 
 export const DEFAULT_CONFIG = {
   enabled: true,  // 默认启用
-  shortcut: 'alt+l'
+  shortcut: 'alt+x'
 };

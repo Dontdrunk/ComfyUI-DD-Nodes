@@ -96,13 +96,12 @@ app.registerExtension({
   },
   settings: [
     // 移除启用/禁用设置选项
-    {
-      id: "LayoutPanel.shortcut",
+    {      id: "LayoutPanel.shortcut",
       name: "开关快捷键",
       type: "text",
       defaultValue: DEFAULT_CONFIG.shortcut,
-      tooltip: "弹出智能布局硬币动画面板的快捷键（如alt+l）",
-      category: ["🍺智能布局", "1·功能", "快捷键"],
+      tooltip: "弹出节点颜色工具面板的快捷键（如alt+x）",
+      category: ["🎨节点样式", "1·功能", "快捷键"],
       onChange(value) {
         if (typeof value === 'string' && value.includes('+')) {
           const layoutPanel = getOrCreateLayoutInstance();

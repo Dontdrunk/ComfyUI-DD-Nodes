@@ -59,5 +59,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-LatentSwitcher": "DD 潜空间切换"
+    "DD-LatentSwitcher": "DD Latent Switcher"
 }

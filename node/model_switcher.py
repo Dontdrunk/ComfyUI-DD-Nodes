@@ -59,5 +59,5 @@ NODE_CLASS_MAPPINGS = {
 
 # 节点显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ModelSwitcher": "DD 模型切换"
+    "DD-ModelSwitcher": "DD Model Switcher"
 }

@@ -119,6 +119,11 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
+- v2.3.0 (2025-05-14)
+  - Interface Layout Alpha 2.0 version released, with improved interface and basic tools
+  - Now you can synchronize the width, height, and size of selected nodes, and align all selected nodes
+  - Still a test version, please report bugs if you find any
+
 - v2.2.0 (2025-05-13)
   - Added support for ComfyUI's native internationalization (i18n) system
   - Now can seamlessly switch between Chinese and English interfaces

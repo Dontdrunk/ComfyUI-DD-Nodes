@@ -58,8 +58,7 @@ export const layoutExt = {
     
     this.initLayoutPanel();
   },
-  
-  initLayoutPanel() {
+    initLayoutPanel() {
     // 初始化布局面板
     const layoutPanel = getOrCreateLayoutInstance();
     if (!layoutPanel) return;
@@ -89,25 +88,38 @@ app.registerExtension({
     // 初始化布局面板
     const layoutPanel = getOrCreateLayoutInstance();
     if (!layoutPanel) return;
-    
-    // 始终启用布局功能，不再依赖设置
-    layoutPanel.setEnabled(true);
+      // 始终启用布局功能，不再依赖设置    layoutPanel.setEnabled(true);
     layoutPanel.setShortcut(app.extensionManager.setting.get("LayoutPanel.shortcut") ?? DEFAULT_CONFIG.shortcut);
-  },
-  settings: [
+  },  settings: [
     // 移除启用/禁用设置选项
-    {      id: "LayoutPanel.shortcut",
-      name: "开关快捷键",
+    {      
+      id: "LayoutPanel.shortcut",
+      name: "快捷键",
       type: "text",
       defaultValue: DEFAULT_CONFIG.shortcut,
       tooltip: "弹出节点颜色工具面板的快捷键（如alt+x）",
-      category: ["🎨节点样式", "1·功能", "快捷键"],
+      category: ["🍺界面布局", "1·功能", "快捷键"],
       onChange(value) {
         if (typeof value === 'string' && value.includes('+')) {
           const layoutPanel = getOrCreateLayoutInstance();
           if (layoutPanel) {
             layoutPanel.setShortcut(value);
           }
+        }
+      }    
+    },
+    {
+      id: "LayoutPanel.opacity",
+      name: "界面透明度",
+      type: "slider",
+      defaultValue: 85,
+      attrs: { min: 0, max: 100, step: 1 },
+      tooltip: "设置智能布局主面板的透明度（0~100%）",
+      category: ["🍺界面布局", "2·外观", "界面透明度"],
+      onChange(value) {
+        const layoutPanel = getOrCreateLayoutInstance();
+        if (layoutPanel && typeof layoutPanel.setOpacity === 'function') {
+          layoutPanel.setOpacity(value);
         }
       }
     }

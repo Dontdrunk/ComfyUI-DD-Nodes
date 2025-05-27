@@ -88,7 +88,9 @@ High-performance model loading optimizer with multiple optimization modes:
 <details>
   <summary>DD Interface Layout</summary>
 
-- Alpha version implemented, can randomly or specifically color node titles, and quickly organize messy workflows into modules
+- Beta version implemented, can randomly or specifically color node titles, and quickly organize messy workflows.
+- Beautified UI, added theme system, each theme has two different styles to switch between, supports custom themes.
+- Added modular presets, you can preset your own layouts and apply them with one click.
 
 </details>
 
@@ -119,6 +121,9 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
+- v2.3.1 (2025-05-27)
+  - Improved UI, added theme options, and fixed bugs.
+
 - v2.3.0 (2025-05-14)
   - Interface Layout Alpha 2.0 version released, with improved interface and basic tools
   - Now you can synchronize the width, height, and size of selected nodes, and align all selected nodes

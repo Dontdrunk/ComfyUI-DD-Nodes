@@ -24,6 +24,8 @@
 - 提高工作流创作效率
 - 高效管理LORA模型提示词
 
+  ![提示词](https://github.com/user-attachments/assets/52bd3fa9-e6e0-486e-a18d-da45b6058e79)
+
 </details>
 
 <details>
@@ -110,6 +112,8 @@
 
 - 已实现Alpha版本，可以随机或指定节点标题的颜色，可以对杂乱节点做快速整理
 - 美化UI，添加主题系统，每一种主题有两种不同风格可以切换，点击硬币动画即可切换
+  
+![面板](https://github.com/user-attachments/assets/ef4d9bb9-57a7-445d-8515-3bf07f1d48bc)
 
 </details>
 
@@ -119,6 +123,8 @@
 为 ComfyUI 节点连线提供多种炫酷动画效果，支持自定义风格：
 - 支持“流动”、“波浪”、“律动”、“脉冲”等多种动画风格
 - 动画参数可自定义（线宽、速度、特效等）
+
+![连线](https://github.com/user-attachments/assets/56621f61-fe41-48fc-8871-471f5d411a17)
 
 </details>
 

@@ -31,9 +31,7 @@ class PromptManager {
             if (localData) {
                 this.prompts = JSON.parse(localData);
                 return;
-            }
-
-            // 如果本地存储没有数据，尝试从 JSON 文件加载
+            }            // 如果本地存储没有数据，尝试从 JSON 文件加载
             const response = await fetch('./extensions/Prompt_Manager/prompts.json');
             if (response.ok) {
                 this.prompts = await response.json();
@@ -640,9 +638,7 @@ class PromptEmbedderUI {
 
         this.hideForm();
         this.renderPromptList();
-    }
-
-    renderPromptList() {
+    }    renderPromptList() {
         const listContainer = this.modal.querySelector('.prompt-list');
         const prompts = this.promptManager.getPrompts();
 
@@ -654,7 +650,9 @@ class PromptEmbedderUI {
                 </div>
             `;
             return;
-        }        listContainer.innerHTML = prompts.map(prompt => `
+        }
+
+        listContainer.innerHTML = prompts.map(prompt => `
             <div class="prompt-item" data-id="${prompt.id}">
                 <div class="prompt-item-header">
                     <div class="prompt-item-name">${this.escapeHtml(prompt.name)}</div>
@@ -668,19 +666,48 @@ class PromptEmbedderUI {
             </div>
         `).join('');
 
-        // 绑定按钮事件
-        listContainer.addEventListener('click', (e) => {
+        // 移除之前的事件监听器（如果存在）
+        const existingListener = this._listClickHandler;
+        if (existingListener) {
+            listContainer.removeEventListener('click', existingListener);
+        }
+
+        // 创建新的事件处理器
+        this._listClickHandler = (e) => {
             const action = e.target.getAttribute('data-action');
+            if (!action) return; // 如果没有action属性，则不处理
+
             const promptItem = e.target.closest('.prompt-item');
+            if (!promptItem) return; // 如果找不到对应的提示词项，则不处理
+
             const promptId = parseInt(promptItem.getAttribute('data-id'));
-            const prompt = prompts.find(p => p.id === promptId);            if (action === 'edit') {
-                this.showForm(prompt);
-            } else if (action === 'apply') {
-                this.applyPrompt(prompt);
-            } else if (action === 'delete') {
-                this.deletePrompt(prompt);
+            const prompt = prompts.find(p => p.id === promptId);
+            
+            if (!prompt) {
+                console.error('找不到对应的提示词:', promptId);
+                return;
             }
-        });
+
+            // 防止事件冒泡
+            e.stopPropagation();
+            e.preventDefault();
+
+            try {
+                if (action === 'edit') {
+                    this.showForm(prompt);
+                } else if (action === 'apply') {
+                    this.applyPrompt(prompt);
+                } else if (action === 'delete') {
+                    this.deletePrompt(prompt);
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                alert('操作失败: ' + error.message);
+            }
+        };
+
+        // 绑定新的事件监听器
+        listContainer.addEventListener('click', this._listClickHandler);
     }
 
     applyPrompt(prompt) {
@@ -944,19 +971,23 @@ class PromptEmbedderUI {
             this.promptManager.deletePrompt(prompt.id);
             this.renderPromptList();
         });
-    }
+    }    showDeleteConfirmDialog(promptName, callback) {
+        // 移除已存在的删除确认对话框
+        const existingModal = document.querySelector('.delete-confirm-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
 
-    showDeleteConfirmDialog(promptName, callback) {
         const confirmModal = document.createElement('div');
         confirmModal.className = 'delete-confirm-modal';
         confirmModal.innerHTML = `
-            <div class="confirm-dialog-overlay">
-                <div class="confirm-dialog-container">
-                    <div class="confirm-dialog-header">
+            <div class="delete-confirm-overlay">
+                <div class="delete-confirm-container">
+                    <div class="delete-confirm-header">
                         <h4>确认删除</h4>
-                        <button class="dialog-close-btn">&times;</button>
+                        <button class="delete-close-btn">&times;</button>
                     </div>
-                    <div class="confirm-dialog-content">
+                    <div class="delete-confirm-content">
                         <p>确定要删除提示词 "<strong>${this.escapeHtml(promptName)}</strong>" 吗？</p>
                         <p class="warning-text">此操作不可撤销！</p>
                         <div class="delete-confirm-actions">
@@ -970,22 +1001,34 @@ class PromptEmbedderUI {
 
         this.addDeleteConfirmStyles();
 
-        confirmModal.querySelector('.dialog-close-btn').addEventListener('click', () => {
-            document.body.removeChild(confirmModal);
+        // 安全的事件绑定
+        const closeBtn = confirmModal.querySelector('.delete-close-btn');
+        const confirmBtn = confirmModal.querySelector('.delete-confirm-btn');
+        const cancelBtn = confirmModal.querySelector('.delete-cancel-btn');
+        const overlay = confirmModal.querySelector('.delete-confirm-overlay');
+
+        const removeModal = () => {
+            if (confirmModal.parentNode) {
+                confirmModal.parentNode.removeChild(confirmModal);
+            }
+        };
+
+        closeBtn.addEventListener('click', removeModal);
+        cancelBtn.addEventListener('click', removeModal);
+        
+        confirmBtn.addEventListener('click', () => {
+            try {
+                callback();
+            } catch (error) {
+                console.error('删除操作失败:', error);
+            } finally {
+                removeModal();
+            }
         });
 
-        confirmModal.querySelector('.delete-confirm-btn').addEventListener('click', () => {
-            callback();
-            document.body.removeChild(confirmModal);
-        });
-
-        confirmModal.querySelector('.delete-cancel-btn').addEventListener('click', () => {
-            document.body.removeChild(confirmModal);
-        });
-
-        confirmModal.querySelector('.confirm-dialog-overlay').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
-                document.body.removeChild(confirmModal);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                removeModal();
             }
         });
 
@@ -1212,78 +1255,16 @@ class PromptEmbedderUI {
                 font-size: 12px;
                 color: #c0c0c0;
                 line-height: 1.4;
-            }
-
-            .option-card[data-action="append"] .option-title {
+            }            .option-card[data-action="append"] .option-title {
                 color: #2ea043;
-            }.confirm-dialog-options {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                margin-top: 15px;
             }
 
-            .option-card {
-                background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-                border: 2px solid #404040;
-                border-radius: 8px;
-                padding: 16px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
-
-            .option-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-                transition: left 0.5s ease;
-            }
-
-            .option-card:hover {
-                border-color: #2a82e4;
-                background: linear-gradient(145deg, #333333, #2a2a2a);
-                transform: translateY(-2px);
-                box-shadow: 0 8px 16px rgba(42, 130, 228, 0.2);
-            }
-
-            .option-card:hover::before {
-                left: 100%;
-            }
-
-            .option-card:active {
-                transform: translateY(0);
-                box-shadow: 0 4px 8px rgba(42, 130, 228, 0.3);
-            }
-
-            .option-title {
-                font-size: 14px;
-                font-weight: 600;
-                color: #ffffff;
-                margin-bottom: 6px;
-            }
-
-            .option-description {
-                font-size: 12px;
-                color: #c0c0c0;
-                line-height: 1.4;
-            }
-
-            .option-card[data-action="append"] .option-title {
-                color: #2ea043;
-            }            .option-card[data-action="replace"] .option-title {
+            .option-card[data-action="replace"] .option-title {
                 color: #f85149;
             }
         `;
         document.head.appendChild(styles);
-    }
-
-    addDeleteConfirmStyles() {
+    }addDeleteConfirmStyles() {
         if (document.getElementById('delete-confirm-styles')) return;
         
         const styles = document.createElement('style');
@@ -1297,6 +1278,89 @@ class PromptEmbedderUI {
                 width: 100%;
                 height: 100%;
                 z-index: 10003;
+            }
+
+            .delete-confirm-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .delete-confirm-container {
+                background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+                border: 1px solid #404040;
+                border-radius: 12px;
+                min-width: 400px;
+                max-width: 500px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+                animation: deleteConfirmFadeIn 0.3s ease-out;
+            }
+
+            @keyframes deleteConfirmFadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9) translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+
+            .delete-confirm-header {
+                background: linear-gradient(145deg, #333333, #2a2a2a);
+                padding: 16px 20px;
+                border-radius: 12px 12px 0 0;
+                border-bottom: 1px solid #404040;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .delete-confirm-header h4 {
+                margin: 0;
+                color: #ffffff;
+                font-size: 16px;
+                font-weight: 600;
+            }
+
+            .delete-close-btn {
+                background: none;
+                border: none;
+                color: #999999;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 4px;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+            .delete-close-btn:hover {
+                background: #ff5733;
+                color: #ffffff;
+                transform: scale(1.1);
+            }
+
+            .delete-confirm-content {
+                padding: 20px;
+                color: #e0e0e0;
+            }
+
+            .delete-confirm-content p {
+                margin: 0 0 15px 0;
+                font-size: 14px;
+                line-height: 1.5;
             }
 
             .warning-text {

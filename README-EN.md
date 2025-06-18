@@ -9,6 +9,24 @@ A collection of fully customized ComfyUI nodes developed by Dontdrunk, designed 
 ## Node List
 
 <details>
+  <summary>🎯 DD Prompt Manager (New Feature)</summary>
+
+Intelligent prompt embedding and management system that provides powerful prompt management capabilities for all CLIP text encoder nodes:
+
+**Core Features:**
+- 🔍 **Smart Node Recognition**: Automatically adds "Embed Prompt" buttons to various CLIP text encoders
+- 📁 **Import/Export**: Supports JSON format prompt backup and sharing, allowing you to share your prompts with others and import prompts from others
+
+**Use Cases:**
+- Manage commonly used positive/negative prompt templates
+- Quickly switch between different style prompt combinations
+- Share and backup prompt libraries among teams
+- Improve workflow creation efficiency
+- Efficiently manage LORA model prompts
+
+</details>
+
+<details>
   <summary>DD Model Optimizer + DD Sampling Optimizer</summary>
 
 High-performance model loading optimizer with multiple optimization modes:
@@ -121,6 +139,12 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
+- v2.4.0 (2025-06-18)
+  - 🎉 **New Prompt Manager Feature**:
+    - Added intelligent prompt embedding functionality for all CLIP text encoder nodes
+    - Supports CRUD operations for prompts with a modern management interface
+    - Supports import/export of prompt files in JSON format
+
 - v2.3.1 (2025-05-27)
   - Improved UI, added theme options, and fixed bugs.
 

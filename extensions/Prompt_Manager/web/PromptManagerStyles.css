@@ -1,0 +1,18 @@
+/* ComfyUI Prompt Manager Extension Styles */
+
+/* 确保在ComfyUI环境中的样式兼容性 */
+.prompt-embedder-modal * {
+    box-sizing: border-box;
+}
+
+/* 节点按钮样式增强 */
+.comfy-multiline-input.prompt-embedder-enhanced {
+    border-bottom: 2px solid #2a82e4;
+}
+
+/* 提示词按钮悬停效果 */
+.prompt-embedder-button:hover {
+    background: #1f6bb8 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(42, 130, 228, 0.3);
+}

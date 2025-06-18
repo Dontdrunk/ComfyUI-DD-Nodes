@@ -108,26 +108,35 @@ export class StyleManager {
         }
     }
       /**
-     * 计算路径
+     * 计算指定连线的路径
+     * @param {Array} specificLinks - 要计算的特定连线数组，如果为null则计算所有连线
      * @returns {Array} 路径数据数组
      */
-    calculatePaths() {
-        if (!this.currentStyle || !this.animationManager.canvas) {
+    calculatePaths(specificLinks = null) {
+        if (!this.currentStyle) {
+            console.warn("No current style set");
             return [];
         }
         
-        // 对于电路板样式，使用其特殊的getAllPaths方法
+        // 对于电路板样式，仍然需要计算所有路径以保持布局一致性
         if (this.currentStyleName === "电路板1" || this.currentStyleName === "电路板2") {
-            return this.currentStyle.getAllPaths();
+            const allPaths = this.currentStyle.getAllPaths();
+            // 如果指定了特定连线，则只返回相关的路径
+            if (specificLinks && specificLinks.length > 0) {
+                const specificLinkIds = new Set(specificLinks.map(link => link.id));
+                return allPaths.filter(pathData => 
+                    pathData.link && specificLinkIds.has(pathData.link.id)
+                );
+            }
+            return allPaths;
         }
         
-        // 对于标准样式，计算每条连线的路径
+        // 对于标准样式，计算指定连线或所有连线的路径
         const pathsData = [];
-        const links = this.animationManager.canvas.graph.links;
-        if (!links) return pathsData;
+        const linksToProcess = specificLinks || Object.values(this.animationManager.canvas.graph.links || {});
         
-        // 处理所有连线
-        Object.values(links).forEach(link => {
+        // 处理指定的连线
+        linksToProcess.forEach(link => {
             const outNode = this.animationManager.canvas.graph.getNodeById(link.origin_id);
             const inNode = this.animationManager.canvas.graph.getNodeById(link.target_id);
             if (!outNode || !inNode) return;
@@ -146,11 +155,11 @@ export class StyleManager {
                     type: pathInfo.type,
                     from: outPos,
                     to: inPos,
-                    baseColor: baseColor
+                    baseColor: baseColor,
+                    link: link // 添加link引用以便进行显示模式判断
                 });
             }
         });
         
-        return pathsData;
-    }
+        return pathsData;    }
 }

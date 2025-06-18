@@ -36,10 +36,52 @@ app.registerExtension({
         connectionAnimation.initOverrides(app.canvas);
         connectionAnimation.setEnabled(app.extensionManager.setting.get("ConnectionAnimation.enabled") ?? DEFAULT_CONFIG.enabled);
         connectionAnimation.setLineWidth(app.extensionManager.setting.get("ConnectionAnimation.lineWidth") ?? DEFAULT_CONFIG.lineWidth);
-        connectionAnimation.setEffect(app.extensionManager.setting.get("ConnectionAnimation.effect") ?? DEFAULT_CONFIG.effect);
-        connectionAnimation.setEffectExtra(app.extensionManager.setting.get("ConnectionAnimation.effectExtra") ?? true);
+        connectionAnimation.setEffect(app.extensionManager.setting.get("ConnectionAnimation.effect") ?? DEFAULT_CONFIG.effect);        connectionAnimation.setSpeed(app.extensionManager.setting.get("ConnectionAnimation.speed") ?? 2);
+        connectionAnimation.setSamplingLevel(app.extensionManager.setting.get("ConnectionAnimation.samplingLevel") ?? 2);
+        connectionAnimation.setEffectExtra(app.extensionManager.setting.get("ConnectionAnimation.effectExtra") ?? false);
         connectionAnimation.setRenderStyle(app.extensionManager.setting.get("ConnectionAnimation.renderStyle") ?? "曲线");
         connectionAnimation.setUseGradient(app.extensionManager.setting.get("ConnectionAnimation.useGradient") ?? true);
+        connectionAnimation.setDisplayMode(app.extensionManager.setting.get("ConnectionAnimation.displayMode") ?? DEFAULT_CONFIG.displayMode);
+          // 设置节点悬停和选择监听
+        const originalOnNodeMouseEnter = app.canvas.onNodeMouseEnter;
+        if (originalOnNodeMouseEnter) {
+            app.canvas.onNodeMouseEnter = function(node, e) {
+                try {
+                    connectionAnimation.setHoveredNode(node);
+                } catch (e) {
+                    console.warn("Connection Animation: Error setting hovered node:", e);
+                }
+                return originalOnNodeMouseEnter?.call(this, node, e);
+            };
+        }
+        
+        const originalOnNodeMouseLeave = app.canvas.onNodeMouseLeave;
+        if (originalOnNodeMouseLeave) {
+            app.canvas.onNodeMouseLeave = function(node, e) {
+                try {
+                    connectionAnimation.setHoveredNode(null);
+                } catch (e) {
+                    console.warn("Connection Animation: Error clearing hovered node:", e);
+                }
+                return originalOnNodeMouseLeave?.call(this, node, e);
+            };
+        }
+        
+        // 重写 node_over 属性以捕获节点悬停
+        if (app.canvas && !app.canvas._connectionAnimationNodeOverPatched) {
+            let _node_over = app.canvas.node_over;
+            Object.defineProperty(app.canvas, 'node_over', {
+                get: () => _node_over,
+                set: (value) => {
+                    _node_over = value;
+                    try {
+                        connectionAnimation.setHoveredNode(value);
+                    } catch (e) {
+                        console.warn("Connection Animation: Error setting hovered node:", e);
+                    }
+                }
+            });
+            app.canvas._connectionAnimationNodeOverPatched = true;        }
     },
     settings: [
         {
@@ -164,6 +206,21 @@ app.registerExtension({
                 const connectionAnim = app.canvas?._connectionAnimation;
                 if (connectionAnim) {
                     connectionAnim.setUseGradient(value);
+                    app.graph.setDirtyCanvas(true, true);
+                }
+            },
+        },        {
+            id: "ConnectionAnimation.displayMode",
+            name: "动画显示",
+            type: "combo",
+            options: ["全部显示", "悬停节点"],
+            defaultValue: "全部显示",
+            tooltip: "控制动画连线的显示方式：全部显示=所有连线都显示动画；悬停节点=只有鼠标悬停节点的连线显示动画",
+            category: ["🍺连线动画", "2·样式", "动画显示"],
+            onChange(value) {
+                const connectionAnim = app.canvas?._connectionAnimation;
+                if (connectionAnim) {
+                    connectionAnim.setDisplayMode(value);
                     app.graph.setDirtyCanvas(true, true);
                 }
             },

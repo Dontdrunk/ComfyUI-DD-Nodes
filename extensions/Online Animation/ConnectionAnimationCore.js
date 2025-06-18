@@ -11,20 +11,69 @@ export class ConnectionAnimation {
         this._lastTime = 0;
         this._phase = 0;
         this._originalDrawConnections = null;
-        this._animating = false;
-        this.speed = 2; // 1~3
-        this.effectExtra = true;
-        this.renderStyle = "曲线";        this.useGradient = true; 
+        this._animating = false;        this.speed = 2; // 1~3
+        this.effectExtra = true;        this.renderStyle = "曲线";        this.useGradient = true; 
         this.circuitBoardMap = null; 
+        this.displayMode = "全部显示"; // 新增：动画显示模式
+        this._hoveredNode = null; // 追踪悬停节点
         
         // 初始化效果管理器
         this.effectManager = new EffectManager(this);
         
         // 初始化样式管理器
         this.styleManager = new StyleManager(this);
+    }    // 获取与指定节点相关的连线
+    _getRelevantLinks() {
+        if (!this.canvas || !this.canvas.graph || !this.canvas.graph.links) {
+            return [];
+        }
+        
+        const links = this.canvas.graph.links;
+        const relevantLinks = [];
+        
+        if (this.displayMode === "全部显示") {
+            // 全部显示：返回所有连线
+            return Object.values(links);
+        } else if (this.displayMode === "悬停节点" && this._hoveredNode) {
+            // 悬停模式：只返回与悬停节点相关的连线
+            const nodeId = this._hoveredNode.id;
+            Object.values(links).forEach(link => {
+                if (link.origin_id === nodeId || link.target_id === nodeId) {
+                    relevantLinks.push(link);
+                }
+            });
+        }
+        
+        return relevantLinks;
+    }// 检查是否应该运行动画循环
+    _shouldRunAnimation() {
+        if (!this.enabled || !this.canvas) return false;
+        
+        switch (this.displayMode) {
+            case "全部显示":
+                return true; // 全部显示模式总是需要动画
+                
+            case "悬停节点":
+                return this._hoveredNode !== null; // 只有悬停节点时才需要动画
+                
+            default:
+                return true;
+        }
     }
-
-    setEnabled(e) {
+    
+    // 智能启动或停止动画循环
+    _updateAnimationLoop() {
+        const shouldRun = this._shouldRunAnimation();
+        
+        if (shouldRun && !this._animating) {
+            // 需要动画但当前没有运行，启动动画循环
+            this._animating = true;
+            this._animationLoop();
+        } else if (!shouldRun && this._animating) {
+            // 不需要动画但当前在运行，停止动画循环
+            this._animating = false;
+        }
+    }    setEnabled(e) {
         this.enabled = e;
         this._lastTime = performance.now();
         if (e) this._startTime = performance.now();
@@ -37,11 +86,8 @@ export class ConnectionAnimation {
                 this.canvas.drawConnections = function(ctx) {
                     self.drawAnimation(ctx);
                 };
-                // 只在 enabled 时启动动画循环
-                if (!this._animating) {
-                    this._animating = true;
-                    this._animationLoop();
-                }
+                // 使用智能动画循环控制
+                this._updateAnimationLoop();
             } else {
                 if (this._originalDrawConnections) {
                     // 兼容性修改：检查当前的 drawConnections 是否是我们设置的函数
@@ -57,20 +103,42 @@ export class ConnectionAnimation {
                 this._animating = false;
             }
             this.canvas.setDirty(true, true);
-        }
-    }
-
-    _animationLoop() {
-        if (!this.enabled || !this.canvas) {
+        }    }
+      _animationLoop() {
+        if (!this._shouldRunAnimation()) {
             this._animating = false;
             return;
         }
-        this.canvas.setDirty(true, true);
-        window.requestAnimationFrame(() => {
-            if (this.enabled && this._animating) {
-                this._animationLoop();
+        
+        // 智能帧率控制：根据相关连线数量调整重绘频率
+        let delay = 0;
+        if (this.displayMode !== "全部显示") {
+            const relevantLinks = this._getRelevantLinks();
+            if (relevantLinks.length <= 5) {
+                delay = 16; // 约60fps，少量连线时降低频率
+            } else if (relevantLinks.length <= 10) {
+                delay = 8; // 约120fps
             }
-        });
+            // 更多连线时使用原始频率(0延迟)
+        }
+        
+        this.canvas.setDirty(true, true);
+        
+        const nextFrame = () => {
+            if (this._shouldRunAnimation() && this._animating) {
+                this._animationLoop();
+            } else {
+                this._animating = false;
+            }
+        };
+        
+        if (delay > 0) {
+            setTimeout(() => {
+                window.requestAnimationFrame(nextFrame);
+            }, delay);
+        } else {
+            window.requestAnimationFrame(nextFrame);
+        }
     }
 
     setLineWidth(w) {
@@ -96,6 +164,52 @@ export class ConnectionAnimation {
         if (this.canvas) {
             this.canvas.setDirty(true, true);
         }
+    }    setDisplayMode(mode) {
+        const oldMode = this.displayMode;
+        this.displayMode = mode || "全部显示";
+        
+        // 如果显示模式改变，重新评估是否需要动画循环
+        if (oldMode !== this.displayMode) {
+            this._updateAnimationLoop();
+            if (this.canvas) {
+                this.canvas.setDirty(true, true);
+            }
+        }
+    }
+    
+    // 设置悬停节点
+    setHoveredNode(node) {
+        // 确保 node 是有效的节点对象或null
+        const newHoveredNode = node && typeof node === 'object' ? node : null;
+        const changed = this._hoveredNode !== newHoveredNode;
+        this._hoveredNode = newHoveredNode;
+        
+        if (changed && this.displayMode === "悬停节点") {
+            // 智能控制动画循环
+            this._updateAnimationLoop();
+            if (this.canvas) {
+                this.canvas.setDirty(true, true);
+            }
+        }
+    }// 检查连线是否应该显示动画
+    _shouldShowAnimation(link) {
+        if (!link || !this.canvas || !this.canvas.graph) return false;
+        
+        const originNode = this.canvas.graph._nodes_by_id[link.origin_id];
+        const targetNode = this.canvas.graph._nodes_by_id[link.target_id];
+        
+        if (!originNode || !targetNode) return false;
+          switch (this.displayMode) {
+            case "全部显示":
+                return true;
+                
+            case "悬停节点":
+                return this._hoveredNode && 
+                       (originNode === this._hoveredNode || targetNode === this._hoveredNode);
+                
+            default:
+                return true;
+        }
     }
     
     setUseGradient(flag) {
@@ -103,53 +217,98 @@ export class ConnectionAnimation {
         if (this.canvas) {
             this.canvas.setDirty(true, true);
         }
-    }
-
-    // =============== 路径计算层 ===============
+    }    // =============== 路径计算层 ===============
       // 统一路径计算入口
-    _calculatePaths() {
-        // 使用样式管理器计算所有路径
-        return this.styleManager.calculatePaths();
+    _calculatePaths(specificLinks = null) {
+        // 使用样式管理器计算指定连线或所有路径
+        return this.styleManager.calculatePaths(specificLinks);
     }
 
     // =============== 统一动画绘制层 ===============
-
+    
     // 总体动画绘制入口
     drawAnimation(ctx) {
         if (!this.canvas || !this.canvas.graph || !this.enabled) return;
         const links = this.canvas.graph.links;
-        if (!links) return;
-
-        // 更新时间和相位
-        const now = performance.now();
-        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-        let phaseSpeed = speedMap[this.speed] || 0.002;
-        const isWave = this.effect === "波浪";
-        if (isWave) phaseSpeed *= 0.5;
-        if (!this._startTime) this._startTime = now;
-        this._phase = ((now - this._startTime) * phaseSpeed) % 1;
-        this._lastTime = now;
-
-        // 统一计算所有连线路径
-        const pathsData = this._calculatePaths();
-
-        // 应用选择的动画效果到所有路径
-        ctx.save();
-          // 获取当前效果实例
-        const effectInstance = this.effectManager.getEffect(this.effect);
-        if (!effectInstance) {
-            // 无效效果，绘制静态线
-            for (const pathData of pathsData) {
-                this._drawStaticPath(ctx, pathData);
+        if (!links) return;        // 提前检查显示模式，快速退出无关的绘制
+        if (this.displayMode === "悬停节点" && !this._hoveredNode) {
+            // 悬停模式但没有悬停节点，绘制静态连线后退出
+            if (this._originalDrawConnections) {
+                this._originalDrawConnections.call(this.canvas, ctx);
             }
-        } else {
-            // 使用效果实例绘制动画
-            for (const pathData of pathsData) {
-                effectInstance.draw(ctx, pathData, now, this._phase);
-            }
+            return;
         }
-        
-        ctx.restore();
+
+        if (this.displayMode === "全部显示") {
+            // 全部显示模式：统一计算所有连线路径，完全由动画绘制
+            // 更新时间和相位
+            const now = performance.now();
+            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+            let phaseSpeed = speedMap[this.speed] || 0.002;
+            const isWave = this.effect === "波浪";
+            if (isWave) phaseSpeed *= 0.5;
+            if (!this._startTime) this._startTime = now;
+            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+            this._lastTime = now;
+
+            const pathsData = this._calculatePaths(); // 计算所有路径
+
+            // 应用选择的动画效果到所有路径
+            ctx.save();
+            // 获取当前效果实例
+            const effectInstance = this.effectManager.getEffect(this.effect);
+            if (!effectInstance) {
+                // 无效效果，绘制静态线
+                for (const pathData of pathsData) {
+                    this._drawStaticPath(ctx, pathData);
+                }
+            } else {
+                // 使用效果实例绘制动画
+                for (const pathData of pathsData) {
+                    effectInstance.draw(ctx, pathData, now, this._phase);
+                }
+            }
+            
+            ctx.restore();
+        } else {
+            // 部分显示模式：先绘制原生的静态连线，然后叠加动画连线
+            if (this._originalDrawConnections) {
+                this._originalDrawConnections.call(this.canvas, ctx);
+            }
+
+            // 快速检查是否有相关连线，避免不必要的计算
+            const relevantLinks = this._getRelevantLinks();
+            if (relevantLinks.length === 0) {
+                return; // 没有相关连线，直接返回
+            }
+
+            // 更新时间和相位
+            const now = performance.now();
+            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+            let phaseSpeed = speedMap[this.speed] || 0.002;
+            const isWave = this.effect === "波浪";
+            if (isWave) phaseSpeed *= 0.5;
+            if (!this._startTime) this._startTime = now;
+            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+            this._lastTime = now;
+
+            // 只计算相关连线的路径，大幅提升性能
+            const pathsData = this._calculatePaths(relevantLinks);
+
+            // 只对符合条件的连线应用动画效果（叠加绘制）
+            ctx.save();
+            const effectInstance = this.effectManager.getEffect(this.effect);
+            
+            for (const pathData of pathsData) {
+                if (effectInstance) {
+                    effectInstance.draw(ctx, pathData, now, this._phase);
+                } else {
+                    this._drawStaticPath(ctx, pathData);
+                }
+            }
+            
+            ctx.restore();
+        }
     }
 
     // 统一的静态路径绘制（备用，当效果不存在时使用）
@@ -291,7 +450,7 @@ export class ConnectionAnimation {
         ];
     }
 
-    // 计算贝塞尔曲线上某点的切线方向
+    // 计算贝塞尔曲线上的切线方向
     _getBezierTangent(t, p0, p1, p2, p3) {
         const mt = 1 - t;
         const x = 3*mt*mt * (p1[0] - p0[0]) + 6*mt*t * (p2[0] - p1[0]) + 3*t*t * (p3[0] - p2[0]);
@@ -300,7 +459,7 @@ export class ConnectionAnimation {
         return len > 0 ? [x/len, y/len] : [0, 0];
     }
 
-    // 计算贝塞尔曲线上某点的法线方向
+    // 计算贝塞尔曲线上的法线方向
     _getBezierNormal(t, p0, p1, p2, p3) {
         const tangent = this._getBezierTangent(t, p0, p1, p2, p3);
         return [-tangent[1], tangent[0]]; // 切线顺时针旋转90度得到法线
@@ -397,5 +556,6 @@ export class ConnectionAnimation {
 export const DEFAULT_CONFIG = {
     enabled: false,
     lineWidth: 3,
-    effect: "流动"
+    effect: "流动",
+    displayMode: "全部显示"
 };

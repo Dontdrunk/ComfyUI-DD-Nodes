@@ -35,9 +35,7 @@ export class CircuitBoard1Style extends BaseStyle {
                     const pathPoints = this._calculateSimplePath(outPos, inPos);
                     
                     // 获取连线颜色
-                    const baseColor = this.getBaseColor(outNode, link);
-                    
-                    // 保存路径信息
+                    const baseColor = this.getBaseColor(outNode, link);                    // 保存路径信息
                     this.paths.push({
                         path: pathPoints,
                         from: outPos,
@@ -47,7 +45,14 @@ export class CircuitBoard1Style extends BaseStyle {
                         targetNode: inNode,
                         originSlot: link.origin_slot,
                         targetSlot: link.target_slot,
-                        type: "angled" // 角线类型
+                        type: "angled", // 角线类型
+                        link: {
+                            origin_id: link.origin_id,
+                            target_id: link.target_id,
+                            origin_slot: link.origin_slot,
+                            target_slot: link.target_slot,
+                            ...link
+                        } // 添加完整的link信息以便进行显示模式判断
                     });
                 });
             }

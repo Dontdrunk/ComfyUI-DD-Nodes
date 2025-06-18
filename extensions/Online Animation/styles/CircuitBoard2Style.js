@@ -661,9 +661,7 @@ class MapLinks {
                          this.canvas.default_connection_color_byType[output.type]) ||
                         (this.canvas.default_connection_color && 
                          this.canvas.default_connection_color.input_on) ||
-                        "#ff0000");
-                    
-                    this.paths.push({
+                        "#ff0000");                    this.paths.push({
                         path,
                         from: outputXYConnection,
                         to: inputXYConnection,
@@ -672,7 +670,14 @@ class MapLinks {
                         targetNode,
                         originSlot: slot,
                         targetSlot: link.target_slot,
-                        type: "angled" // 角线类型
+                        type: "angled", // 角线类型
+                        link: {
+                            origin_id: link.origin_id,
+                            target_id: link.target_id,
+                            origin_slot: link.origin_slot,
+                            target_slot: link.target_slot,
+                            ...link
+                        } // 添加完整的link信息以便进行显示模式判断
                     });
                     
                     // 为下一条线预留空间

@@ -86,10 +86,65 @@ class PromptManager {
             return true;
         }
         return false;
+    }    getPrompts() {
+        return this.prompts;
     }
 
-    getPrompts() {
-        return this.prompts;
+    // 搜索提示词
+    searchPrompts(keyword) {
+        if (!keyword || keyword.trim() === '') {
+            return this.prompts;
+        }
+
+        const searchTerm = keyword.trim().toLowerCase();
+        
+        // 按相关性排序搜索结果
+        const searchResults = this.prompts.map(prompt => {
+            const name = prompt.name.toLowerCase();
+            const content = prompt.content.toLowerCase();
+            
+            let score = 0;
+            
+            // 名称完全匹配得分最高
+            if (name === searchTerm) {
+                score = 1000;
+            }
+            // 名称开头匹配得分次高
+            else if (name.startsWith(searchTerm)) {
+                score = 900;
+            }
+            // 名称包含搜索词
+            else if (name.includes(searchTerm)) {
+                score = 800;
+            }
+            // 内容开头匹配
+            else if (content.startsWith(searchTerm)) {
+                score = 700;
+            }
+            // 内容包含搜索词
+            else if (content.includes(searchTerm)) {
+                score = 600;
+            }
+            
+            // 根据匹配位置调整分数（越靠前分数越高）
+            if (score > 0) {
+                const nameIndex = name.indexOf(searchTerm);
+                const contentIndex = content.indexOf(searchTerm);
+                
+                if (nameIndex >= 0) {
+                    score += (100 - nameIndex); // 名称中越靠前分数越高
+                } else if (contentIndex >= 0) {
+                    score += (50 - Math.min(contentIndex, 50)); // 内容中越靠前分数越高
+                }
+            }
+            
+            return { prompt, score };
+        })
+        .filter(item => item.score > 0) // 只返回有匹配的结果
+        .sort((a, b) => b.score - a.score) // 按分数降序排列
+        .map(item => item.prompt); // 提取提示词对象
+        
+        return searchResults;
     }
 
     // 导出提示词到 JSON 格式
@@ -132,12 +187,12 @@ class PromptManager {
     }
 }
 
-class PromptEmbedderUI {
-    constructor(node, promptManager) {
+class PromptEmbedderUI {    constructor(node, promptManager) {
         this.node = node;
         this.promptManager = promptManager;
         this.isVisible = false;
         this.editingPrompt = null;
+        this.currentSearchKeyword = ''; // 添加搜索关键词属性
         this.createModal();
     }
 
@@ -159,6 +214,12 @@ class PromptEmbedderUI {
                                     <button class="import-btn">导入</button>
                                     <button class="export-btn">导出</button>
                                     <button class="add-prompt-btn">+ 添加提示词</button>
+                                </div>
+                            </div>
+                            <div class="search-section">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="搜索提示词名称或内容..." />
+                                    <div class="search-icon">🔍</div>
                                 </div>
                             </div>
                             <div class="prompt-list"></div>
@@ -318,10 +379,55 @@ class PromptEmbedderUI {
 
             .export-btn:hover {
                 background: #e6af00;
+            }            .prompt-list {
+                min-height: 200px;
             }
 
-            .prompt-list {
-                min-height: 200px;
+            .search-section {
+                margin-bottom: 15px;
+            }
+
+            .search-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .search-input {
+                width: 100%;
+                padding: 10px 40px 10px 12px;
+                background: #262626;
+                border: 1px solid #3d3d3d;
+                border-radius: 6px;
+                color: #ffffff;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+
+            .search-input:focus {
+                border-color: #2a82e4;
+            }
+
+            .search-input::placeholder {
+                color: #888;
+            }            .search-icon {
+                position: absolute;
+                right: 12px;
+                color: #888;
+                pointer-events: none;
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 40px 20px;
+                color: #888;
+            }
+
+            .empty-state-icon {
+                font-size: 48px;
+                margin-bottom: 15px;
+                opacity: 0.5;
             }
 
             .prompt-item {
@@ -575,17 +681,39 @@ class PromptEmbedderUI {
         this.modal.querySelector('.prompt-form').addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleFormSubmit();
-        });
-
-        // 取消按钮
+        });        // 取消按钮
         this.modal.querySelector('.cancel-btn').addEventListener('click', () => {
             this.hideForm();
         });
-    }
 
-    show() {
+        // 搜索框事件监听
+        const searchInput = this.modal.querySelector('.search-input');
+        
+        // 输入事件 - 实时搜索
+        searchInput.addEventListener('input', (e) => {
+            this.currentSearchKeyword = e.target.value;
+            this.renderPromptList();
+        });
+
+        // 清空搜索框快捷键 (Escape)
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.target.value = '';
+                this.currentSearchKeyword = '';
+                this.renderPromptList();
+            }
+        });
+    }    show() {
         this.isVisible = true;
         this.modal.style.display = 'block';
+        
+        // 重置搜索状态
+        this.currentSearchKeyword = '';
+        const searchInput = this.modal.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
         this.renderPromptList();
     }
 
@@ -640,8 +768,25 @@ class PromptEmbedderUI {
         this.renderPromptList();
     }    renderPromptList() {
         const listContainer = this.modal.querySelector('.prompt-list');
-        const prompts = this.promptManager.getPrompts();
+        
+        // 使用搜索功能获取提示词列表
+        const prompts = this.currentSearchKeyword 
+            ? this.promptManager.searchPrompts(this.currentSearchKeyword)
+            : this.promptManager.getPrompts();
 
+        // 如果搜索无结果，显示相应提示
+        if (this.currentSearchKeyword && prompts.length === 0) {
+            listContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div>未找到匹配"${this.escapeHtml(this.currentSearchKeyword)}"的提示词</div>
+                    <div style="font-size: 12px; color: #888; margin-top: 5px;">尝试使用其他关键词搜索</div>
+                </div>
+            `;
+            return;
+        }
+
+        // 如果没有提示词，显示空状态
         if (prompts.length === 0) {
             listContainer.innerHTML = `
                 <div class="empty-state">
@@ -652,19 +797,55 @@ class PromptEmbedderUI {
             return;
         }
 
-        listContainer.innerHTML = prompts.map(prompt => `
-            <div class="prompt-item" data-id="${prompt.id}">
-                <div class="prompt-item-header">
-                    <div class="prompt-item-name">${this.escapeHtml(prompt.name)}</div>
-                    <div class="prompt-item-actions">
-                        <button class="edit-btn" data-action="edit" title="编辑提示词">编辑</button>
-                        <button class="apply-btn" data-action="apply" title="应用提示词">应用</button>
-                        <button class="delete-btn" data-action="delete" title="删除提示词">删除</button>
+        // 渲染提示词列表，如果是搜索结果，高亮显示匹配的关键词
+        listContainer.innerHTML = prompts.map(prompt => {
+            let displayName = this.escapeHtml(prompt.name);
+            let displayContent = this.escapeHtml(prompt.content);
+            
+            // 如果有搜索关键词，高亮显示匹配的部分
+            if (this.currentSearchKeyword) {
+                const keyword = this.escapeHtml(this.currentSearchKeyword);
+                const highlightClass = 'search-highlight';
+                
+                // 创建高亮样式（如果还没有）
+                if (!document.getElementById('search-highlight-style')) {
+                    const highlightStyle = document.createElement('style');
+                    highlightStyle.id = 'search-highlight-style';
+                    highlightStyle.textContent = `
+                        .search-highlight {
+                            background-color: #ffc300;
+                            color: #000;
+                            padding: 1px 2px;
+                            border-radius: 2px;
+                            font-weight: bold;
+                        }
+                    `;
+                    document.head.appendChild(highlightStyle);
+                }
+                
+                // 高亮名称中的匹配文本
+                const nameRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                displayName = displayName.replace(nameRegex, `<span class="${highlightClass}">$1</span>`);
+                
+                // 高亮内容中的匹配文本
+                const contentRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                displayContent = displayContent.replace(contentRegex, `<span class="${highlightClass}">$1</span>`);
+            }
+            
+            return `
+                <div class="prompt-item" data-id="${prompt.id}">
+                    <div class="prompt-item-header">
+                        <div class="prompt-item-name">${displayName}</div>
+                        <div class="prompt-item-actions">
+                            <button class="edit-btn" data-action="edit" title="编辑提示词">编辑</button>
+                            <button class="apply-btn" data-action="apply" title="应用提示词">应用</button>
+                            <button class="delete-btn" data-action="delete" title="删除提示词">删除</button>
+                        </div>
                     </div>
+                    <div class="prompt-item-content">${displayContent}</div>
                 </div>
-                <div class="prompt-item-content">${this.escapeHtml(prompt.content)}</div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // 移除之前的事件监听器（如果存在）
         const existingListener = this._listClickHandler;

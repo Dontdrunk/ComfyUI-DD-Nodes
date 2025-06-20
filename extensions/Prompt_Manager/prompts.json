@@ -1,0 +1,29 @@
+{
+  "version": "2.4.0",
+  "exportTime": "2025-06-20T00:00:00.000Z",
+  "description": "ComfyUI-DD-Nodes 提示词管理器数据文件",
+  "totalCount": 3,
+  "prompts": [
+    {
+      "id": 1,
+      "name": "高质量肖像",
+      "content": "best quality, ultra detailed, masterpiece, realistic, photorealistic, 8k uhd, high resolution, studio lighting, sharp focus",
+      "tags": ["质量", "肖像", "写实"],
+      "createdAt": "2025-06-20T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "动漫风格",
+      "content": "anime style, manga, cel shading, vibrant colors, detailed eyes, expressive face, dynamic pose",
+      "tags": ["动漫", "风格", "色彩"],
+      "createdAt": "2025-06-20T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "负面提示词",
+      "content": "low quality, blurry, distorted, ugly, deformed, bad anatomy, extra limbs, watermark, signature",
+      "tags": ["负面", "质量"],
+      "createdAt": "2025-06-20T00:00:00.000Z"
+    }
+  ]
+}

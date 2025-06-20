@@ -14,8 +14,10 @@ A collection of fully customized ComfyUI nodes developed by Dontdrunk, designed 
 Intelligent prompt embedding and management system that provides powerful prompt management capabilities for all CLIP text encoder nodes:
 
 **Core Features:**
-- 🔍 **Smart Node Recognition**: Automatically adds "Embed Prompt" buttons to various CLIP text encoders
-- 📁 **Import/Export**: Supports JSON format prompt backup and sharing, allowing you to share your prompts with others and import prompts from others
+- 🔍 **Prompt Search**: Search prompt names and content for quick location and filtering
+- 📁 **Import/Export**: JSON format prompt backup and sharing - share your prompts with others and import community prompts
+- 🏷️ **Tag System**: Organize prompts with up to 4 tags per prompt for easy categorization
+- 💾 **Auto Backup**: All prompt operations automatically save to JSON files for data persistence
 
 **Use Cases:**
 - Manage commonly used positive/negative prompt templates
@@ -128,7 +130,10 @@ Method 1
 3. Restart ComfyUI
 
 Method 2 (Recommended)
-Use Manager or launcher for installation
+Use ComfyUI Manager or launcher for git installation
+
+Method 3 (Recommended)
+Search for the plugin name directly in ComfyUI Manager and install
 
 ## Language Switching
 
@@ -139,11 +144,24 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
+- v2.5.0 (2025-06-20)
+  - 🔄 **Prompt Manager New Features**:
+    - Added intelligent backup system - all prompt operations automatically save to extensions\Prompt_Manager\prompts.json
+    - You can also edit the JSON file directly to modify frontend prompts (frontend and backend data now sync through a unified JSON file)
+    - Added tag functionality - assign up to 4 tags per prompt for categorization and quick searching
+
+- v2.4.1 (2025-06-18)
+  - ⚡ **Online Animation Performance & Feature Optimization**:
+    - Added animation visual options with "Show All" and "Hover Node" display modes
+    - Improved intelligent frame rate control: dynamically adjusts refresh rate based on connection count
+    - Hover mode FPS now matches native performance
+
 - v2.4.0 (2025-06-18)
   - 🎉 **New Prompt Manager Feature**:
     - Added intelligent prompt embedding functionality for all CLIP text encoder nodes
     - Supports CRUD operations for prompts with a modern management interface
     - Supports import/export of prompt files in JSON format
+    - Search functionality for prompt names and content for quick location
 
 - v2.3.1 (2025-05-27)
   - Improved UI, added theme options, and fixed bugs.
@@ -236,14 +254,17 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 This is a growing collection of nodes, primarily for sharing practical ComfyUI extension tools. Feel free to provide suggestions and feedback through Issues. If you find any problems or have any improvement suggestions, please feel free to raise them.
 
 ## License
+- MIT License
 
-MIT
-
-1. Project growth requires financial support
+## Support the Author
+1. They say project growth needs money to survive
 2. Without donations, the author might:
-   - 🦥 Stop development
-   - 😴 Take a long nap
+   - 🦥 Become lazy and slack off
+   - 😴 Sleep all day
    - 🎮 Go play games instead
+
+Your support is the motivation for the author to continue coding! ╭(●｀∀´●)╯
+![Payment QR Code](https://github.com/user-attachments/assets/77c99c94-3854-4c12-81cf-09c9f76099ac)
 
 Your support is the motivation for the author to continue development! ╭(●｀∀´●)╯
 ![QR Code](https://github.com/user-attachments/assets/77c99c94-3854-4c12-81cf-09c9f76099ac)

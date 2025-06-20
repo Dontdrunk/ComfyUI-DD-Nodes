@@ -12,6 +12,9 @@ from .node.model_switcher import NODE_CLASS_MAPPINGS as MODEL_SWITCHER_NODES
 from .node.condition_switcher import NODE_CLASS_MAPPINGS as CONDITION_SWITCHER_NODES
 from .node.latent_switcher import NODE_CLASS_MAPPINGS as LATENT_SWITCHER_NODES
 
+# 导入扩展功能API
+from .extensions.Prompt_Manager.prompt_api import prompt_manager_api
+
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
     **COLOR_NODES,
@@ -46,6 +49,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-LatentSwitcher": "DD Latent Switcher",
 }
 
-__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'prompt_manager_api']
 
 WEB_DIRECTORY =  "extensions"

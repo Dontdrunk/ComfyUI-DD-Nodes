@@ -15,8 +15,8 @@ const CLIP_TEXT_ENCODERS = [
     "Easy Negative",
     "Easy Positive",
     "CLIPTextEncodeFlux(Advanced)",
-    "CLIP Text Encode (Prompt)"
-    // 添加更多CLIP文本编码器节点类型
+    "CLIP Text Encode (Prompt)",
+    "WanVideoTextEncode"
 ];
 
 // 全局提示词管理器

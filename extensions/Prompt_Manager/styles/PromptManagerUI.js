@@ -862,6 +862,58 @@ export class PromptManagerUI {
         return true;
     }
 
+    showInsertDialog(title, message, callback) {
+        const insertModal = document.createElement('div');
+        insertModal.className = 'confirm-dialog-modal';
+        insertModal.innerHTML = `
+            <div class="confirm-dialog-overlay">
+                <div class="confirm-dialog-container">
+                    <div class="confirm-dialog-header">
+                        <h4>${title}</h4>
+                        <button class="dialog-close-btn">&times;</button>
+                    </div>
+                    <div class="confirm-dialog-content">
+                        <p>${message}</p>
+                        <div class="confirm-dialog-options">
+                            <div class="option-card" data-action="insert">
+                                <div class="option-title">插入 - 在光标位置插入</div>
+                                <div class="option-description">在当前光标位置或文本开头插入提示词</div>
+                            </div>
+                            <div class="option-card" data-action="replace">
+                                <div class="option-title">替换 - 替换全部内容</div>
+                                <div class="option-description">删除原有内容，使用新提示词替换</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 添加确认对话框样式
+        this.addConfirmDialogStyles();
+
+        // 绑定事件
+        insertModal.querySelector('.dialog-close-btn').addEventListener('click', () => {
+            document.body.removeChild(insertModal);
+        });
+
+        insertModal.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const action = card.getAttribute('data-action');
+                callback(action);
+                document.body.removeChild(insertModal);
+            });
+        });
+
+        insertModal.querySelector('.confirm-dialog-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                document.body.removeChild(insertModal);
+            }
+        });
+
+        document.body.appendChild(insertModal);
+    }
+
     showConfirmDialog(title, message, callback) {
         const confirmModal = document.createElement('div');
         confirmModal.className = 'confirm-dialog-modal';

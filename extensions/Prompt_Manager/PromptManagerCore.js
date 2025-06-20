@@ -507,33 +507,115 @@ export class PromptEmbedder {
         }
         
         return false;
-    }
-
-    applyPromptToWidget(prompt, widget) {
+    }    applyPromptToWidget(prompt, widget) {
         if (!widget) return;
         
-        // 检查是否需要追加到现有内容
+        // 检查是否需要处理现有内容
         const currentValue = widget.value || '';
-        const shouldAppend = currentValue.trim().length > 0;
+        const hasContent = currentValue.trim().length > 0;
         
-        if (shouldAppend) {
+        if (hasContent) {
             // 显示自定义确认对话框
-            this.ui.showConfirmDialog(
+            this.ui.showInsertDialog(
                 '当前输入框已有内容', 
-                '是否追加提示词？',
-                (confirmed) => {
+                '是否插入提示词？',
+                (action) => {
                     let newValue;
-                    if (confirmed) {
-                        newValue = currentValue + (currentValue.endsWith(',') || currentValue.endsWith(', ') ? ' ' : ', ') + prompt.content;
-                    } else {
+                    if (action === 'insert') {
+                        // 插入到选中位置或开头
+                        newValue = this.insertPromptAtCursor(widget, prompt.content);
+                    } else if (action === 'replace') {
+                        // 替换全部内容
                         newValue = prompt.content;
                     }
-                    this.setWidgetValue(widget, newValue);
+                    if (newValue !== undefined) {
+                        this.setWidgetValue(widget, newValue);
+                    }
                 }
             );
         } else {
             this.setWidgetValue(widget, prompt.content);
         }
+    }    insertPromptAtCursor(widget, promptText) {
+        const currentValue = widget.value || '';
+        let cursorPosition = 0;
+        
+        // 尝试获取文本框的选择位置
+        if (widget.inputEl && typeof widget.inputEl.selectionStart === 'number') {
+            // ComfyUI多行文本框
+            cursorPosition = widget.inputEl.selectionStart;
+        } else if (widget.element && typeof widget.element.selectionStart === 'number') {
+            // 普通输入框
+            cursorPosition = widget.element.selectionStart;
+        } else {
+            // 无法获取光标位置，默认插入到开头
+            cursorPosition = 0;
+        }
+        
+        // 在光标位置插入提示词
+        const beforeCursor = currentValue.substring(0, cursorPosition);
+        const afterCursor = currentValue.substring(cursorPosition);
+        
+        // 智能添加分隔符
+        let insertText = promptText;
+        
+        // 检查光标前的情况
+        if (beforeCursor.length > 0) {
+            // 获取光标前最后一个字符
+            const lastChar = beforeCursor.charAt(beforeCursor.length - 1);
+            
+            // 如果前面是换行符，不需要添加逗号
+            if (lastChar === '\n' || lastChar === '\r') {
+                // 在新行开始，不添加分隔符
+            } else {
+                // 检查是否需要添加逗号分隔符
+                const beforeTrim = beforeCursor.trimEnd();
+                if (beforeTrim.length > 0 && !beforeTrim.endsWith(',')) {
+                    insertText = ', ' + insertText;
+                } else if (beforeCursor.endsWith(' ') && beforeTrim.endsWith(',')) {
+                    // 如果前面已经有逗号和空格，直接插入
+                    insertText = insertText;
+                } else if (beforeTrim.endsWith(',')) {
+                    // 如果前面有逗号但没有空格
+                    insertText = ' ' + insertText;
+                }
+            }
+        }
+        
+        // 检查光标后的情况
+        if (afterCursor.length > 0) {
+            // 获取光标后第一个字符
+            const firstChar = afterCursor.charAt(0);
+            
+            // 如果后面是换行符，不需要添加逗号
+            if (firstChar === '\n' || firstChar === '\r') {
+                // 后面是新行，不添加分隔符
+            } else {
+                // 检查是否需要添加逗号分隔符
+                const afterTrim = afterCursor.trimStart();
+                if (afterTrim.length > 0 && !afterTrim.startsWith(',')) {
+                    insertText = insertText + ', ';
+                }
+            }
+        }
+        
+        const newValue = beforeCursor + insertText + afterCursor;
+        
+        // 设置新的光标位置（在插入文本之后）
+        const newCursorPosition = beforeCursor.length + insertText.length;
+        
+        // 延迟设置光标位置
+        setTimeout(() => {
+            if (widget.inputEl && typeof widget.inputEl.setSelectionRange === 'function') {
+                widget.inputEl.focus();
+                widget.inputEl.setSelectionRange(newCursorPosition, newCursorPosition);
+            } else if (widget.element && typeof widget.element.setSelectionRange === 'function') {
+                widget.element.focus();
+                widget.element.setSelectionRange(newCursorPosition, newCursorPosition);
+            }
+        }, 50);
+        
+        return newValue;
     }
 
     setWidgetValue(widget, newValue) {

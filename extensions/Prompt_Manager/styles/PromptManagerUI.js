@@ -16,32 +16,29 @@ export class PromptManagerUI {
         this.modal = document.createElement('div');
         this.modal.className = 'prompt-embedder-modal';
         this.modal.innerHTML = `
-            <div class="prompt-embedder-overlay">                <div class="prompt-embedder-container">
+            <div class="prompt-embedder-overlay">
+                <div class="prompt-embedder-container">
                     <div class="prompt-embedder-header">
                         <h3>嵌入提示词管理</h3>
                         <button class="close-btn">&times;</button>
                     </div>
                     <div class="prompt-embedder-content">
                         <div class="prompt-list-section">
-                            <div class="fixed-header">
-                                <div class="prompt-list-header">
-                                    <h4>提示词列表</h4>
-                                    <div class="header-actions">
-                                        <button class="import-btn">导入</button>
-                                        <button class="export-btn">导出</button>
-                                        <button class="add-prompt-btn">+ 添加提示词</button>
-                                    </div>
-                                </div>
-                                <div class="search-section">
-                                    <div class="search-container">
-                                        <input type="text" class="search-input" placeholder="搜索提示词名称、内容或标签（多标签用逗号分隔）..." />
-                                        <div class="search-icon">🔍</div>
-                                    </div>
+                            <div class="prompt-list-header">
+                                <h4>提示词列表</h4>
+                                <div class="header-actions">
+                                    <button class="import-btn">导入</button>
+                                    <button class="export-btn">导出</button>
+                                    <button class="add-prompt-btn">+ 添加提示词</button>
                                 </div>
                             </div>
-                            <div class="scrollable-list">
-                                <div class="prompt-list"></div>
+                            <div class="search-section">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="搜索提示词名称、内容或标签（多标签用逗号分隔）..." />
+                                    <div class="search-icon">🔍</div>
+                                </div>
                             </div>
+                            <div class="prompt-list"></div>
                         </div>
                         <div class="prompt-form-section" style="display: none;">
                             <h4 class="form-title">添加提示词</h4>
@@ -149,33 +146,12 @@ export class PromptManagerUI {
             .close-btn:hover {
                 background: #ff5733;
                 border-radius: 50%;
-            }            .prompt-embedder-content {
-                padding: 0;
-                height: 600px;
-                display: flex;
-                flex-direction: column;
             }
 
-            .prompt-list-section {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-            }
-
-            .fixed-header {
-                position: sticky;
-                top: 0;
-                background: #2a2a2a;
+            .prompt-embedder-content {
                 padding: 20px;
-                border-bottom: 1px solid #444;
-                z-index: 10;
-            }
-
-            .scrollable-list {
-                flex: 1;
+                max-height: 600px;
                 overflow-y: auto;
-                padding: 0 20px 20px 20px;
             }
 
             .prompt-list-header {
@@ -226,13 +202,14 @@ export class PromptManagerUI {
 
             .export-btn:hover {
                 background: #e6af00;
-            }            .prompt-list {
+            }
+
+            .prompt-list {
                 min-height: 200px;
-                padding-top: 10px;
             }
 
             .search-section {
-                margin-bottom: 0;
+                margin-bottom: 15px;
             }
 
             .search-container {
@@ -408,13 +385,12 @@ export class PromptManagerUI {
                 border-radius: 4px;
                 border: 1px solid #3d3d3d;
                 white-space: pre-wrap;
-            }            .prompt-form-section {
+            }
+
+            .prompt-form-section {
                 border-top: 1px solid #3d3d3d;
-                padding: 20px;
-                margin: 0;
-                background: #2a2a2a;
-                overflow-y: auto;
-                height: 100%;
+                padding-top: 20px;
+                margin-top: 20px;
             }
 
             .form-title {

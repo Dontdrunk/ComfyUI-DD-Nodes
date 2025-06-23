@@ -1,0 +1,432 @@
+// 智能布局内嵌颜色选择器组件 - 修正版
+export class InlineColorPicker {
+    constructor(options = {}) {
+        this.onColorSelect = options.onColorSelect || null;
+        this.onCancel = options.onCancel || null;
+        this.defaultColor = options.defaultColor || '#3355aa';
+        this.title = options.title || '选择颜色';
+        
+        this.container = null;
+        this.selectedColor = this.defaultColor;
+        this._isVisible = false; // 使用 _isVisible 避免方法名冲突
+        
+        // 自动创建样式
+        this.addStyles();
+    }
+
+    // 创建内嵌式颜色选择器 DOM 元素
+    createInlineColorPicker() {
+        this.container = document.createElement('div');
+        this.container.className = 'layout-inline-color-picker';
+        this.container.style.display = 'none';
+        this.container.innerHTML = `
+            <div class="inline-color-picker-header">
+                <div class="picker-title">
+                    <span class="title-icon">🎨</span>
+                    <span class="title-text">${this.title}</span>
+                </div>
+            </div>
+            <div class="inline-color-picker-content">
+                <div class="preset-colors-section">
+                    <div class="section-label">预设颜色</div>
+                    <div class="preset-colors-grid">
+                        <div class="color-option" data-color="#2a82e4" style="background: #2a82e4" title="蓝色"></div>
+                        <div class="color-option" data-color="#e74c3c" style="background: #e74c3c" title="红色"></div>
+                        <div class="color-option" data-color="#27ae60" style="background: #27ae60" title="绿色"></div>
+                        <div class="color-option" data-color="#f39c12" style="background: #f39c12" title="橙色"></div>
+                        <div class="color-option" data-color="#9b59b6" style="background: #9b59b6" title="紫色"></div>
+                        <div class="color-option" data-color="#1abc9c" style="background: #1abc9c" title="青色"></div>
+                        <div class="color-option" data-color="#e67e22" style="background: #e67e22" title="深橙"></div>
+                        <div class="color-option" data-color="#34495e" style="background: #34495e" title="深蓝灰"></div>
+                        <div class="color-option" data-color="#e91e63" style="background: #e91e63" title="粉红"></div>
+                        <div class="color-option" data-color="#00bcd4" style="background: #00bcd4" title="蓝绿"></div>
+                        <div class="color-option" data-color="#ff5722" style="background: #ff5722" title="深橙红"></div>
+                        <div class="color-option" data-color="#607d8b" style="background: #607d8b" title="蓝灰"></div>
+                    </div>
+                </div>
+                <div class="custom-color-section">
+                    <div class="section-label">自定义颜色</div>
+                    <div class="custom-color-row">
+                        <input type="color" class="color-input" value="${this.defaultColor}">
+                        <div class="color-preview"></div>
+                        <input type="text" class="color-hex-input" value="${this.defaultColor}" placeholder="#000000">
+                    </div>
+                </div>
+                <div class="picker-buttons">
+                    <button class="cancel-btn" type="button">取消</button>
+                    <button class="apply-btn" type="button">应用颜色</button>
+                </div>
+            </div>
+        `;
+
+        // 添加事件监听器
+        this.addEventListeners();
+        
+        // 设置默认选中颜色
+        this.setSelectedColor(this.defaultColor);
+        
+        return this.container;
+    }
+
+    addEventListeners() {
+        if (!this.container) return;
+
+        // 预设颜色点击事件
+        const colorOptions = this.container.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const color = option.dataset.color;
+                this.setSelectedColor(color);
+            });
+        });
+
+        // 自定义颜色输入事件
+        const colorInput = this.container.querySelector('.color-input');
+        const hexInput = this.container.querySelector('.color-hex-input');
+
+        if (colorInput) {
+            colorInput.addEventListener('input', (e) => {
+                const color = e.target.value;
+                this.setSelectedColor(color);
+                if (hexInput) hexInput.value = color;
+            });
+        }
+
+        if (hexInput) {
+            hexInput.addEventListener('input', (e) => {
+                const color = e.target.value;
+                if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+                    this.setSelectedColor(color);
+                    if (colorInput) colorInput.value = color;
+                }
+            });
+        }
+
+        // 按钮事件
+        const applyBtn = this.container.querySelector('.apply-btn');
+        const cancelBtn = this.container.querySelector('.cancel-btn');
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', () => {
+                this.handleConfirm();
+            });
+        }        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.hide();
+                // 在取消按钮点击时调用onCancel回调
+                if (this.onCancel) {
+                    this.onCancel();
+                }
+            });
+        }
+    }
+
+    setSelectedColor(color) {
+        this.selectedColor = color;
+        
+        // 更新预览
+        const preview = this.container?.querySelector('.color-preview');
+        if (preview) {
+            preview.style.background = color;
+        }
+
+        // 更新输入框
+        const colorInput = this.container?.querySelector('.color-input');
+        const hexInput = this.container?.querySelector('.color-hex-input');
+        if (colorInput) colorInput.value = color;
+        if (hexInput) hexInput.value = color;
+
+        // 更新选中状态
+        const colorOptions = this.container?.querySelectorAll('.color-option');
+        colorOptions?.forEach(option => {
+            option.classList.remove('selected');
+            if (option.dataset.color === color) {
+                option.classList.add('selected');
+            }
+        });
+    }
+
+    show(defaultColor) {
+        if (!this.container) return;
+        
+        if (defaultColor) {
+            this.setSelectedColor(defaultColor);
+        }
+        
+        this.container.style.display = 'block';
+        this._isVisible = true;
+        
+        // 添加显示动画
+        requestAnimationFrame(() => {
+            this.container.style.opacity = '1';
+            this.container.style.transform = 'translateY(0)';
+        });
+    }    hide() {
+        if (!this.container) return;
+        
+        // 添加隐藏动画
+        this.container.style.opacity = '0';
+        this.container.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            this.container.style.display = 'none';
+            this._isVisible = false;
+        }, 200);
+        
+        // 注意：不在hide方法中调用onCancel，避免循环调用
+        // onCancel应该只在用户点击取消按钮时调用
+    }
+
+    handleConfirm() {
+        if (this.onColorSelect) {
+            this.onColorSelect(this.selectedColor);
+        }
+        this.hide();
+    }
+
+    isVisible() {
+        return this._isVisible;
+    }
+
+    destroy() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+    }
+
+    addStyles() {
+        // 检查是否已经添加了样式
+        if (document.querySelector('#inline-color-picker-styles')) {
+            return;
+        }
+        
+        const style = document.createElement('style');
+        style.id = 'inline-color-picker-styles';
+        style.textContent = `            /* ========== 智能布局内嵌颜色选择器样式 ========== */
+            .layout-inline-color-picker {
+                width: 100%;
+                margin-top: 0px; /* 移除上边距，因为要替换显示 */
+                background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
+                border: 1px solid rgba(176, 141, 225, 0.3);
+                border-radius: 10px;
+                box-shadow: 
+                    0 8px 24px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(138, 43, 226, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                opacity: 0;
+                transform: translateY(-10px);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+
+            .layout-inline-color-picker::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(176, 141, 225, 0.7), transparent);
+            }
+
+            /* ========== 头部样式 ========== */
+            .inline-color-picker-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px 8px;
+                border-bottom: 1px solid rgba(176, 141, 225, 0.2);
+                background: linear-gradient(135deg, rgba(176, 141, 225, 0.1), rgba(138, 43, 226, 0.05));
+                border-radius: 10px 10px 0 0;
+            }
+
+            .picker-title {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: #e1e1e1;
+                font-size: 14px;
+                font-weight: 600;
+                letter-spacing: 0.3px;
+            }
+
+            .title-icon {
+                font-size: 14px;
+                opacity: 0.9;
+            }
+
+            /* ========== 内容区域 ========== */
+            .inline-color-picker-content {
+                padding: 12px 16px 16px;
+            }
+
+            .section-label {
+                color: #ccc;
+                font-size: 12px;
+                font-weight: 500;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                opacity: 0.9;
+            }
+
+            .section-label::before {
+                content: '●';
+                color: rgba(176, 141, 225, 0.7);
+                font-size: 6px;
+            }
+
+            /* ========== 预设颜色区域 ========== */
+            .preset-colors-section {
+                margin-bottom: 15px;
+            }
+
+            .preset-colors-grid {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 6px;
+                padding: 10px;
+                background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(42, 30, 74, 0.15));
+                border: 1px solid rgba(176, 141, 225, 0.15);
+                border-radius: 6px;
+            }
+
+            .color-option {
+                width: 24px;
+                height: 24px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 2px solid transparent;
+                position: relative;
+                box-shadow: 
+                    0 2px 6px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+
+            .color-option:hover {
+                transform: scale(1.1);
+                box-shadow: 
+                    0 3px 12px rgba(0, 0, 0, 0.4),
+                    0 0 8px rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+
+            .color-option.selected {
+                border-color: rgba(176, 141, 225, 0.8);
+                box-shadow: 
+                    0 0 0 2px rgba(138, 43, 226, 0.4),
+                    0 3px 12px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(138, 43, 226, 0.3);
+                transform: scale(1.05);
+            }
+
+            .color-option.selected::after {
+                content: '✓';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #ffffff;
+                font-size: 10px;
+                font-weight: bold;
+                text-shadow: 
+                    0 0 3px rgba(0, 0, 0, 0.8),
+                    0 1px 2px rgba(0, 0, 0, 0.6);
+            }
+
+            /* ========== 自定义颜色区域 ========== */
+            .custom-color-section {
+                margin-bottom: 15px;
+            }
+
+            .custom-color-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px;
+                background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(42, 30, 74, 0.15));
+                border: 1px solid rgba(176, 141, 225, 0.15);
+                border-radius: 6px;
+            }
+
+            .color-input {
+                width: 40px;
+                height: 28px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                background: none;
+                outline: none;
+            }
+
+            .color-preview {
+                width: 28px;
+                height: 28px;
+                border-radius: 4px;
+                border: 2px solid rgba(176, 141, 225, 0.3);
+                background: #3355aa;
+                box-shadow: 
+                    0 2px 6px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+
+            .color-hex-input {
+                flex: 1;
+                padding: 6px 8px;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(176, 141, 225, 0.2);
+                border-radius: 4px;
+                color: #e1e1e1;
+                font-size: 12px;
+                outline: none;
+                transition: all 0.2s ease;
+            }
+
+            .color-hex-input:focus {
+                border-color: rgba(176, 141, 225, 0.5);
+                box-shadow: 0 0 8px rgba(138, 43, 226, 0.2);
+            }
+
+            /* ========== 按钮区域 ========== */
+            .picker-buttons {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+
+            .cancel-btn, .apply-btn {
+                padding: 6px 16px;
+                border: 1px solid rgba(176, 141, 225, 0.3);
+                border-radius: 4px;
+                background: linear-gradient(145deg, rgba(26, 26, 46, 0.8), rgba(22, 33, 62, 0.8));
+                color: #e1e1e1;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                outline: none;
+            }
+
+            .cancel-btn:hover {
+                background: linear-gradient(145deg, rgba(120, 120, 120, 0.2), rgba(80, 80, 80, 0.2));
+                border-color: rgba(176, 141, 225, 0.5);
+                box-shadow: 0 0 8px rgba(138, 43, 226, 0.2);
+            }
+
+            .apply-btn {
+                background: linear-gradient(145deg, rgba(176, 141, 225, 0.3), rgba(138, 43, 226, 0.3));
+                border-color: rgba(176, 141, 225, 0.5);
+            }
+
+            .apply-btn:hover {
+                background: linear-gradient(145deg, rgba(176, 141, 225, 0.4), rgba(138, 43, 226, 0.4));
+                border-color: rgba(176, 141, 225, 0.7);
+                box-shadow: 0 0 12px rgba(138, 43, 226, 0.3);
+            }
+        `;
+        
+        document.head.appendChild(style);
+    }
+}

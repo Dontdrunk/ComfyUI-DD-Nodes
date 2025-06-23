@@ -50,13 +50,17 @@ class PromptManagerAPI:
                 data = await request.json()
                 prompts = data.get('prompts', [])
                 
+                # 获取标签数据（如果有的话）
+                tags = data.get('tags', {})
+                
                 # 准备要保存的数据
                 prompts_data = {
                     "version": "2.4.0",
                     "exportTime": datetime.now().isoformat(),
                     "description": "ComfyUI-DD-Nodes 提示词管理器数据文件 - 自动同步",
                     "totalCount": len(prompts),
-                    "prompts": prompts
+                    "prompts": prompts,
+                    "tags": tags  # 添加标签数据
                 }
                 
                 # 写入JSON文件
@@ -89,11 +93,13 @@ class PromptManagerAPI:
                 
                 if prompts_data:
                     prompts = prompts_data.get('prompts', [])
+                    tags = prompts_data.get('tags', {})  # 获取标签数据
                     logger.info(f"成功加载 {len(prompts)} 个提示词从JSON文件")
                     return web.json_response({
                         "success": True,
                         "data": prompts_data,
                         "prompts": prompts,
+                        "tags": tags,  # 返回标签数据
                         "count": len(prompts)
                     })
                 else:
@@ -101,6 +107,7 @@ class PromptManagerAPI:
                         "success": True,
                         "data": None,
                         "prompts": [],
+                        "tags": {},  # 空标签数据
                         "count": 0
                     })
                     
@@ -117,6 +124,7 @@ class PromptManagerAPI:
             try:
                 data = await request.json()
                 prompts = data.get('prompts', [])
+                tags = data.get('tags', {})
                 operation = data.get('operation', 'full_sync')  # full_sync, add, update, delete
                 
                 if operation == 'full_sync':
@@ -126,10 +134,11 @@ class PromptManagerAPI:
                         "exportTime": datetime.now().isoformat(),
                         "description": "ComfyUI-DD-Nodes 提示词管理器数据文件 - 自动同步",
                         "totalCount": len(prompts),
-                        "prompts": prompts
+                        "prompts": prompts,
+                        "tags": tags
                     }
                     success = await self.write_prompts_file(prompts_data)
-                    message = f"全量同步 {len(prompts)} 个提示词"
+                    message = f"全量同步 {len(prompts)} 个提示词和 {len(tags)} 个标签"
                 
                 else:
                     # 增量更新（预留接口）
@@ -156,6 +165,81 @@ class PromptManagerAPI:
                 
             except Exception as e:
                 logger.error(f"同步提示词失败: {e}")
+                return web.json_response({
+                    "success": False,
+                    "error": str(e)
+                }, status=500)
+        
+        @PromptServer.instance.routes.post("/dd_nodes/save_tags")
+        async def save_tags(request):
+            """保存标签数据到JSON文件"""
+            try:
+                data = await request.json()
+                tags = data.get('tags', {})
+                
+                # 读取现有的数据
+                current_data = await self.read_prompts_file()
+                if current_data:
+                    # 更新标签数据，保留现有提示词
+                    current_data['tags'] = tags
+                    current_data['exportTime'] = datetime.now().isoformat()
+                else:
+                    # 创建新的数据结构
+                    current_data = {
+                        "version": "2.4.0",
+                        "exportTime": datetime.now().isoformat(),
+                        "description": "ComfyUI-DD-Nodes 提示词管理器数据文件 - 标签更新",
+                        "totalCount": 0,
+                        "prompts": [],
+                        "tags": tags
+                    }
+                
+                # 写入JSON文件
+                success = await self.write_prompts_file(current_data)
+                
+                if success:
+                    logger.info(f"成功保存 {len(tags)} 个标签到JSON文件")
+                    return web.json_response({
+                        "success": True,
+                        "message": f"成功保存 {len(tags)} 个标签",
+                        "count": len(tags)
+                    })
+                else:
+                    return web.json_response({
+                        "success": False,
+                        "error": "写入文件失败"
+                    }, status=500)
+                    
+            except Exception as e:
+                logger.error(f"保存标签失败: {e}")
+                return web.json_response({
+                    "success": False,
+                    "error": str(e)
+                }, status=500)
+        
+        @PromptServer.instance.routes.get("/dd_nodes/load_tags")
+        async def load_tags(request):
+            """从JSON文件加载标签数据"""
+            try:
+                prompts_data = await self.read_prompts_file()
+                
+                if prompts_data:
+                    tags = prompts_data.get('tags', {})
+                    logger.info(f"成功加载 {len(tags)} 个标签从JSON文件")
+                    return web.json_response({
+                        "success": True,
+                        "tags": tags,
+                        "count": len(tags)
+                    })
+                else:
+                    return web.json_response({
+                        "success": True,
+                        "tags": {},
+                        "count": 0
+                    })
+                    
+            except Exception as e:
+                logger.error(f"加载标签失败: {e}")
                 return web.json_response({
                     "success": False,
                     "error": str(e)

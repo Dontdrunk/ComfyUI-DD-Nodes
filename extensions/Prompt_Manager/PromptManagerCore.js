@@ -1,5 +1,6 @@
 // 提示词管理器核心模块，只包含业务逻辑和数据管理
 import { PromptManagerUI } from './styles/PromptManagerUI.js';
+import { globalTagColorManager } from './styles/components/TagColorManager.js';
 
 export class PromptManager {
     constructor() {
@@ -7,95 +8,71 @@ export class PromptManager {
         this.loadPrompts();
     }    async loadPrompts() {
         try {
-            // 首先尝试从后端API加载最新数据
+            // 从后端API加载最新数据
             const response = await fetch('/dd_nodes/load_prompts');
             if (response.ok) {
                 const result = await response.json();
-                if (result.success && result.prompts && result.prompts.length > 0) {
-                    this.prompts = result.prompts;
+                if (result.success && result.data && result.data.prompts) {
+                    this.prompts = result.data.prompts;
                     // 确保所有提示词都有标签属性（向后兼容）
                     this.prompts.forEach(prompt => {
                         if (!prompt.tags) {
                             prompt.tags = [];
                         }
                     });
-                    // 同步到本地存储作为缓存
-                    localStorage.setItem('comfyui_dd_prompts', JSON.stringify(this.prompts));
+                    
+                    // 加载标签颜色数据（如果存在）
+                    if (result.data.tags && typeof result.data.tags === 'object') {
+                        console.log('从后端加载标签颜色数据:', result.data.tags);
+                        // 恢复标签颜色到全局标签颜色管理器
+                        Object.entries(result.data.tags).forEach(([tagName, color]) => {
+                            globalTagColorManager.setTagColor(tagName, color);
+                        });
+                    }
+                    
                     console.log(`从后端API加载了 ${this.prompts.length} 个提示词`);
                     return;
                 }
             }
 
-            // 如果API失败，尝试从本地存储加载
-            const localData = localStorage.getItem('comfyui_dd_prompts');
-            if (localData) {
-                this.prompts = JSON.parse(localData);
-                // 确保所有提示词都有标签属性（向后兼容）
-                this.prompts.forEach(prompt => {
-                    if (!prompt.tags) {
-                        prompt.tags = [];
-                    }
-                });
-                console.log(`从本地存储加载了 ${this.prompts.length} 个提示词`);
-                // 尝试同步到后端
-                this.syncToBackend();
-                return;
-            }
-
-            // 如果都没有数据，使用空列表
+            // 如果API失败，使用空列表
             this.prompts = [];
             console.log('初始化空的提示词列表');
         } catch (error) {
-            console.log('加载提示词失败，尝试从本地存储加载:', error);
-            // 错误处理：从本地存储加载
-            try {
-                const localData = localStorage.getItem('comfyui_dd_prompts');
-                if (localData) {
-                    this.prompts = JSON.parse(localData);
-                    this.prompts.forEach(prompt => {
-                        if (!prompt.tags) {
-                            prompt.tags = [];
-                        }
-                    });
-                } else {
-                    this.prompts = [];
-                }
-            } catch (localError) {
-                console.error('本地存储也加载失败:', localError);
-                this.prompts = [];
-            }
+            console.error('加载提示词失败:', error);
+            this.prompts = [];
         }
-    }    savePrompts() {
+    }savePrompts() {
         try {
-            // 1. 保存到本地存储（作为缓存）
-            localStorage.setItem('comfyui_dd_prompts', JSON.stringify(this.prompts));
-            
-            // 2. 自动同步到后端API（主要存储）
+            // 直接同步到后端API
             this.syncToBackend();
-            
-            console.log('提示词已保存并自动同步到后端');
+            console.log('提示词已自动同步到后端');
         } catch (error) {
             console.error('保存提示词失败:', error);
         }
-    }
-
-    // 同步数据到后端API
+    }    // 同步数据到后端API
     async syncToBackend() {
         try {
+            // 获取标签数据 - 直接从标签颜色管理器获取最新数据
+            const tagsData = Object.fromEntries(globalTagColorManager.colorMap);
+            
+            console.log('同步标签数据到后端:', tagsData);
+            
             const response = await fetch('/dd_nodes/save_prompts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    prompts: this.prompts
+                    prompts: this.prompts,
+                    tags: tagsData  // 包含标签数据
                 })
             });
 
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
-                    console.log(`成功同步 ${result.count} 个提示词到后端`);
+                    console.log(`成功同步 ${result.count} 个提示词和 ${Object.keys(tagsData).length} 个标签到后端`);
                 } else {
                     console.error('后端同步失败:', result.error);
                 }
@@ -103,9 +80,9 @@ export class PromptManager {
                 console.error('后端同步请求失败:', response.status);
             }
         } catch (error) {
-            console.warn('后端同步失败，仅保存到本地存储:', error);
+            console.error('后端同步失败:', error);
         }
-    }    // 已弃用：自动同步功能已转移到后端API
+    }// 已弃用：自动同步功能已转移到后端API
     // 保留此方法仅为向后兼容
     autoSyncToJsonFile() {
         // 现在通过syncToBackend()方法同步到后端
@@ -320,13 +297,17 @@ export class PromptManager {
         return searchResults;
     }    // 导出提示词到 JSON 格式
     exportPrompts() {
+        // 获取标签颜色数据
+        const tagsData = Object.fromEntries(globalTagColorManager.colorMap);
+        
         // 使用当前最新的提示词数据
         const promptsData = {
             version: "2.4.0",
             exportTime: new Date().toISOString(),
             description: "ComfyUI-DD-Nodes 提示词管理器导出的提示词数据",
             totalCount: this.prompts.length,
-            prompts: this.prompts
+            prompts: this.prompts,
+            tags: tagsData  // 添加标签颜色数据
         };
 
         const dataStr = JSON.stringify(promptsData, null, 2);
@@ -341,18 +322,26 @@ export class PromptManager {
         
         link.click();
         URL.revokeObjectURL(url);
-    }    // 从 JSON 文件导入提示词（兼容新旧格式）
+    }// 从 JSON 文件导入提示词（兼容新旧格式）
     importPrompts(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
+            reader.onload = (e) => {                try {
                     const imported = JSON.parse(e.target.result);
                     let promptsToImport = [];
 
                     // 检查是否是新格式（包含metadata）
                     if (imported.prompts && Array.isArray(imported.prompts)) {
                         promptsToImport = imported.prompts;
+                        
+                        // 导入标签颜色数据（如果存在）
+                        if (imported.tags && typeof imported.tags === 'object') {
+                            console.log('导入标签颜色数据:', imported.tags);
+                            // 合并标签颜色到全局标签颜色管理器
+                            Object.entries(imported.tags).forEach(([tagName, color]) => {
+                                globalTagColorManager.setTagColor(tagName, color);
+                            });
+                        }
                     } 
                     // 兼容旧格式（直接是数组）
                     else if (Array.isArray(imported)) {
@@ -507,13 +496,33 @@ export class PromptEmbedder {
         }
         
         return false;
-    }    applyPromptToWidget(prompt, widget) {
+    }    applyPromptToWidget(prompt, widget, insertMode = null) {
         if (!widget) return;
         
-        // 检查是否需要处理现有内容
         const currentValue = widget.value || '';
         const hasContent = currentValue.trim().length > 0;
         
+        // 如果指定了插入模式，直接使用
+        if (insertMode) {
+            let newValue;
+            if (insertMode === 'insert') {
+                // 插入到选中位置或开头
+                newValue = this.insertPromptAtCursor(widget, prompt.content);
+            } else if (insertMode === 'append') {
+                // 追加到内容末尾
+                newValue = currentValue + (currentValue ? ', ' : '') + prompt.content;
+            } else if (insertMode === 'replace') {
+                // 替换全部内容
+                newValue = prompt.content;
+            }
+            
+            if (newValue !== undefined) {
+                this.setWidgetValue(widget, newValue);
+            }
+            return;
+        }
+        
+        // 如果没有指定插入模式且有内容，显示对话框
         if (hasContent) {
             // 显示自定义确认对话框
             this.ui.showInsertDialog(
@@ -524,6 +533,9 @@ export class PromptEmbedder {
                     if (action === 'insert') {
                         // 插入到选中位置或开头
                         newValue = this.insertPromptAtCursor(widget, prompt.content);
+                    } else if (action === 'append') {
+                        // 追加到内容末尾
+                        newValue = currentValue + (currentValue ? ', ' : '') + prompt.content;
                     } else if (action === 'replace') {
                         // 替换全部内容
                         newValue = prompt.content;
@@ -536,7 +548,7 @@ export class PromptEmbedder {
         } else {
             this.setWidgetValue(widget, prompt.content);
         }
-    }    insertPromptAtCursor(widget, promptText) {
+    }insertPromptAtCursor(widget, promptText) {
         const currentValue = widget.value || '';
         let cursorPosition = 0;
         

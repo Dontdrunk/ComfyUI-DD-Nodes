@@ -162,6 +162,12 @@ export const layoutPanelStyles = `
     transition: opacity 0.3s;
     border-radius: 16px;
   }
+  
+  /* 控制区域容器样式 */
+  .layout-controls-container {
+    display: block;
+    width: 100%;
+  }
 `;
 
 // ==========================================================
@@ -179,9 +185,8 @@ export function createPanelElement(mousePosition) {
   container.style.transform = 'none';
   container.style.display = 'none';
   container.style.pointerEvents = 'none';  
-  container.style.opacity = '0';
-  container.style.padding = '30px'; // 增加内边距适应大尺寸硬币
-  container.style.width = '360px'; // 设置基础宽度
+  container.style.opacity = '0';  container.style.padding = '30px'; // 增加内边距适应大尺寸硬币
+  container.style.width = '360px'; // 恢复原始宽度
   container.style.boxSizing = 'border-box'; // 确保padding不增加总宽度
   
   // 添加拖动区域 - 改为在面板边缘创建多个拖动区域

@@ -36,6 +36,9 @@ import {
   alignNodes
 } from './styles/UIUtils.js';
 
+// 导入内嵌颜色选择器组件
+import { InlineColorPicker } from './styles/InlineColorPicker.js';
+
 // 跟踪鼠标位置
 let mousePosition = { x: 0, y: 0 };
 document.addEventListener('mousemove', (e) => {
@@ -49,8 +52,8 @@ export class LayoutPanel {
     this.container = null;
     this.buttonsContainer = null;
     this.colorMode = '完全随机'; // 默认为完全随机模式
-    this.currentTheme = null;
-    this.coinElement = null;
+    this.currentTheme = null;    this.coinElement = null;
+    this.inlineColorPicker = null; // 内嵌颜色选择器实例
   }
   
   setEnabled() {
@@ -118,9 +121,11 @@ export class LayoutPanel {
     
     this.visible = true;
   }
-  
-  hide() {
-    if (!this.container) return;
+    hide() {
+    if (!this.container) return;    // 隐藏颜色选择器（如果存在且可见）
+    if (this.inlineColorPicker && typeof this.inlineColorPicker.isVisible === 'function' && this.inlineColorPicker.isVisible()) {
+      this.inlineColorPicker.hide();
+    }
     
     // 只淡出，不修改 transform
     this.container.style.opacity = '0';
@@ -215,12 +220,11 @@ export class LayoutPanel {
       e.stopPropagation();
       this._setRandomNodeColor();
     });
-    
-    // 创建自定义颜色按钮
+      // 创建自定义颜色按钮
     const customColorBtn = createButton('自定义颜色', 'normal');
     customColorBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      this._openCustomColorPicker();
+      this._toggleInlineColorPicker();
     });
     
     // 创建节点同步按钮
@@ -260,16 +264,45 @@ export class LayoutPanel {
       this.colorMode = e.target.value;
     });
     modeContainer.appendChild(modeSelect);
-    
-    // 添加按钮到容器
+      // 添加按钮到容器
     this.buttonsContainer.appendChild(randomColorBtn);
     this.buttonsContainer.appendChild(customColorBtn);
     this.buttonsContainer.appendChild(syncBtn);
     
-    // 添加按钮容器和模式选择器到主容器
-    this.container.appendChild(this.buttonsContainer);
-    this.container.appendChild(modeContainer);
-    this.container.appendChild(syncModeContainer);
+    // 创建控制区域容器（包含按钮和下拉框）
+    this.controlsContainer = document.createElement('div');
+    this.controlsContainer.className = 'layout-controls-container';
+    this.controlsContainer.appendChild(this.buttonsContainer);
+    this.controlsContainer.appendChild(modeContainer);
+    this.controlsContainer.appendChild(syncModeContainer);    // 创建并添加内嵌颜色选择器
+    this.inlineColorPicker = new InlineColorPicker({
+      title: '选择节点颜色',
+      defaultColor: '#3355aa',
+      onColorSelect: (color) => {
+        // 获取选中的节点和组
+        const app = getComfyUIApp();
+        if (app) {
+          const selectedNodes = getSelectedNodes(app);
+          const selectedGroups = getSelectedGroups(app);
+          this._applyColorToSelectedNodes(color, selectedNodes, selectedGroups, app);
+          // 应用颜色后恢复控制区域
+          this._showControls();
+        }
+      },
+      onCancel: () => {
+        // 取消时恢复控制区域
+        this._showControls();
+      }
+    });
+    
+    const colorPickerElement = this.inlineColorPicker.createInlineColorPicker();
+    
+    // 将控制区域和颜色选择器都添加到主容器
+    this.container.appendChild(this.controlsContainer);
+    this.container.appendChild(colorPickerElement);
+    
+    // 确保初始状态：显示控制区域，隐藏颜色选择器
+    this._showControls();
     
     // 添加面板调整大小时重新调整按钮文字大小的功能
     const resizeObserver = new ResizeObserver(() => {
@@ -398,9 +431,8 @@ export class LayoutPanel {
       showNotification(`设置随机颜色失败: ${error.message}`);
     }
   }
-  
-  // 打开自定义颜色选择器
-  _openCustomColorPicker() {
+    // 打开自定义颜色选择器  // 切换内嵌颜色选择器显示/隐藏
+  _toggleInlineColorPicker() {
     try {
       // 获取ComfyUI应用实例
       const app = getComfyUIApp();
@@ -416,48 +448,64 @@ export class LayoutPanel {
       if (selectedNodes.length === 0 && selectedGroups.length === 0) {
         showNotification("请先选择要应用颜色的节点或组");
         return;
+      }      // 获取默认颜色
+      const defaultColor = selectedNodes.length > 0 ? 
+        (selectedNodes[0].color || '#3355aa') : 
+        (selectedGroups.length > 0 ? (selectedGroups[0].color || '#3355aa') : '#3355aa');
+
+      // 切换颜色选择器显示状态
+      if (this.inlineColorPicker && typeof this.inlineColorPicker.isVisible === 'function') {
+        if (this.inlineColorPicker.isVisible()) {
+          this._showControls();
+        } else {
+          this._showColorPicker(defaultColor);
+        }
+      } else {
+        showNotification("颜色选择器未正确初始化");
       }
-
-      // 创建颜色选择器
-      setTimeout(() => {
-        const defaultColor = selectedNodes.length > 0 ? 
-          (selectedNodes[0].color || '#3355aa') : 
-          (selectedGroups.length > 0 ? (selectedGroups[0].color || '#3355aa') : '#3355aa');
-        
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.value = defaultColor.replace(/rgba?\(.*\)/, '#000000');
-        colorInput.style.position = 'absolute';
-        colorInput.style.visibility = 'hidden';
-        document.body.appendChild(colorInput);
-
-        // 处理颜色变化
-        colorInput.addEventListener('input', (e) => {
-          const color = e.target.value;
-
-          // 应用颜色到节点和组
-          selectedNodes.forEach(node => {
-            node.color = color;
-          });
-
-          selectedGroups.forEach(group => {
-            group.color = color;
-          });
-
-          app.graph.setDirtyCanvas(true, true);
-        });
-        
-        colorInput.addEventListener('change', (e) => {
-          showNotification("已应用自定义颜色", "info");
-          document.body.removeChild(colorInput);
-        });
-        
-        // 模拟点击打开颜色选择器
-        colorInput.click();
-      }, 100);
     } catch (error) {
-      console.error("打开颜色选择器失败:", error);
-      showNotification(`打开颜色选择器失败: ${error.message}`);
+      console.error("切换颜色选择器失败:", error);
+      showNotification(`切换颜色选择器失败: ${error.message}`);
+    }
+  }
+
+  // 显示控制区域，隐藏颜色选择器
+  _showControls() {
+    if (this.controlsContainer) {
+      this.controlsContainer.style.display = 'block';
+    }
+    if (this.inlineColorPicker && typeof this.inlineColorPicker.hide === 'function') {
+      this.inlineColorPicker.hide();
+    }
+  }
+
+  // 显示颜色选择器，隐藏控制区域
+  _showColorPicker(defaultColor) {
+    if (this.controlsContainer) {
+      this.controlsContainer.style.display = 'none';
+    }
+    if (this.inlineColorPicker && typeof this.inlineColorPicker.show === 'function') {
+      this.inlineColorPicker.show(defaultColor);
+    }
+  }
+
+  // 应用颜色到选中的节点和组
+  _applyColorToSelectedNodes(color, selectedNodes, selectedGroups, app) {
+    try {
+      // 应用颜色到节点和组
+      selectedNodes.forEach(node => {
+        node.color = color;
+      });
+
+      selectedGroups.forEach(group => {
+        group.color = color;
+      });
+
+      app.graph.setDirtyCanvas(true, true);
+      showNotification("已应用自定义颜色", "info");
+    } catch (error) {
+      console.error("应用颜色失败:", error);
+      showNotification(`应用颜色失败: ${error.message}`);
     }
   }
   
@@ -500,6 +548,33 @@ export class LayoutPanel {
     } catch (e) {
       showNotification('节点同步失败: ' + e.message);
     }
+  }
+  
+  // 清理资源
+  destroy() {
+    // 隐藏面板
+    if (this.visible) {
+      this.hide();
+    }
+      // 销毁颜色选择器
+    if (this.inlineColorPicker) {
+      this.inlineColorPicker.destroy();
+      this.inlineColorPicker = null;
+    }
+    
+    // 移除面板元素
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    
+    // 清理样式
+    removeStyles('layout-panel-styles');
+    
+    // 重置状态
+    this.container = null;
+    this.buttonsContainer = null;
+    this.coinElement = null;
+    this.visible = false;
   }
 }
 

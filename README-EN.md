@@ -16,8 +16,6 @@ Intelligent prompt embedding and management system that provides powerful prompt
 **Core Features:**
 - 🔍 **Prompt Search**: Search prompt names and content for quick location and filtering
 - 📁 **Import/Export**: JSON format prompt backup and sharing - share your prompts with others and import community prompts
-- 🏷️ **Tag System**: Organize prompts with up to 4 tags per prompt for easy categorization
-- 💾 **Auto Backup**: All prompt operations automatically save to JSON files for data persistence
 
 **Use Cases:**
 - Manage commonly used positive/negative prompt templates
@@ -25,6 +23,8 @@ Intelligent prompt embedding and management system that provides powerful prompt
 - Share and backup prompt libraries among teams
 - Improve workflow creation efficiency
 - Efficiently manage LORA model prompts
+
+  ![提示词](https://github.com/user-attachments/assets/52bd3fa9-e6e0-486e-a18d-da45b6058e79)
 
 </details>
 
@@ -105,12 +105,12 @@ High-performance model loading optimizer with multiple optimization modes:
 
 </details>
 
-<details>
-  <summary>DD Interface Layout</summary>
+<details>  <summary>DD Interface Layout</summary>
 
-- Beta version implemented, can randomly or specifically color node titles, and quickly organize messy workflows.
-- Beautified UI, added theme system, each theme has two different styles to switch between, supports custom themes.
-- Added modular presets, you can preset your own layouts and apply them with one click.
+- Can randomly or specifically set node title colors, quickly organize messy nodes
+- Beautify UI, add theme system, each theme has two different styles to switch between, click the coin animation to switch
+  
+![面板](https://github.com/user-attachments/assets/ef4d9bb9-57a7-445d-8515-3bf07f1d48bc)
 
 </details>
 
@@ -120,6 +120,8 @@ High-performance model loading optimizer with multiple optimization modes:
 Provides various cool animation effects for ComfyUI node connections, supporting customizable styles:
 - Supports "Flow", "Wave", "Rhythm", "Pulse" and other animation styles
 - Animation parameters are customizable (line width, speed, effects, etc.)
+
+![连线](https://github.com/user-attachments/assets/56621f61-fe41-48fc-8871-471f5d411a17)
 
 </details>
 
@@ -144,6 +146,10 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
+- v2.6.0 (2025-06-23)
+- Complete reconstruction of the prompt management panel with many new features
+- Improved interface layout panel custom color functionality, now with a dedicated color preset panel
+
 - v2.5.0 (2025-06-20)
   - 🔄 **Prompt Manager New Features**:
     - Added intelligent backup system - all prompt operations automatically save to extensions\Prompt_Manager\prompts.json
@@ -265,6 +271,3 @@ This is a growing collection of nodes, primarily for sharing practical ComfyUI e
 
 Your support is the motivation for the author to continue coding! ╭(●｀∀´●)╯
 ![Payment QR Code](https://github.com/user-attachments/assets/77c99c94-3854-4c12-81cf-09c9f76099ac)
-
-Your support is the motivation for the author to continue development! ╭(●｀∀´●)╯
-![QR Code](https://github.com/user-attachments/assets/77c99c94-3854-4c12-81cf-09c9f76099ac)

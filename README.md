@@ -113,7 +113,8 @@
 - 可以随机或指定节点标题的颜色，可以对杂乱节点做快速整理
 - 美化UI，添加主题系统，每一种主题有两种不同风格可以切换，点击硬币动画即可切换
   
-![面板](https://github.com/user-attachments/assets/ef4d9bb9-57a7-445d-8515-3bf07f1d48bc)
+![2025-06-23 17-52-10 00_00_00-00_00_30](https://github.com/user-attachments/assets/e79cfa00-9243-41bb-98e3-e9c67e104419)
+
 
 </details>
 
@@ -124,7 +125,8 @@
 - 支持“流动”、“波浪”、“律动”、“脉冲”等多种动画风格
 - 动画参数可自定义（线宽、速度、特效等）
 
-![连线](https://github.com/user-attachments/assets/56621f61-fe41-48fc-8871-471f5d411a17)
+![2025-06-23 17-48-57 00_00_10-00_00_15](https://github.com/user-attachments/assets/aeac1b96-c8d0-497a-9594-1ab7b5766f44)
+
 
 </details>
 

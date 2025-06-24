@@ -4,9 +4,9 @@
   <a href="https://github.com/Dontdrunk/ComfyUI-DD-Nodes/blob/main/README.md">中文</a> | <b>English</b>
 </div>
 
-A collection of fully customized ComfyUI nodes developed by Dontdrunk, designed to enhance your workflow with powerful tools and optimizations.
+A full-process AI-developed ComfyUI custom node collection (fully localized) developed and maintained by Dontdrunk.
 
-## Node List
+## Current Node List
 
 <details>
   <summary>🎯 DD Prompt Manager (New Feature)</summary>
@@ -24,7 +24,7 @@ Intelligent prompt embedding and management system that provides powerful prompt
 - Improve workflow creation efficiency
 - Efficiently manage LORA model prompts
 
-  ![提示词](https://github.com/user-attachments/assets/52bd3fa9-e6e0-486e-a18d-da45b6058e79)
+  ![1](https://github.com/user-attachments/assets/8a751d5a-980d-48d6-898d-fb8a016920fc)
 
 </details>
 
@@ -36,7 +36,7 @@ High-performance model loading optimizer with multiple optimization modes:
 - Built-in Smart Mode (automatically selects the best loading solution based on model size and hardware configuration)
 - Compatible with all models loaded through UNET nodes
 
-- First-time sampling speed optimizer, eliminates first sampling delay
+- Model first-time sampling speed optimizer, eliminates first sampling delay
 
 ![2131](https://github.com/user-attachments/assets/85c3f36b-f51a-4651-b4f7-9ff0d9f78170)
 
@@ -105,12 +105,13 @@ High-performance model loading optimizer with multiple optimization modes:
 
 </details>
 
-<details>  <summary>DD Interface Layout</summary>
+<details>  
+  <summary>DD Interface Layout</summary>
 
 - Can randomly or specifically set node title colors, quickly organize messy nodes
 - Beautify UI, add theme system, each theme has two different styles to switch between, click the coin animation to switch
   
-![面板](https://github.com/user-attachments/assets/ef4d9bb9-57a7-445d-8515-3bf07f1d48bc)
+![2025-06-23 17-52-10 00_00_00-00_00_30](https://github.com/user-attachments/assets/e79cfa00-9243-41bb-98e3-e9c67e104419)
 
 </details>
 
@@ -121,7 +122,7 @@ Provides various cool animation effects for ComfyUI node connections, supporting
 - Supports "Flow", "Wave", "Rhythm", "Pulse" and other animation styles
 - Animation parameters are customizable (line width, speed, effects, etc.)
 
-![连线](https://github.com/user-attachments/assets/56621f61-fe41-48fc-8871-471f5d411a17)
+![2025-06-23 17-48-57 00_00_10-00_00_15](https://github.com/user-attachments/assets/aeac1b96-c8d0-497a-9594-1ab7b5766f44)
 
 </details>
 
@@ -132,10 +133,10 @@ Method 1
 3. Restart ComfyUI
 
 Method 2 (Recommended)
-Use ComfyUI Manager or launcher for git installation
+Use Manager or launcher for git installation
 
 Method 3 (Recommended)
-Search for the plugin name directly in ComfyUI Manager and install
+Search for the plugin name directly in Manager and install
 
 ## Language Switching
 
@@ -153,7 +154,7 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 - v2.4.0 (2025-06-20)
   - 🔄 **Prompt Manager New Features**:
     - Added intelligent backup system - all prompt operations automatically save to extensions\Prompt_Manager\prompts.json
-    - You can also edit the JSON file directly to modify frontend prompts (frontend and backend data now sync through a unified JSON file)
+    (You can also edit the JSON file directly to modify frontend prompts, frontend and backend data now sync through a unified JSON file)
     - Added tag functionality - assign up to 4 tags per prompt for categorization and quick searching
 
 - v2.3.0 (2025-06-18)
@@ -168,7 +169,7 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
     - Hover mode FPS now matches native performance
 
 - v2.2.1 (2025-05-27)
-  - Improved UI, added theme options, and fixed bugs.
+  - Improved interface UI, added theme options, and fixed bugs.
 
 - v2.2.0 (2025-05-14)
   - Interface Layout Alpha 2.0 version released, with improved interface and basic tools

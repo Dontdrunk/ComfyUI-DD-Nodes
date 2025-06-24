@@ -146,97 +146,95 @@ This extension now supports ComfyUI's native internationalization (i18n) system,
 3. Currently only supports node translation, frontend functionality translation is not yet supported
 
 ## Version History
-- v2.6.0 (2025-06-23)
+- v2.4.1 (2025-06-23)
 - Complete reconstruction of the prompt management panel with many new features
 - Improved interface layout panel custom color functionality, now with a dedicated color preset panel
 
-- v2.5.0 (2025-06-20)
+- v2.4.0 (2025-06-20)
   - 🔄 **Prompt Manager New Features**:
     - Added intelligent backup system - all prompt operations automatically save to extensions\Prompt_Manager\prompts.json
     - You can also edit the JSON file directly to modify frontend prompts (frontend and backend data now sync through a unified JSON file)
     - Added tag functionality - assign up to 4 tags per prompt for categorization and quick searching
 
-- v2.4.1 (2025-06-18)
-  - ⚡ **Online Animation Performance & Feature Optimization**:
-    - Added animation visual options with "Show All" and "Hover Node" display modes
-    - Improved intelligent frame rate control: dynamically adjusts refresh rate based on connection count
-    - Hover mode FPS now matches native performance
-
-- v2.4.0 (2025-06-18)
+- v2.3.0 (2025-06-18)
   - 🎉 **New Prompt Manager Feature**:
     - Added intelligent prompt embedding functionality for all CLIP text encoder nodes
     - Supports CRUD operations for prompts with a modern management interface
     - Supports import/export of prompt files in JSON format
     - Search functionality for prompt names and content for quick location
+      - ⚡ **Online Animation Performance & Feature Optimization**:
+    - Added animation visual options with "Show All" and "Hover Node" display modes
+    - Improved intelligent frame rate control: dynamically adjusts refresh rate based on connection count
+    - Hover mode FPS now matches native performance
 
-- v2.3.1 (2025-05-27)
+- v2.2.1 (2025-05-27)
   - Improved UI, added theme options, and fixed bugs.
 
-- v2.3.0 (2025-05-14)
+- v2.2.0 (2025-05-14)
   - Interface Layout Alpha 2.0 version released, with improved interface and basic tools
   - Now you can synchronize the width, height, and size of selected nodes, and align all selected nodes
   - Still a test version, please report bugs if you find any
 
-- v2.2.0 (2025-05-13)
+- v2.1.0 (2025-05-13)
   - Added support for ComfyUI's native internationalization (i18n) system
   - Now can seamlessly switch between Chinese and English interfaces
   - All node names, descriptions, parameters, and outputs support bilingual display
   - Removed modular functionality from the smart layout (may be replaced with custom templates in the future)
 
-- v2.1.2 (2025-05-12)
+- v2.0.2 (2025-05-12)
   - Further improved animation performance and effects, fixed some path bugs in animations
 
-- v2.1.1 (2025-05-08)
+- v2.0.1 (2025-05-08)
   - Fixed compatibility issues between connection animation and the cg-use-everywhere plugin
   - When animation is disabled, it will use cg-use-everywhere's animation implementation (refresh browser if not working)
   - Fixed a serious bug in the smart layout functionality
 
-- v2.1.0 (2025-05-08)
+- v2.0.0 (2025-05-08)
   - Modularized connection animation effects for easier maintenance and future additions
   - Optimized animation performance and algorithms, added animation sampling strength options
   - [Low-spec computers: reduce sampling strength and increase animation speed to improve FPS by about 20%]
   - Improved pulse animation effects and fixed rhythm effect bugs
-  - Implemented Alpha version of smart layout functionality (may contain bugs)
+  - [New Feature!] Implemented Alpha version of smart layout functionality (may contain bugs)
 
-- v2.0.0-F (2025-05-05~06)
+- v1.9.1 (2025-05-05~06)
   - Permanently removed node alignment functionality, with plans for a more powerful interface layout tool
-  - Changed project to MIT license for full open-source accessibility
+  - [Changed project to MIT license for full open-source accessibility, hoping more people can use my code to create or integrate into their own projects]
 
-- v2.0.0 (2025-05-04)
+- v1.9.0 (2025-05-04)
   - Added "Circuit Board 1" and "Circuit Board 2" connection styles:
     - Circuit board implementation references the [quick-connections](https://github.com/niknah/quick-connections) project
     - Circuit Board 1: Classic L-shaped/folded paths, compatible with any node layout, fully supports animations and effects
     - Circuit Board 2: Supports recursive obstacle avoidance, prioritizes 90/45 degree connections, automatically avoids obstacle nodes
   - Both circuit board modes support "Flow", "Wave", "Rhythm", "Pulse" animation styles and gradient effects
 
-- v1.9.0 (2025-05-03)
+- v1.8.0 (2025-05-03)
   - Added a complete set of frontend connection animations
 
-- v1.8.0 (2025-04-22)
+- v1.7.0 (2025-04-22)
   - ┭┮﹏┭┮
 
-- v1.7.0 (2025-04-21)
+- v1.6.0 (2025-04-21)- v1.6.0 (2025-04-21)
   - Added mask uniform size node
   - Added image size limiter node
   - Added switcher series nodes (Condition, Latent, Model)
 
-- v1.6.0 (2025-03-05)
+- v1.5.0 (2025-03-05)
   - Added image uniform size node
 
-- v1.5.0 (2025-03-02)
+- v1.4.0 (2025-03-02)
   - Added empty Latent video (Wan2.1) [This node has been removed!]
 
-- v1.4.0 (2025-03-01)
+- v1.3.0 (2025-03-01)
   - Added sampling optimizer node for first sampling delay elimination and CLIP text encoding preheating
 
-- v1.3.0 (2025-02-21)
+- v1.2.0 (2025-02-21)
   - Added model optimizer node for UNET model optimization
 
-- v1.2.0 (2025-02-20)
+- v1.1.0 (2025-02-20)
   - Added advanced fusion node for image and video processing
   - Added simple latent node
 
-- v1.1.0 (2025-02-19)
+- v1.0.1 (2025-02-19)
   - Optimized color background generator node
   - Added layer control features
   - Improved mask blending system

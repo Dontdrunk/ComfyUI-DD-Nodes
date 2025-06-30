@@ -311,13 +311,9 @@ function createCoinElement() {
   setTimeout(() => {
     if (typeof window.createAncientGod1Eye === 'function') {
       window.createAncientGod1Eye('ancient-god-eye1');
-    } else {
-      console.warn('无法找到createAncientGod1Eye函数');
     }
     if (typeof window.createAncientGod2Eye === 'function') {
       window.createAncientGod2Eye('ancient-god-eye2');
-    } else {
-      console.warn('无法找到createAncientGod2Eye函数');
     }
   }, 100);
   
@@ -476,31 +472,34 @@ function flipCoin() {
     
     // 注入当前主题的CSS以确保应用正确的样式
     injectThemeStyles();
-    
+
     // 动画结束后清理并恢复透明度
     setTimeout(() => {
       // 移除临时元素
       rippleContainer.remove();
       rippleStyle.remove();
-      
+
       // 优化主题层，但保留动画状态
       cleanupThemeLayers();
-      
+
       // 恢复之前保存的透明度设置
       if (panelContainer) {
         // 设置数据属性
         panelContainer.dataset.bgOpacity = savedBgOpacity;
         panelContainer.dataset.btnOpacity = savedBtnOpacity;
-        
+
         // 应用透明度
         const bgContainer = panelContainer.querySelector('.theme-svg-background');
         if (bgContainer) {
           bgContainer.style.opacity = savedBgOpacity;
         }
-        
+
         // 通知主题系统透明度已更改
         _updatePanelStyles(panelContainer);
       }
+
+      // 通知颜色选择器更新主题
+      AncientGodTheme.notifyColorPickerThemeChange();
     }, 2000);
   }, 900); // 等待硬币翻转动画完成(0.9秒)
 }
@@ -819,6 +818,15 @@ const AncientGodTheme = {
   // 获取当前主题样式ID
   getCurrentThemeId() {
     return currentThemeId;
+  },
+
+  // 通知颜色选择器更新主题
+  notifyColorPickerThemeChange() {
+    // 查找颜色选择器实例并更新主题
+    const colorPicker = panelContainer?.querySelector('.layout-inline-color-picker');
+    if (colorPicker && colorPicker._inlineColorPickerInstance) {
+      colorPicker._inlineColorPickerInstance.updateTheme();
+    }
   },
   // 清理主题资源
   cleanup() {

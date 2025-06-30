@@ -171,7 +171,7 @@ export class LayoutPanel {
         buttonOpacity = window.app.extensionManager.setting.get("LayoutPanel.buttonOpacity", 90);
       }
     } catch(e) {
-      console.warn("获取透明度设置失败:", e);
+      // 静默处理设置获取失败
     }
     
     // 将初始透明度值存储到数据属性
@@ -278,6 +278,19 @@ export class LayoutPanel {
     this.inlineColorPicker = new InlineColorPicker({
       title: '选择节点颜色',
       defaultColor: '#3355aa',
+      getThemeInfo: () => {
+        // 获取当前主题信息
+        if (this.currentTheme && typeof getTheme === 'function') {
+          const themeModule = getTheme(this.currentTheme);
+          if (themeModule && typeof themeModule.getCurrentThemeId === 'function') {
+            const themeId = themeModule.getCurrentThemeId();
+            return {
+              type: themeId === 'blood' ? 'blood' : 'purple'
+            };
+          }
+        }
+        return { type: 'purple' }; // 默认紫色主题
+      },
       onColorSelect: (color) => {
         // 获取选中的节点和组
         const app = getComfyUIApp();
@@ -359,7 +372,7 @@ export class LayoutPanel {
           themeId = window.app.extensionManager.setting.get("LayoutPanel.theme");
         }
       } catch(e) {
-        console.warn("获取主题设置失败:", e);
+        // 静默处理主题设置获取失败
       }
       
       if (!themeId) {
@@ -427,11 +440,11 @@ export class LayoutPanel {
       }
       app.graph.setDirtyCanvas(true, true);
     } catch (error) {
-      console.error("设置随机颜色失败:", error);
       showNotification(`设置随机颜色失败: ${error.message}`);
     }
   }
-    // 打开自定义颜色选择器  // 切换内嵌颜色选择器显示/隐藏
+
+  // 切换内嵌颜色选择器显示/隐藏
   _toggleInlineColorPicker() {
     try {
       // 获取ComfyUI应用实例
@@ -464,7 +477,6 @@ export class LayoutPanel {
         showNotification("颜色选择器未正确初始化");
       }
     } catch (error) {
-      console.error("切换颜色选择器失败:", error);
       showNotification(`切换颜色选择器失败: ${error.message}`);
     }
   }
@@ -504,7 +516,6 @@ export class LayoutPanel {
       app.graph.setDirtyCanvas(true, true);
       showNotification("已应用自定义颜色", "info");
     } catch (error) {
-      console.error("应用颜色失败:", error);
       showNotification(`应用颜色失败: ${error.message}`);
     }
   }

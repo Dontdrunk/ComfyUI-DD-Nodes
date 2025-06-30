@@ -5,11 +5,13 @@ export class InlineColorPicker {
         this.onCancel = options.onCancel || null;
         this.defaultColor = options.defaultColor || '#3355aa';
         this.title = options.title || '选择颜色';
-        
+        this.getThemeInfo = options.getThemeInfo || null; // 新增：获取主题信息的回调
+
         this.container = null;
         this.selectedColor = this.defaultColor;
         this._isVisible = false; // 使用 _isVisible 避免方法名冲突
-        
+        this.currentTheme = 'purple'; // 默认主题
+
         // 自动创建样式
         this.addStyles();
     }
@@ -19,6 +21,9 @@ export class InlineColorPicker {
         this.container = document.createElement('div');
         this.container.className = 'layout-inline-color-picker';
         this.container.style.display = 'none';
+
+        // 添加实例引用，以便主题系统能够找到它
+        this.container._inlineColorPickerInstance = this;
         this.container.innerHTML = `
             <div class="inline-color-picker-header">
                 <div class="picker-title">
@@ -61,10 +66,13 @@ export class InlineColorPicker {
 
         // 添加事件监听器
         this.addEventListeners();
-        
+
         // 设置默认选中颜色
         this.setSelectedColor(this.defaultColor);
-        
+
+        // 设置初始主题
+        this.updateTheme();
+
         return this.container;
     }
 
@@ -148,14 +156,17 @@ export class InlineColorPicker {
 
     show(defaultColor) {
         if (!this.container) return;
-        
+
         if (defaultColor) {
             this.setSelectedColor(defaultColor);
         }
-        
+
+        // 更新主题
+        this.updateTheme();
+
         this.container.style.display = 'block';
         this._isVisible = true;
-        
+
         // 添加显示动画
         requestAnimationFrame(() => {
             this.container.style.opacity = '1';
@@ -188,6 +199,29 @@ export class InlineColorPicker {
         return this._isVisible;
     }
 
+    // 更新主题
+    updateTheme() {
+        if (!this.container) return;
+
+        // 获取当前主题信息
+        let themeInfo = { type: 'purple' }; // 默认值
+        if (this.getThemeInfo && typeof this.getThemeInfo === 'function') {
+            themeInfo = this.getThemeInfo();
+        }
+
+        // 移除旧的主题类
+        this.container.classList.remove('theme-purple', 'theme-blood');
+
+        // 添加新的主题类
+        if (themeInfo.type === 'blood') {
+            this.container.classList.add('theme-blood');
+            this.currentTheme = 'blood';
+        } else {
+            this.container.classList.add('theme-purple');
+            this.currentTheme = 'purple';
+        }
+    }
+
     destroy() {
         if (this.container && this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
@@ -206,12 +240,7 @@ export class InlineColorPicker {
             .layout-inline-color-picker {
                 width: 100%;
                 margin-top: 0px; /* 移除上边距，因为要替换显示 */
-                background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
-                border: 1px solid rgba(176, 141, 225, 0.3);
                 border-radius: 10px;
-                box-shadow: 
-                    0 8px 24px rgba(0, 0, 0, 0.4),
-                    0 0 15px rgba(138, 43, 226, 0.15);
                 backdrop-filter: blur(8px);
                 -webkit-backdrop-filter: blur(8px);
                 opacity: 0;
@@ -220,7 +249,16 @@ export class InlineColorPicker {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
-            .layout-inline-color-picker::before {
+            /* 紫色主题（秩序） */
+            .layout-inline-color-picker.theme-purple {
+                background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
+                border: 1px solid rgba(176, 141, 225, 0.3);
+                box-shadow:
+                    0 8px 24px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(138, 43, 226, 0.15);
+            }
+
+            .layout-inline-color-picker.theme-purple::before {
                 content: '';
                 position: absolute;
                 top: 0;
@@ -230,15 +268,44 @@ export class InlineColorPicker {
                 background: linear-gradient(90deg, transparent, rgba(176, 141, 225, 0.7), transparent);
             }
 
+            /* 血色主题（混沌） */
+            .layout-inline-color-picker.theme-blood {
+                background: linear-gradient(145deg, rgba(46, 26, 26, 0.9), rgba(62, 22, 22, 0.9));
+                border: 1px solid rgba(255, 0, 0, 0.3);
+                box-shadow:
+                    0 8px 24px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(184, 0, 0, 0.15);
+            }
+
+            .layout-inline-color-picker.theme-blood::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.7), transparent);
+            }
+
             /* ========== 头部样式 ========== */
             .inline-color-picker-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 padding: 12px 16px 8px;
+                border-radius: 10px 10px 0 0;
+            }
+
+            /* 紫色主题头部 */
+            .theme-purple .inline-color-picker-header {
                 border-bottom: 1px solid rgba(176, 141, 225, 0.2);
                 background: linear-gradient(135deg, rgba(176, 141, 225, 0.1), rgba(138, 43, 226, 0.05));
-                border-radius: 10px 10px 0 0;
+            }
+
+            /* 血色主题头部 */
+            .theme-blood .inline-color-picker-header {
+                border-bottom: 1px solid rgba(255, 0, 0, 0.2);
+                background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(184, 0, 0, 0.05));
             }
 
             .picker-title {
@@ -272,9 +339,15 @@ export class InlineColorPicker {
                 opacity: 0.9;
             }
 
-            .section-label::before {
+            .theme-purple .section-label::before {
                 content: '●';
                 color: rgba(176, 141, 225, 0.7);
+                font-size: 6px;
+            }
+
+            .theme-blood .section-label::before {
+                content: '●';
+                color: rgba(255, 0, 0, 0.7);
                 font-size: 6px;
             }
 
@@ -288,9 +361,19 @@ export class InlineColorPicker {
                 grid-template-columns: repeat(6, 1fr);
                 gap: 6px;
                 padding: 10px;
+                border-radius: 6px;
+            }
+
+            /* 紫色主题预设颜色网格 */
+            .theme-purple .preset-colors-grid {
                 background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(42, 30, 74, 0.15));
                 border: 1px solid rgba(176, 141, 225, 0.15);
-                border-radius: 6px;
+            }
+
+            /* 血色主题预设颜色网格 */
+            .theme-blood .preset-colors-grid {
+                background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(74, 30, 30, 0.15));
+                border: 1px solid rgba(255, 0, 0, 0.15);
             }
 
             .color-option {
@@ -314,12 +397,23 @@ export class InlineColorPicker {
                 border-color: rgba(255, 255, 255, 0.3);
             }
 
-            .color-option.selected {
+            /* 紫色主题选中颜色 */
+            .theme-purple .color-option.selected {
                 border-color: rgba(176, 141, 225, 0.8);
-                box-shadow: 
+                box-shadow:
                     0 0 0 2px rgba(138, 43, 226, 0.4),
                     0 3px 12px rgba(0, 0, 0, 0.4),
                     0 0 15px rgba(138, 43, 226, 0.3);
+                transform: scale(1.05);
+            }
+
+            /* 血色主题选中颜色 */
+            .theme-blood .color-option.selected {
+                border-color: rgba(255, 0, 0, 0.8);
+                box-shadow:
+                    0 0 0 2px rgba(184, 0, 0, 0.4),
+                    0 3px 12px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(184, 0, 0, 0.3);
                 transform: scale(1.05);
             }
 
@@ -347,9 +441,19 @@ export class InlineColorPicker {
                 align-items: center;
                 gap: 8px;
                 padding: 10px;
+                border-radius: 6px;
+            }
+
+            /* 紫色主题自定义颜色行 */
+            .theme-purple .custom-color-row {
                 background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(42, 30, 74, 0.15));
                 border: 1px solid rgba(176, 141, 225, 0.15);
-                border-radius: 6px;
+            }
+
+            /* 血色主题自定义颜色行 */
+            .theme-blood .custom-color-row {
+                background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(74, 30, 30, 0.15));
+                border: 1px solid rgba(255, 0, 0, 0.15);
             }
 
             .color-input {
@@ -366,18 +470,26 @@ export class InlineColorPicker {
                 width: 28px;
                 height: 28px;
                 border-radius: 4px;
-                border: 2px solid rgba(176, 141, 225, 0.3);
                 background: #3355aa;
-                box-shadow: 
+                box-shadow:
                     0 2px 6px rgba(0, 0, 0, 0.3),
                     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+
+            /* 紫色主题颜色预览 */
+            .theme-purple .color-preview {
+                border: 2px solid rgba(176, 141, 225, 0.3);
+            }
+
+            /* 血色主题颜色预览 */
+            .theme-blood .color-preview {
+                border: 2px solid rgba(255, 0, 0, 0.3);
             }
 
             .color-hex-input {
                 flex: 1;
                 padding: 6px 8px;
                 background: rgba(0, 0, 0, 0.3);
-                border: 1px solid rgba(176, 141, 225, 0.2);
                 border-radius: 4px;
                 color: #e1e1e1;
                 font-size: 12px;
@@ -385,9 +497,24 @@ export class InlineColorPicker {
                 transition: all 0.2s ease;
             }
 
-            .color-hex-input:focus {
+            /* 紫色主题输入框 */
+            .theme-purple .color-hex-input {
+                border: 1px solid rgba(176, 141, 225, 0.2);
+            }
+
+            .theme-purple .color-hex-input:focus {
                 border-color: rgba(176, 141, 225, 0.5);
                 box-shadow: 0 0 8px rgba(138, 43, 226, 0.2);
+            }
+
+            /* 血色主题输入框 */
+            .theme-blood .color-hex-input {
+                border: 1px solid rgba(255, 0, 0, 0.2);
+            }
+
+            .theme-blood .color-hex-input:focus {
+                border-color: rgba(255, 0, 0, 0.5);
+                box-shadow: 0 0 8px rgba(184, 0, 0, 0.2);
             }
 
             /* ========== 按钮区域 ========== */
@@ -399,9 +526,7 @@ export class InlineColorPicker {
 
             .cancel-btn, .apply-btn {
                 padding: 6px 16px;
-                border: 1px solid rgba(176, 141, 225, 0.3);
                 border-radius: 4px;
-                background: linear-gradient(145deg, rgba(26, 26, 46, 0.8), rgba(22, 33, 62, 0.8));
                 color: #e1e1e1;
                 font-size: 12px;
                 cursor: pointer;
@@ -409,21 +534,50 @@ export class InlineColorPicker {
                 outline: none;
             }
 
-            .cancel-btn:hover {
+            /* 紫色主题按钮 */
+            .theme-purple .cancel-btn, .theme-purple .apply-btn {
+                border: 1px solid rgba(176, 141, 225, 0.3);
+                background: linear-gradient(145deg, rgba(26, 26, 46, 0.8), rgba(22, 33, 62, 0.8));
+            }
+
+            .theme-purple .cancel-btn:hover {
                 background: linear-gradient(145deg, rgba(120, 120, 120, 0.2), rgba(80, 80, 80, 0.2));
                 border-color: rgba(176, 141, 225, 0.5);
                 box-shadow: 0 0 8px rgba(138, 43, 226, 0.2);
             }
 
-            .apply-btn {
+            .theme-purple .apply-btn {
                 background: linear-gradient(145deg, rgba(176, 141, 225, 0.3), rgba(138, 43, 226, 0.3));
                 border-color: rgba(176, 141, 225, 0.5);
             }
 
-            .apply-btn:hover {
+            .theme-purple .apply-btn:hover {
                 background: linear-gradient(145deg, rgba(176, 141, 225, 0.4), rgba(138, 43, 226, 0.4));
                 border-color: rgba(176, 141, 225, 0.7);
                 box-shadow: 0 0 12px rgba(138, 43, 226, 0.3);
+            }
+
+            /* 血色主题按钮 */
+            .theme-blood .cancel-btn, .theme-blood .apply-btn {
+                border: 1px solid rgba(255, 0, 0, 0.3);
+                background: linear-gradient(145deg, rgba(46, 26, 26, 0.8), rgba(62, 22, 22, 0.8));
+            }
+
+            .theme-blood .cancel-btn:hover {
+                background: linear-gradient(145deg, rgba(120, 80, 80, 0.2), rgba(80, 60, 60, 0.2));
+                border-color: rgba(255, 0, 0, 0.5);
+                box-shadow: 0 0 8px rgba(184, 0, 0, 0.2);
+            }
+
+            .theme-blood .apply-btn {
+                background: linear-gradient(145deg, rgba(255, 0, 0, 0.3), rgba(184, 0, 0, 0.3));
+                border-color: rgba(255, 0, 0, 0.5);
+            }
+
+            .theme-blood .apply-btn:hover {
+                background: linear-gradient(145deg, rgba(255, 0, 0, 0.4), rgba(184, 0, 0, 0.4));
+                border-color: rgba(255, 0, 0, 0.7);
+                box-shadow: 0 0 12px rgba(184, 0, 0, 0.3);
             }
         `;
         

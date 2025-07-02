@@ -16,7 +16,22 @@ const CLIP_TEXT_ENCODERS = [
     "Easy Positive",
     "CLIPTextEncodeFlux(Advanced)",
     "CLIP Text Encode (Prompt)",
-    "WanVideoTextEncode"
+    "WanVideoTextEncode",
+    "fast fluxInput",
+    "fast sdInput",
+    "fast hiDreamInput",
+    "fast videoInput",
+    "easy cascadeLoader",
+    "easy fullLoader",
+    "easy a1111Loader",
+    "easy comfyLoader",
+    "easy svdLoader",
+    "easy pixArtLoader",
+    "easy kolorsLoader",
+    "easy hunyuanDiTLoader",
+    "easy fluxLoader",
+    "easy mochiLoader",
+    "easy promptAwait"
 ];
 
 // 全局提示词管理器

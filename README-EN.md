@@ -9,7 +9,7 @@ A full-process AI-developed ComfyUI custom node collection (fully localized) dev
 ## Current Node List
 
 <details>
-  <summary>🎯 DD Prompt Manager (New Feature)</summary>
+  <summary> DD Prompt Manager (New Feature)</summary>
 
 Intelligent prompt embedding and management system that provides powerful prompt management capabilities for all CLIP text encoder nodes:
 

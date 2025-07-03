@@ -52,7 +52,8 @@ export class LayoutPanel {
     this.container = null;
     this.buttonsContainer = null;
     this.colorMode = '完全随机'; // 默认为完全随机模式
-    this.currentTheme = null;    this.coinElement = null;
+    this.currentTheme = null;
+    this.coinElement = null;
     this.inlineColorPicker = null; // 内嵌颜色选择器实例
   }
   
@@ -83,6 +84,9 @@ export class LayoutPanel {
     if (applyTheme(themeId, this.container, this.coinElement)) {
       this.currentTheme = themeId;
       
+      // *** 关键修改：主题应用后检查并恢复控制区域 ***
+      this._ensureControlsExist();
+      
       // 主题应用后，恢复保存的透明度设置
       setTimeout(() => {
         if (bgOpacity) this.setOpacity(parseFloat(bgOpacity) * 100);
@@ -92,6 +96,25 @@ export class LayoutPanel {
       return true;
     }
     return false;
+  }
+
+  // 新增方法：确保控制区域存在，如果被主题覆盖则重新创建
+  _ensureControlsExist() {
+    if (!this.container) return;
+    
+    // 检查控制区域是否存在
+    const existingControls = this.container.querySelector('.layout-controls-container');
+    const existingColorPicker = this.container.querySelector('.layout-inline-color-picker');
+    
+    // 如果控制区域不存在，重新创建
+    if (!existingControls || !this.controlsContainer) {
+      console.log('🔧 智能布局：检测到控制区域丢失，正在重新创建...');
+      this._createControlElements();
+      console.log('✅ 智能布局：控制区域已重新创建');
+    } else {
+      // 确保控制区域可见
+      this._showControls();
+    }
   }
   
   // 只有通过toggle方法才能控制面板显示/隐藏，确保只能通过快捷键激活
@@ -108,6 +131,9 @@ export class LayoutPanel {
       this._createPanel();
     }
     
+    // *** 新增：每次显示时确保控制区域存在 ***
+    this._ensureControlsExist();
+    
     // 使用当前鼠标位置显示面板
     showAtMousePosition(this.container, mousePosition);
     
@@ -121,7 +147,8 @@ export class LayoutPanel {
     
     this.visible = true;
   }
-    hide() {
+  
+  hide() {
     if (!this.container) return;    // 隐藏颜色选择器（如果存在且可见）
     if (this.inlineColorPicker && typeof this.inlineColorPicker.isVisible === 'function' && this.inlineColorPicker.isVisible()) {
       this.inlineColorPicker.hide();
@@ -182,14 +209,40 @@ export class LayoutPanel {
     // 这样可以确保主题应用后再设置透明度
     this.container.dataset.bgOpacity = opacity / 100;
     this.container.dataset.btnOpacity = buttonOpacity / 100;
+
+    // *** 关键修改：先应用主题，再创建控制元素 ***
+    // 应用当前主题或默认主题
+    let themeId = null;
+    try {
+      if (window.app?.extensionManager?.setting) {
+        themeId = window.app.extensionManager.setting.get("LayoutPanel.theme");
+      }
+    } catch(e) {
+      // 静默处理主题设置获取失败
+    }
     
-    // 确保面板存在后才设置透明度
-    setTimeout(() => {
-      // 确保面板已经完全创建并添加到DOM中
-      this.setOpacity(opacity);
-      this.setButtonOpacity(buttonOpacity);
-    }, 50);
+    if (!themeId) {
+      themeId = getDefaultTheme();
+    }
+
+    // 创建硬币容器 - 在主题应用前创建
+    this.coinElement = createCoinElement();
     
+    // 确保硬币元素添加到面板顶部
+    if (this.container.firstChild) {
+      this.container.insertBefore(this.coinElement, this.container.firstChild);
+    } else {
+      this.container.appendChild(this.coinElement);
+    }
+
+    // 先应用主题（如果有的话）
+    if (themeId) {
+      this.setTheme(themeId);
+    }
+
+    // *** 在主题应用后创建所有控制元素 ***
+    this._createControlElements();
+
     // 监听设置变化
     if (window.app?.extensionManager?.setting?.onChange) {
       window.app.extensionManager.setting.onChange("LayoutPanel.opacity", (val) => {
@@ -201,16 +254,27 @@ export class LayoutPanel {
       });
     }
 
-    // 创建硬币容器 
-    this.coinElement = createCoinElement();
+    // 使用外部样式模块注入样式
+    injectStyles('layout-panel-styles', layoutPanelStyles);
     
-    // 确保硬币元素添加到面板顶部
-    if (this.container.firstChild) {
-      this.container.insertBefore(this.coinElement, this.container.firstChild);
-    } else {
-      this.container.appendChild(this.coinElement);
-    }
+    // 添加面板点击事件，阻止冒泡
+    this.container.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    
+    // 添加到文档
+    document.body.appendChild(this.container);
+    
+    // 最后应用透明度设置
+    setTimeout(() => {
+      this.container.dataset.initialSetup = 'completed';
+      this.setOpacity(opacity);
+      this.setButtonOpacity(buttonOpacity);
+    }, 100);
+  }
 
+  // 新增方法：创建所有控制元素（按钮、选择器等）
+  _createControlElements() {
     // 创建按钮容器
     this.buttonsContainer = createButtonsContainer();
     
@@ -220,7 +284,8 @@ export class LayoutPanel {
       e.stopPropagation();
       this._setRandomNodeColor();
     });
-      // 创建自定义颜色按钮
+    
+    // 创建自定义颜色按钮
     const customColorBtn = createButton('自定义颜色', 'normal');
     customColorBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -264,7 +329,8 @@ export class LayoutPanel {
       this.colorMode = e.target.value;
     });
     modeContainer.appendChild(modeSelect);
-      // 添加按钮到容器
+    
+    // 添加按钮到容器
     this.buttonsContainer.appendChild(randomColorBtn);
     this.buttonsContainer.appendChild(customColorBtn);
     this.buttonsContainer.appendChild(syncBtn);
@@ -274,7 +340,9 @@ export class LayoutPanel {
     this.controlsContainer.className = 'layout-controls-container';
     this.controlsContainer.appendChild(this.buttonsContainer);
     this.controlsContainer.appendChild(modeContainer);
-    this.controlsContainer.appendChild(syncModeContainer);    // 创建并添加内嵌颜色选择器
+    this.controlsContainer.appendChild(syncModeContainer);
+    
+    // 创建并添加内嵌颜色选择器
     this.inlineColorPicker = new InlineColorPicker({
       title: '选择节点颜色',
       defaultColor: '#3355aa',
@@ -310,7 +378,7 @@ export class LayoutPanel {
     
     const colorPickerElement = this.inlineColorPicker.createInlineColorPicker();
     
-    // 将控制区域和颜色选择器都添加到主容器
+    // *** 关键：确保控制元素在主题应用后添加到容器 ***
     this.container.appendChild(this.controlsContainer);
     this.container.appendChild(colorPickerElement);
     
@@ -352,44 +420,6 @@ export class LayoutPanel {
         }
       });
     }, 200);
-    
-    // 使用外部样式模块注入样式
-    injectStyles('layout-panel-styles', layoutPanelStyles);
-    
-    // 添加面板点击事件，阻止冒泡
-    this.container.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-    
-    // 添加到文档
-    document.body.appendChild(this.container);
-    
-    // 应用当前主题或默认主题
-    setTimeout(() => {
-      let themeId = null;
-      try {
-        if (window.app?.extensionManager?.setting) {
-          themeId = window.app.extensionManager.setting.get("LayoutPanel.theme");
-        }
-      } catch(e) {
-        // 静默处理主题设置获取失败
-      }
-      
-      if (!themeId) {
-        themeId = getDefaultTheme();
-      }
-      
-      if (themeId) {
-        this.setTheme(themeId);
-        
-        // 最后应用透明度，确保不被主题覆盖
-        setTimeout(() => {
-          this.container.dataset.initialSetup = 'completed';
-          this.setOpacity(opacity);
-          this.setButtonOpacity(buttonOpacity);
-        }, 150);
-      }
-    }, 100);
   }
   
   // 设置随机节点颜色
@@ -497,6 +527,10 @@ export class LayoutPanel {
       this.controlsContainer.style.display = 'none';
     }
     if (this.inlineColorPicker && typeof this.inlineColorPicker.show === 'function') {
+      // 在显示前更新主题，确保颜色选择器使用正确的主题
+      if (typeof this.inlineColorPicker.updateTheme === 'function') {
+        this.inlineColorPicker.updateTheme();
+      }
       this.inlineColorPicker.show(defaultColor);
     }
   }
@@ -567,7 +601,8 @@ export class LayoutPanel {
     if (this.visible) {
       this.hide();
     }
-      // 销毁颜色选择器
+    
+    // 销毁颜色选择器
     if (this.inlineColorPicker) {
       this.inlineColorPicker.destroy();
       this.inlineColorPicker = null;
@@ -584,8 +619,10 @@ export class LayoutPanel {
     // 重置状态
     this.container = null;
     this.buttonsContainer = null;
+    this.controlsContainer = null; // 新增：清理控制容器引用
     this.coinElement = null;
     this.visible = false;
+    this.currentTheme = null;
   }
 }
 

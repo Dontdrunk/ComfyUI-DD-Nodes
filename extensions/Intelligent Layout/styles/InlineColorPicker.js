@@ -18,6 +18,11 @@ export class InlineColorPicker {
 
     // 创建内嵌式颜色选择器 DOM 元素
     createInlineColorPicker() {
+        // 如果已经创建过容器，直接返回
+        if (this.container) {
+            return this.container;
+        }
+
         this.container = document.createElement('div');
         this.container.className = 'layout-inline-color-picker';
         this.container.style.display = 'none';
@@ -79,6 +84,11 @@ export class InlineColorPicker {
     addEventListeners() {
         if (!this.container) return;
 
+        // 防止重复绑定事件 - 检查是否已经绑定过
+        if (this.container.dataset.eventsAttached === 'true') {
+            return;
+        }
+
         // 预设颜色点击事件
         const colorOptions = this.container.querySelectorAll('.color-option');
         colorOptions.forEach(option => {
@@ -118,7 +128,9 @@ export class InlineColorPicker {
             applyBtn.addEventListener('click', () => {
                 this.handleConfirm();
             });
-        }        if (cancelBtn) {
+        }
+        
+        if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
                 this.hide();
                 // 在取消按钮点击时调用onCancel回调
@@ -127,6 +139,9 @@ export class InlineColorPicker {
                 }
             });
         }
+
+        // 标记事件已绑定
+        this.container.dataset.eventsAttached = 'true';
     }
 
     setSelectedColor(color) {
@@ -172,7 +187,9 @@ export class InlineColorPicker {
             this.container.style.opacity = '1';
             this.container.style.transform = 'translateY(0)';
         });
-    }    hide() {
+    }
+    
+    hide() {
         if (!this.container) return;
         
         // 添加隐藏动画
@@ -206,7 +223,11 @@ export class InlineColorPicker {
         // 获取当前主题信息
         let themeInfo = { type: 'purple' }; // 默认值
         if (this.getThemeInfo && typeof this.getThemeInfo === 'function') {
-            themeInfo = this.getThemeInfo();
+            try {
+                themeInfo = this.getThemeInfo();
+            } catch (e) {
+                console.warn('获取主题信息失败，使用默认主题:', e);
+            }
         }
 
         // 移除旧的主题类
@@ -220,17 +241,44 @@ export class InlineColorPicker {
             this.container.classList.add('theme-purple');
             this.currentTheme = 'purple';
         }
+        
+        // 强制重绘以确保样式正确应用
+        this.container.offsetHeight;
     }
 
     destroy() {
-        if (this.container && this.container.parentNode) {
-            this.container.parentNode.removeChild(this.container);
+        // 移除事件监听器
+        if (this.container) {
+            // 获取所有需要清理的元素
+            const colorOptions = this.container.querySelectorAll('.color-option');
+            const colorInput = this.container.querySelector('.color-input');
+            const hexInput = this.container.querySelector('.color-hex-input');
+            const applyBtn = this.container.querySelector('.apply-btn');
+            const cancelBtn = this.container.querySelector('.cancel-btn');
+
+            // 移除事件监听器（虽然移除DOM元素也会自动清理，但显式清理更安全）
+            colorOptions.forEach(option => {
+                option.removeEventListener('click', () => {});
+            });
+
+            // 移除DOM元素
+            if (this.container.parentNode) {
+                this.container.parentNode.removeChild(this.container);
+            }
         }
+
+        // 清理实例属性
+        this.container = null;
+        this.onColorSelect = null;
+        this.onCancel = null;
+        this.getThemeInfo = null;
+        this._isVisible = false;
     }
 
     addStyles() {
         // 检查是否已经添加了样式
-        if (document.querySelector('#inline-color-picker-styles')) {
+        const existingStyle = document.querySelector('#inline-color-picker-styles');
+        if (existingStyle) {
             return;
         }
         

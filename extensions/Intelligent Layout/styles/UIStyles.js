@@ -91,6 +91,23 @@ export function applyTheme(id, container, coinElement) {
     return false;
   }
   
+  // *** 关键修改：在主题应用前保存控制区域 ***
+  let savedControlsContainer = null;
+  let savedColorPicker = null;
+  
+  if (container) {
+    // 临时移除控制区域，防止被主题操作影响
+    savedControlsContainer = container.querySelector('.layout-controls-container');
+    savedColorPicker = container.querySelector('.layout-inline-color-picker');
+    
+    if (savedControlsContainer) {
+      savedControlsContainer.remove();
+    }
+    if (savedColorPicker) {
+      savedColorPicker.remove();
+    }
+  }
+  
   // 初始化并应用新主题
   // 确保硬币元素存在且为初始状态
   if (coinElement) {
@@ -104,6 +121,18 @@ export function applyTheme(id, container, coinElement) {
   themeModule.init(container, coinElement);
   themeModule.applyTheme();
   currentTheme = id;
+  
+  // *** 关键修改：主题应用后恢复控制区域 ***
+  if (container && (savedControlsContainer || savedColorPicker)) {
+    setTimeout(() => {
+      if (savedControlsContainer && !container.querySelector('.layout-controls-container')) {
+        container.appendChild(savedControlsContainer);
+      }
+      if (savedColorPicker && !container.querySelector('.layout-inline-color-picker')) {
+        container.appendChild(savedColorPicker);
+      }
+    }, 50); // 短延迟确保主题完全应用
+  }
   
   return true;
 }

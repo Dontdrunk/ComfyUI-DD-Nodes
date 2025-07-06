@@ -334,5 +334,25 @@
         "tooltip": "Selected latent space"
       }
     }
+  },
+  "DD-VideoFrameExtractor": {
+    "display_name": "DD Video Frame Extractor",
+    "description": "Extract first or last frame from video",
+    "inputs": {
+      "视频": {
+        "name": "Video",
+        "tooltip": "Input video frame sequence"
+      },
+      "提取模式": {
+        "name": "Extract Mode",
+        "tooltip": "Choose to extract first frame or last frame"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Image",
+        "tooltip": "Extracted single frame image"
+      }
+    }
   }
 }

@@ -334,5 +334,25 @@
         "tooltip": "选中的潜空间"
       }
     }
+  },
+  "DD-VideoFrameExtractor": {
+    "display_name": "DD 视频首尾帧输出",
+    "description": "从视频中提取首帧或尾帧图像",
+    "inputs": {
+      "视频": {
+        "name": "视频",
+        "tooltip": "输入的视频帧序列"
+      },
+      "提取模式": {
+        "name": "提取模式",
+        "tooltip": "选择提取首帧还是尾帧"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像",
+        "tooltip": "提取的单帧图像"
+      }
+    }
   }
 }

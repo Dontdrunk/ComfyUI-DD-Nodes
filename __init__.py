@@ -1,6 +1,7 @@
 from .node.color_generator import NODE_CLASS_MAPPINGS as COLOR_NODES
 from .node.dimension_calculator import NODE_CLASS_MAPPINGS as DIMENSION_NODES
 from .node.image_to_video import NODE_CLASS_MAPPINGS as VIDEO_NODES
+from .node.video_frame_extractor import NODE_CLASS_MAPPINGS as VIDEO_FRAME_EXTRACTOR_NODES
 from .node.advanced_fusion import NODE_CLASS_MAPPINGS as FUSION_NODES
 from .node.simple_latent import NODE_CLASS_MAPPINGS as LATENT_NODES
 from .node.model_optimizer import NODE_CLASS_MAPPINGS as OPTIMIZER_NODES
@@ -20,6 +21,7 @@ NODE_CLASS_MAPPINGS = {
     **COLOR_NODES,
     **DIMENSION_NODES,
     **VIDEO_NODES,
+    **VIDEO_FRAME_EXTRACTOR_NODES,
     **FUSION_NODES,
     **LATENT_NODES,
     **OPTIMIZER_NODES,
@@ -37,6 +39,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ColorBackgroundGenerator": "DD Color Background Generator",
     "DD-DimensionCalculator": "DD Dimension Calculator",
     "DD-ImageToVideo": "DD Image To Video",
+    "DD-VideoFrameExtractor": "DD Video Frame Extractor",
     "DD-AdvancedFusion": "DD Advanced Fusion",
     "DD-SimpleLatent": "DD Simple Latent",
     "DD-ModelOptimizer": "DD Model Optimizer",

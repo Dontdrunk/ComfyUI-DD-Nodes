@@ -21,17 +21,18 @@
 
 | Node Name | Function Description | Image Description |
 |-----------|---------------------|-------------------|
-| **DD Model Optimizer** | High-performance model loading optimizer supporting intelligent loading and multiple optimization modes. Built-in Smart Mode automatically selects the best loading solution based on model size and hardware configuration, compatible with all models loaded through UNET nodes | ![Model Optimizer Interface](https://github.com/user-attachments/assets/85c3f36b-f51a-4651-b4f7-9ff0d9f78170) |
-| **DD Sampling Optimizer** | Model first-time sampling speed optimizer that effectively eliminates first sampling delay, improving workflow response speed and user experience | Shares interface with Model Optimizer |
+| **DD Model Optimizer** | High-performance model loading optimizer supporting intelligent loading and multiple optimization modes. Built-in Smart Mode automatically selects the best loading solution based on model size and hardware configuration, compatible with all models loaded through UNET nodes | Image to be added |
+| **DD Sampling Optimizer** | Model first-time sampling speed optimizer that effectively eliminates first sampling delay, improving workflow response speed and user experience | Image to be added |
 | **DD Image To Video** | Efficient image to video frame converter supporting batch processing and multiple output formats, providing convenience for video generation workflows | ![Image To Video Interface](https://github.com/user-attachments/assets/66c05a9c-c33b-4813-b434-d3c5928067c5) |
 | **DD Advanced Fusion** | Powerful image and video fusion processor supporting multiple fusion algorithms and parameter adjustments for professional-grade image composition effects | ![Advanced Fusion Demo](https://github.com/user-attachments/assets/2a50614f-1911-4fd8-bc2e-8d2bece91e73) |
 | **DD Color Background Generator** | Advanced color background generator supporting various color modes, gradient effects, and layer controls, providing rich background options for image creation | ![Color Background Generator Interface](https://github.com/user-attachments/assets/141b1585-0d02-47f1-9d51-2d12eccc6403) |
-| **DD Dimension Calculator** | Minimalist image dimension calculator providing precise dimension calculation and ratio adjustment functions, ensuring output images meet expected specifications | ![Dimension Calculator Interface](https://github.com/user-attachments/assets/dca647bf-1c8f-4947-ad14-c7ad00e98d10) |
-| **DD Simple Latent** | Simplified latent space generator providing quick and convenient latent space creation functionality, optimizing workflow node connections | Shares interface with Dimension Calculator |
-| **DD Image Uniform Size** | Multi-functional image and video size unification processor supporting batch processing and intelligent scaling, ensuring output content size consistency | ![Image Uniform Size Interface](https://github.com/user-attachments/assets/58629a1d-f331-4fd6-aabe-de7158d6fdda) |
-| **DD Mask Uniform Size** | Professional mask size unification tool that works perfectly with image processing, ensuring mask and target image size matching | Shares interface with Image Uniform Size |
+| **DD Dimension Calculator** | Minimalist image dimension calculator providing precise dimension calculation and ratio adjustment functions, ensuring output images meet expected specifications | Image to be added |
+| **DD Simple Latent** | Simplified latent space generator providing quick and convenient latent space creation functionality, optimizing workflow node connections | Image to be added |
+| **DD Image Uniform Size** | Multi-functional image and video size unification processor supporting batch processing and intelligent scaling, ensuring output content size consistency | Image to be added |
+| **DD Mask Uniform Size** | Professional mask size unification tool that works perfectly with image processing, ensuring mask and target image size matching | Image to be added |
 | **DD Image Size Limiter** | Smart image size limiter ensuring images are within specified maximum and minimum size ranges, preventing memory overflow and performance issues | ![Image Size Limiter Interface](https://github.com/user-attachments/assets/d2fac125-fad3-4f51-9b91-39d0be4c7753) |
 | **DD Switcher Series** | Includes condition switcher, latent switcher, model switcher and other switching nodes, simplifying workflows and improving processing flexibility | ![Switcher Series Interface](https://github.com/user-attachments/assets/54690c0c-3627-4970-9bc0-ef58ca4be2f7) |
+| **DD Video First Last Frame** | Professional video frame extraction tool that can precisely extract the first and last frames of videos, providing convenience for video processing workflows | Image to be added |
 
 ## 🎯 Extension Functions Overview
 

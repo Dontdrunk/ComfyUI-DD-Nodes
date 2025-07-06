@@ -5,7 +5,7 @@
 // ==========================================================
 
 // 导入主题模块
-import AncientGodTheme from "./古神之眼/AncientGodTheme.js";
+import AncientGodTheme from "./AncientGodEye/AncientGodTheme.js";
 
 // 存储所有已注册的主题
 const registeredThemes = {};

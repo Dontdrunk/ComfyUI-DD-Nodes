@@ -1,32 +1,4 @@
 {
-  "DD-ColorBackgroundGenerator": {
-    "display_name": "DD 颜色背景生成器",
-    "description": "生成纯色背景图像",
-    "inputs": {
-      "图层设置": {
-        "name": "图层设置",
-        "tooltip": "控制图层的属性设置"
-      },
-      "宽度": {
-        "name": "宽度",
-        "tooltip": "图像宽度（像素）"
-      },
-      "高度": {
-        "name": "高度",
-        "tooltip": "图像高度（像素）"
-      },
-      "颜色模式": {
-        "name": "颜色模式",
-        "tooltip": "选择颜色表示模式（HSLA, HSVA, CMYK）"
-      }
-    },
-    "outputs": {
-      "0": {
-        "name": "图像",
-        "tooltip": "生成的背景图像"
-      }
-    }
-  },
   "DD-DimensionCalculator": {
     "display_name": "DD 尺寸计算器",
     "description": "计算和调整图像尺寸比例",
@@ -332,6 +304,46 @@
       "0": {
         "name": "潜空间",
         "tooltip": "选中的潜空间"
+      }
+    }
+  },
+  "DD-ImageStroke": {
+    "display_name": "DD 图片描边",
+    "description": "为图片添加描边效果，支持透明图和普通图片",
+    "inputs": {
+      "图片": {
+        "name": "图片",
+        "tooltip": "需要添加描边的输入图片"
+      },
+      "反转遮罩": {
+        "name": "反转遮罩",
+        "tooltip": "是否反转遮罩效果，默认开启"
+      },
+      "位置": {
+        "name": "位置",
+        "tooltip": "描边位置：外描边、内描边或居中描边"
+      },
+      "大小": {
+        "name": "大小",
+        "tooltip": "描边的像素大小(1-200)"
+      },
+      "不透明度": {
+        "name": "不透明度",
+        "tooltip": "描边的不透明度(1-100)"
+      },
+      "描边颜色": {
+        "name": "描边颜色",
+        "tooltip": "描边的颜色，点击可打开颜色选择器"
+      },
+      "遮罩": {
+        "name": "遮罩",
+        "tooltip": "可选的遮罩，用于定义图片的透明区域"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "描边图片",
+        "tooltip": "添加描边效果后的图片"
       }
     }
   },

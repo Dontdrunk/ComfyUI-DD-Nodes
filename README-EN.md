@@ -25,7 +25,6 @@
 | **DD Sampling Optimizer** | Model first-time sampling speed optimizer that effectively eliminates first sampling delay, improving workflow response speed and user experience | ![Sampling Optimizer](https://github.com/user-attachments/assets/53a74ea8-2a37-479c-8ff9-99c9ceac345c) |
 | **DD Image To Video** | Efficient image to video frame converter supporting batch processing and multiple output formats, providing convenience for video generation workflows | ![Image To Video Interface](https://github.com/user-attachments/assets/66c05a9c-c33b-4813-b434-d3c5928067c5) |
 | **DD Advanced Fusion** | Powerful image and video fusion processor supporting multiple fusion algorithms and parameter adjustments for professional-grade image composition effects | ![Advanced Fusion Demo](https://github.com/user-attachments/assets/2a50614f-1911-4fd8-bc2e-8d2bece91e73) |
-| **DD Color Background Generator** | Advanced color background generator supporting various color modes, gradient effects, and layer controls, providing rich background options for image creation | ![Color Background Generator Interface](https://github.com/user-attachments/assets/141b1585-0d02-47f1-9d51-2d12eccc6403) |
 | **DD Dimension Calculator** | Minimalist image dimension calculator providing precise dimension calculation and ratio adjustment functions, ensuring output images meet expected specifications | ![Dimension Calculator](https://github.com/user-attachments/assets/f3b670d6-a471-4851-a2bf-49b8f174d83e) |
 | **DD Simple Latent** | Simplified latent space generator providing quick and convenient latent space creation functionality, optimizing workflow node connections | ![Simple Latent](https://github.com/user-attachments/assets/ca00fb32-aa48-4e18-9a60-56b1c6cbda9c) |
 | **DD Image Uniform Size** | Multi-functional image and video size unification processor supporting batch processing and intelligent scaling, ensuring output content size consistency | ![Image Uniform Size](https://github.com/user-attachments/assets/c96fbfa0-9da4-4641-a08b-6ce5699dfae3) |
@@ -165,13 +164,11 @@ This extension now supports ComfyUI's native internationalization (i18n) system 
   - Added simple latent node
 
 - **v1.0.1** (2025-02-19)
-  - Optimized color background generator node
   - Added layer control features
   - Improved mask blending system
 
 - **v1.0.0** (2025-02-17)
   - Initial release
-  - Added color background generator node
   - Added dimension calculator node
   - Added image to video frame node
   - Full Chinese interface support

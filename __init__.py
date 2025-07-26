@@ -1,4 +1,3 @@
-from .node.color_generator import NODE_CLASS_MAPPINGS as COLOR_NODES
 from .node.dimension_calculator import NODE_CLASS_MAPPINGS as DIMENSION_NODES
 from .node.image_to_video import NODE_CLASS_MAPPINGS as VIDEO_NODES
 from .node.video_frame_extractor import NODE_CLASS_MAPPINGS as VIDEO_FRAME_EXTRACTOR_NODES
@@ -12,13 +11,13 @@ from .node.image_size_limiter import NODE_CLASS_MAPPINGS as SIZE_LIMITER_NODES
 from .node.model_switcher import NODE_CLASS_MAPPINGS as MODEL_SWITCHER_NODES
 from .node.condition_switcher import NODE_CLASS_MAPPINGS as CONDITION_SWITCHER_NODES
 from .node.latent_switcher import NODE_CLASS_MAPPINGS as LATENT_SWITCHER_NODES
+from .node.image_stroke import NODE_CLASS_MAPPINGS as IMAGE_STROKE_NODES
 
 # 导入扩展功能API
 from .extensions.Prompt_Manager.prompt_api import prompt_manager_api
 
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
-    **COLOR_NODES,
     **DIMENSION_NODES,
     **VIDEO_NODES,
     **VIDEO_FRAME_EXTRACTOR_NODES,
@@ -32,11 +31,11 @@ NODE_CLASS_MAPPINGS = {
     **MODEL_SWITCHER_NODES,
     **CONDITION_SWITCHER_NODES,
     **LATENT_SWITCHER_NODES,
+    **IMAGE_STROKE_NODES,
 }
 
 # 节点显示名称映射（使用英文作为默认，中文通过locales提供）
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DD-ColorBackgroundGenerator": "DD Color Background Generator",
     "DD-DimensionCalculator": "DD Dimension Calculator",
     "DD-ImageToVideo": "DD Image To Video",
     "DD-VideoFrameExtractor": "DD Video Frame Extractor",
@@ -50,6 +49,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ModelSwitcher": "DD Model Switcher",
     "DD-ConditionSwitcher": "DD Condition Switcher",
     "DD-LatentSwitcher": "DD Latent Switcher",
+    "DD-ImageStroke": "DD Image Stroke",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'prompt_manager_api']

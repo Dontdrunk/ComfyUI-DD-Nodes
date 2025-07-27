@@ -315,9 +315,9 @@
         "name": "Image",
         "tooltip": "Input image to add stroke effect"
       },
-      "反转遮罩": {
-        "name": "Invert Mask",
-        "tooltip": "Whether to invert mask effect, enabled by default"
+      "关闭遮罩": {
+        "name": "Disable Mask",
+        "tooltip": "Disable mask input when enabled"
       },
       "位置": {
         "name": "Position",

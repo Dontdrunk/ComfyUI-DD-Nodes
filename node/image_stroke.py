@@ -14,6 +14,7 @@ class DDImageStroke:
         return {
             "required": {
                 "图片": ("IMAGE",),
+                "关闭遮罩": ("BOOLEAN", {"default": False}),
                 "位置": (["外描边", "内描边", "居中描边"], {"default": "外描边"}),
                 "大小": ("INT", {"default": 5, "min": 1, "max": 200, "step": 1}),
                 "不透明度": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
@@ -249,12 +250,13 @@ class DDImageStroke:
         
         return result
     
-    def add_stroke(self, 图片, 位置, 大小, 不透明度, 描边颜色, 遮罩=None):
+    def add_stroke(self, 图片, 关闭遮罩, 位置, 大小, 不透明度, 描边颜色, 遮罩=None):
         """
         为图片添加描边效果
         
         Args:
             图片: 输入图片tensor
+            关闭遮罩: 是否关闭遮罩功能(True时忽略遮罩输入)
             位置: 描边位置("外描边", "内描边", "居中描边")
             大小: 描边大小(像素)
             不透明度: 描边不透明度(1-100)
@@ -270,9 +272,9 @@ class DDImageStroke:
             results = []
             
             for i in range(batch_size):
-                # 获取对应的遮罩（如果有）
+                # 获取对应的遮罩（如果有且未关闭遮罩功能）
                 current_mask = None
-                if 遮罩 is not None:
+                if not 关闭遮罩 and 遮罩 is not None:
                     if len(遮罩.shape) == 3 and 遮罩.shape[0] > i:
                         current_mask = 遮罩[i:i+1]
                     elif len(遮罩.shape) == 2:

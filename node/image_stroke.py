@@ -14,7 +14,6 @@ class DDImageStroke:
         return {
             "required": {
                 "图片": ("IMAGE",),
-                "反转遮罩": ("BOOLEAN", {"default": True}),
                 "位置": (["外描边", "内描边", "居中描边"], {"default": "外描边"}),
                 "大小": ("INT", {"default": 5, "min": 1, "max": 200, "step": 1}),
                 "不透明度": ("INT", {"default": 100, "min": 1, "max": 100, "step": 1}),
@@ -59,7 +58,7 @@ class DDImageStroke:
         except:
             return (255, 255, 255)  # 解析失败时返回白色
     
-    def tensor_to_pil(self, tensor, mask=None, invert_mask=True):
+    def tensor_to_pil(self, tensor, mask=None):
         """将tensor转换为PIL图像，支持遮罩"""
         # tensor格式: [batch, height, width, channels]
         if len(tensor.shape) == 4:
@@ -90,9 +89,8 @@ class DDImageStroke:
                 # 转换遮罩为numpy数组
                 mask_np = (mask.cpu().numpy() * 255).astype(np.uint8)
                 
-                # 根据反转设置处理遮罩
-                if invert_mask:
-                    mask_np = 255 - mask_np  # 反转遮罩
+                # 默认反转遮罩（遮罩接入时默认就是反转状态）
+                mask_np = 255 - mask_np  # 反转遮罩
                 
                 # 创建RGBA图像
                 pil_image = pil_image.convert('RGBA')
@@ -251,13 +249,12 @@ class DDImageStroke:
         
         return result
     
-    def add_stroke(self, 图片, 反转遮罩, 位置, 大小, 不透明度, 描边颜色, 遮罩=None):
+    def add_stroke(self, 图片, 位置, 大小, 不透明度, 描边颜色, 遮罩=None):
         """
         为图片添加描边效果
         
         Args:
             图片: 输入图片tensor
-            反转遮罩: 是否反转遮罩(True/False)
             位置: 描边位置("外描边", "内描边", "居中描边")
             大小: 描边大小(像素)
             不透明度: 描边不透明度(1-100)
@@ -283,8 +280,8 @@ class DDImageStroke:
                     elif len(遮罩.shape) == 3 and 遮罩.shape[0] == 1:
                         current_mask = 遮罩
                 
-                # 转换为PIL图像，应用遮罩（支持反转）
-                pil_image, is_transparent_image = self.tensor_to_pil(图片[i:i+1], current_mask, 反转遮罩)
+                # 转换为PIL图像，应用遮罩（默认反转）
+                pil_image, is_transparent_image = self.tensor_to_pil(图片[i:i+1], current_mask)
                 
                 # 解析描边颜色（支持COLOR类型、整数和字符串格式）
                 if isinstance(描边颜色, str):

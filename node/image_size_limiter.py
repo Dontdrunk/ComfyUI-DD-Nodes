@@ -123,34 +123,49 @@ class DDImageSizeLimiter:
             return resized.squeeze(1)
 
     def _calculate_new_dimensions(self, width, height, max_size, min_size):
-        """计算新的图像尺寸，确保在最大和最小限制内，保持宽高比"""
+        """
+        计算新的图像尺寸，确保在最大和最小限制内，保持宽高比
+        
+        逻辑：
+        1. 如果长边超过max_size，按长边缩放到max_size
+        2. 如果长边小于min_size，按长边放大到min_size
+        3. 否则保持原尺寸
+        
+        注意：这里的逻辑是基于长边来控制图像尺寸
+        """
         # 获取原始宽高比
         aspect_ratio = width / height
         
-        # 检查图像是否过大
-        if width > max_size or height > max_size:
-            # 重新计算尺寸，确保最大边不超过max_size
+        # 确定长边和短边
+        long_side = max(width, height)
+        short_side = min(width, height)
+        
+        new_width = width
+        new_height = height
+        
+        # 检查长边是否超过最大限制
+        if long_side > max_size:
+            # 按长边缩放到max_size
             if width >= height:
+                # 宽度是长边
                 new_width = max_size
                 new_height = int(new_width / aspect_ratio)
             else:
+                # 高度是长边
                 new_height = max_size
                 new_width = int(new_height * aspect_ratio)
         
-        # 检查图像是否过小
-        elif width < min_size and height < min_size:
-            # 重新计算尺寸，确保最小边不小于min_size
+        # 检查长边是否小于最小限制
+        elif long_side < min_size:
+            # 按长边放大到min_size
             if width >= height:
+                # 宽度是长边
+                new_width = min_size
+                new_height = int(new_width / aspect_ratio)
+            else:
+                # 高度是长边
                 new_height = min_size
                 new_width = int(new_height * aspect_ratio)
-            else:
-                new_width = min_size
-                new_height = int(new_width * aspect_ratio)
-        
-        # 图像尺寸已在合适范围内
-        else:
-            new_width = width
-            new_height = height
             
         # 确保尺寸总是8的倍数
         new_width = ((new_width + 7) // 8) * 8

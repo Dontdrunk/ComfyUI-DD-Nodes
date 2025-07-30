@@ -1,6 +1,7 @@
 // 动画核心模块，只包含动画逻辑和默认配置
 import { EffectManager } from './effects/EffectManager.js';
 import { StyleManager } from './styles/StyleManager.js';
+import { StaticStyleManager } from './styles/static/StaticStyleManager.js';
 
 export class ConnectionAnimation {
     constructor() {
@@ -22,6 +23,12 @@ export class ConnectionAnimation {
         
         // 初始化样式管理器
         this.styleManager = new StyleManager(this);
+        
+        // 初始化静态样式管理器
+        this.staticStyleManager = new StaticStyleManager(this);
+        
+        // 设置默认的静态样式
+        this.staticStyleManager.setStyle(this.renderStyle);
     }    // 获取与指定节点相关的连线
     _getRelevantLinks() {
         if (!this.canvas || !this.canvas.graph || !this.canvas.graph.links) {
@@ -160,6 +167,9 @@ export class ConnectionAnimation {
         // 使用样式管理器切换渲染样式
         this.styleManager.setStyle(this.renderStyle);
         
+        // 同时设置静态样式管理器的样式
+        this.staticStyleManager.setStyle(this.renderStyle);
+        
         // 单次触发画布重绘，不使用延迟重绘以避免循环问题
         if (this.canvas) {
             this.canvas.setDirty(true, true);
@@ -230,84 +240,199 @@ export class ConnectionAnimation {
     drawAnimation(ctx) {
         if (!this.canvas || !this.canvas.graph || !this.enabled) return;
         const links = this.canvas.graph.links;
-        if (!links) return;        // 提前检查显示模式，快速退出无关的绘制
-        if (this.displayMode === "悬停节点" && !this._hoveredNode) {
-            // 悬停模式但没有悬停节点，绘制静态连线后退出
-            if (this._originalDrawConnections) {
-                this._originalDrawConnections.call(this.canvas, ctx);
+        if (!links) return;
+
+        if (this.displayMode === "全部显示") {
+            // 全部显示模式：所有连线都使用动画渲染
+            this._drawAllAnimatedConnections(ctx);
+        } else if (this.displayMode === "悬停节点") {
+            // 悬停模式：静态线 + 悬停节点的动画线
+            this._drawHybridConnections(ctx);
+        }
+    }
+
+    // 绘制所有动画连线（全部显示模式）
+    _drawAllAnimatedConnections(ctx) {
+        // 更新时间和相位
+        const now = performance.now();
+        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+        let phaseSpeed = speedMap[this.speed] || 0.002;
+        const isWave = this.effect === "波浪";
+        if (isWave) phaseSpeed *= 0.5;
+        if (!this._startTime) this._startTime = now;
+        this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+        this._lastTime = now;
+
+        const pathsData = this._calculatePaths(); // 计算所有路径
+
+        // 应用选择的动画效果到所有路径
+        ctx.save();
+        const effectInstance = this.effectManager.getEffect(this.effect);
+        if (!effectInstance) {
+            // 无效效果，绘制静态线
+            for (const pathData of pathsData) {
+                this._drawStaticPath(ctx, pathData);
             }
+        } else {
+            // 使用效果实例绘制动画
+            for (const pathData of pathsData) {
+                effectInstance.draw(ctx, pathData, now, this._phase);
+            }
+        }
+        ctx.restore();
+    }
+
+    // 绘制混合连线（悬停模式）
+    _drawHybridConnections(ctx) {
+        const links = this.canvas.graph.links;
+        if (!links) return;
+
+        // 获取相关连线（悬停节点的连线）
+        const relevantLinks = this._getRelevantLinks();
+        const relevantLinkIds = new Set(relevantLinks.map(link => link.id));
+
+        // 第一步：绘制所有静态连线
+        this._drawAllStaticConnections(ctx, relevantLinkIds);
+
+        // 第二步：如果有悬停节点，绘制动画连线（叠加）
+        if (this._hoveredNode && relevantLinks.length > 0) {
+            // 更新时间和相位
+            const now = performance.now();
+            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+            let phaseSpeed = speedMap[this.speed] || 0.002;
+            const isWave = this.effect === "波浪";
+            if (isWave) phaseSpeed *= 0.5;
+            if (!this._startTime) this._startTime = now;
+            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+            this._lastTime = now;
+
+            // 只计算相关连线的路径
+            const pathsData = this._calculatePaths(relevantLinks);
+
+            // 绘制动画连线
+            ctx.save();
+            const effectInstance = this.effectManager.getEffect(this.effect);
+            if (effectInstance) {
+                for (const pathData of pathsData) {
+                    effectInstance.draw(ctx, pathData, now, this._phase);
+                }
+            }
+            ctx.restore();
+        }
+    }
+
+    // 绘制所有静态连线
+    _drawAllStaticConnections(ctx, excludeIds = new Set()) {
+        const links = this.canvas.graph.links;
+        if (!links) return;
+
+        ctx.save();
+        
+        // 对于电路板样式，使用批量路径计算
+        if (this.renderStyle === "电路板1" || this.renderStyle === "电路板2") {
+            this._drawBatchStaticConnections(ctx, excludeIds);
+        } else {
+            // 对于其他样式，逐个计算连线
+            Object.values(links).forEach(link => {
+                // 跳过需要排除的连线（通常是要显示动画的连线）
+                if (excludeIds.has(link.id)) {
+                    return;
+                }
+
+                // 计算静态连线路径并绘制
+                const pathData = this._calculateSingleStaticPath(link);
+                if (pathData) {
+                    this.staticStyleManager.draw(ctx, pathData);
+                }
+            });
+        }
+
+        ctx.restore();
+    }
+
+    // 批量绘制静态连线（用于电路板样式）
+    _drawBatchStaticConnections(ctx, excludeIds = new Set()) {
+        // 获取静态样式的所有路径
+        const staticStyle = this.staticStyleManager.getCurrentStyle();
+        
+        if (!staticStyle || typeof staticStyle.getAllPaths !== 'function') {
+            // 回退到逐个绘制
+            const links = this.canvas.graph.links;
+            if (!links) return;
+            
+            Object.values(links).forEach(link => {
+                if (excludeIds.has(link.id)) return;
+                
+                const pathData = this._calculateSingleStaticPath(link);
+                if (pathData) {
+                    this.staticStyleManager.draw(ctx, pathData);
+                }
+            });
             return;
         }
 
-        if (this.displayMode === "全部显示") {
-            // 全部显示模式：统一计算所有连线路径，完全由动画绘制
-            // 更新时间和相位
-            const now = performance.now();
-            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-            let phaseSpeed = speedMap[this.speed] || 0.002;
-            const isWave = this.effect === "波浪";
-            if (isWave) phaseSpeed *= 0.5;
-            if (!this._startTime) this._startTime = now;
-            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
-            this._lastTime = now;
-
-            const pathsData = this._calculatePaths(); // 计算所有路径
-
-            // 应用选择的动画效果到所有路径
-            ctx.save();
-            // 获取当前效果实例
-            const effectInstance = this.effectManager.getEffect(this.effect);
-            if (!effectInstance) {
-                // 无效效果，绘制静态线
-                for (const pathData of pathsData) {
-                    this._drawStaticPath(ctx, pathData);
-                }
-            } else {
-                // 使用效果实例绘制动画
-                for (const pathData of pathsData) {
-                    effectInstance.draw(ctx, pathData, now, this._phase);
-                }
+        // 获取所有路径并过滤掉被排除的连线
+        const allPaths = staticStyle.getAllPaths();
+        
+        allPaths.forEach(pathData => {
+            if (pathData.link && !excludeIds.has(pathData.link.id)) {
+                this.staticStyleManager.draw(ctx, pathData);
             }
-            
-            ctx.restore();
+        });
+    }
+
+    // 计算单条静态连线路径
+    _calculateSingleStaticPath(link) {
+        const graph = this.canvas.graph;
+        if (!graph || !graph._nodes_by_id) return null;
+
+        const outNode = graph._nodes_by_id[link.origin_id];
+        const inNode = graph._nodes_by_id[link.target_id];
+        
+        if (!outNode || !inNode) return null;
+
+        // 计算连接点位置
+        const outPos = this._getConnectionPos(outNode, link.origin_slot, true);
+        const inPos = this._getConnectionPos(inNode, link.target_slot, false);
+        
+        if (!outPos || !inPos) return null;
+
+        // 使用静态样式管理器计算路径
+        const pathInfo = this.staticStyleManager.calculatePath(outNode, inNode, outPos, inPos, link);
+        if (!pathInfo) return null;
+
+        // 获取基础颜色
+        const baseColor = this.staticStyleManager.getCurrentStyle()?.getBaseColor(outNode, link) || "#999999";
+
+        return {
+            path: pathInfo.points,
+            type: pathInfo.type,
+            from: outPos,
+            to: inPos,
+            baseColor: baseColor,
+            link: link
+        };
+    }
+
+    // 获取连接点位置的辅助方法
+    _getConnectionPos(node, slot, isOutput) {
+        if (!node || slot === undefined) return null;
+        
+        // 使用ComfyUI标准的连接点位置获取方法
+        if (typeof node.getConnectionPos === 'function') {
+            return node.getConnectionPos(!isOutput, slot); // 注意：getConnectionPos的第一个参数是isInput
+        }
+        
+        // 回退方法：如果node没有getConnectionPos方法，使用简化计算
+        const nodePos = [node.pos[0], node.pos[1]];
+        const nodeSize = node.size || [node.width || 150, node.height || 100];
+        
+        if (isOutput) {
+            // 输出点通常在节点右侧
+            return [nodePos[0] + nodeSize[0], nodePos[1] + 30 + slot * 20];
         } else {
-            // 部分显示模式：先绘制原生的静态连线，然后叠加动画连线
-            if (this._originalDrawConnections) {
-                this._originalDrawConnections.call(this.canvas, ctx);
-            }
-
-            // 快速检查是否有相关连线，避免不必要的计算
-            const relevantLinks = this._getRelevantLinks();
-            if (relevantLinks.length === 0) {
-                return; // 没有相关连线，直接返回
-            }
-
-            // 更新时间和相位
-            const now = performance.now();
-            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-            let phaseSpeed = speedMap[this.speed] || 0.002;
-            const isWave = this.effect === "波浪";
-            if (isWave) phaseSpeed *= 0.5;
-            if (!this._startTime) this._startTime = now;
-            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
-            this._lastTime = now;
-
-            // 只计算相关连线的路径，大幅提升性能
-            const pathsData = this._calculatePaths(relevantLinks);
-
-            // 只对符合条件的连线应用动画效果（叠加绘制）
-            ctx.save();
-            const effectInstance = this.effectManager.getEffect(this.effect);
-            
-            for (const pathData of pathsData) {
-                if (effectInstance) {
-                    effectInstance.draw(ctx, pathData, now, this._phase);
-                } else {
-                    this._drawStaticPath(ctx, pathData);
-                }
-            }
-            
-            ctx.restore();
+            // 输入点通常在节点左侧
+            return [nodePos[0], nodePos[1] + 30 + slot * 20];
         }
     }
 

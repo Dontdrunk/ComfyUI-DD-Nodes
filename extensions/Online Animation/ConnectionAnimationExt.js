@@ -9,79 +9,75 @@ function getOrCreateAnimationInstance() {
     return app.canvas._connectionAnimation;
 }
 
-export const connectionAnimationExt = {
-    name: "connection-animation",
-    init() {
-        const connectionAnimation = getOrCreateAnimationInstance();
-        connectionAnimation.initOverrides(app.canvas);
-        const applySettings = () => {
-            const enabled = app.extensionManager.setting.get("ConnectionAnimation.enabled", DEFAULT_CONFIG.enabled);
-            const lineWidth = app.extensionManager.setting.get("ConnectionAnimation.lineWidth", DEFAULT_CONFIG.lineWidth);
-            const effect = app.extensionManager.setting.get("ConnectionAnimation.effect", DEFAULT_CONFIG.effect);
-            const effectExtra = app.extensionManager.setting.get("ConnectionAnimation.effectExtra", true);
-            connectionAnimation.setEnabled(enabled);
-            connectionAnimation.setLineWidth(lineWidth);
-            connectionAnimation.setEffect(effect);
-            connectionAnimation.setEffectExtra(effectExtra);
-            app.graph.setDirtyCanvas(true, true);
-        };
-        applySettings();
-    }
-};
+// 应用设置配置
+function applySettings(connectionAnimation) {
+    connectionAnimation.setEnabled(app.extensionManager.setting.get("ConnectionAnimation.enabled") ?? DEFAULT_CONFIG.enabled);
+    connectionAnimation.setLineWidth(app.extensionManager.setting.get("ConnectionAnimation.lineWidth") ?? DEFAULT_CONFIG.lineWidth);
+    connectionAnimation.setEffect(app.extensionManager.setting.get("ConnectionAnimation.effect") ?? DEFAULT_CONFIG.effect);
+    connectionAnimation.setSpeed(app.extensionManager.setting.get("ConnectionAnimation.speed") ?? 2);
+    connectionAnimation.setSamplingLevel(app.extensionManager.setting.get("ConnectionAnimation.samplingLevel") ?? 2);
+    connectionAnimation.setEffectExtra(app.extensionManager.setting.get("ConnectionAnimation.effectExtra") ?? false);
+    connectionAnimation.setRenderStyle(app.extensionManager.setting.get("ConnectionAnimation.renderStyle") ?? "曲线");
+    connectionAnimation.setUseGradient(app.extensionManager.setting.get("ConnectionAnimation.useGradient") ?? true);
+    connectionAnimation.setDisplayMode(app.extensionManager.setting.get("ConnectionAnimation.displayMode") ?? DEFAULT_CONFIG.displayMode);
+}
 
-app.registerExtension({
-    name: "ComfyUI.ConnectionAnimation.Settings",
-    setup() {
-        const connectionAnimation = getOrCreateAnimationInstance();
-        connectionAnimation.initOverrides(app.canvas);
-        connectionAnimation.setEnabled(app.extensionManager.setting.get("ConnectionAnimation.enabled") ?? DEFAULT_CONFIG.enabled);
-        connectionAnimation.setLineWidth(app.extensionManager.setting.get("ConnectionAnimation.lineWidth") ?? DEFAULT_CONFIG.lineWidth);
-        connectionAnimation.setEffect(app.extensionManager.setting.get("ConnectionAnimation.effect") ?? DEFAULT_CONFIG.effect);        connectionAnimation.setSpeed(app.extensionManager.setting.get("ConnectionAnimation.speed") ?? 2);
-        connectionAnimation.setSamplingLevel(app.extensionManager.setting.get("ConnectionAnimation.samplingLevel") ?? 2);
-        connectionAnimation.setEffectExtra(app.extensionManager.setting.get("ConnectionAnimation.effectExtra") ?? false);
-        connectionAnimation.setRenderStyle(app.extensionManager.setting.get("ConnectionAnimation.renderStyle") ?? "曲线");
-        connectionAnimation.setUseGradient(app.extensionManager.setting.get("ConnectionAnimation.useGradient") ?? true);
-        connectionAnimation.setDisplayMode(app.extensionManager.setting.get("ConnectionAnimation.displayMode") ?? DEFAULT_CONFIG.displayMode);
-          // 设置节点悬停和选择监听
-        const originalOnNodeMouseEnter = app.canvas.onNodeMouseEnter;
-        if (originalOnNodeMouseEnter) {
-            app.canvas.onNodeMouseEnter = function(node, e) {
+// 设置节点悬停监听
+function setupNodeHoverListeners(connectionAnimation) {
+    // 设置节点悬停和选择监听
+    const originalOnNodeMouseEnter = app.canvas.onNodeMouseEnter;
+    if (originalOnNodeMouseEnter) {
+        app.canvas.onNodeMouseEnter = function(node, e) {
+            try {
+                connectionAnimation.setHoveredNode(node);
+            } catch (e) {
+                console.warn("Connection Animation: Error setting hovered node:", e);
+            }
+            return originalOnNodeMouseEnter?.call(this, node, e);
+        };
+    }
+    
+    const originalOnNodeMouseLeave = app.canvas.onNodeMouseLeave;
+    if (originalOnNodeMouseLeave) {
+        app.canvas.onNodeMouseLeave = function(node, e) {
+            try {
+                connectionAnimation.setHoveredNode(null);
+            } catch (e) {
+                console.warn("Connection Animation: Error clearing hovered node:", e);
+            }
+            return originalOnNodeMouseLeave?.call(this, node, e);
+        };
+    }
+    
+    // 重写 node_over 属性以捕获节点悬停
+    if (app.canvas && !app.canvas._connectionAnimationNodeOverPatched) {
+        let _node_over = app.canvas.node_over;
+        Object.defineProperty(app.canvas, 'node_over', {
+            get: () => _node_over,
+            set: (value) => {
+                _node_over = value;
                 try {
-                    connectionAnimation.setHoveredNode(node);
+                    connectionAnimation.setHoveredNode(value);
                 } catch (e) {
                     console.warn("Connection Animation: Error setting hovered node:", e);
                 }
-                return originalOnNodeMouseEnter?.call(this, node, e);
-            };
-        }
+            }
+        });
+        app.canvas._connectionAnimationNodeOverPatched = true;
+    }
+}
+
+app.registerExtension({
+    name: "ComfyUI.ConnectionAnimation",
+    setup() {
+        const connectionAnimation = getOrCreateAnimationInstance();
+        connectionAnimation.initOverrides(app.canvas);
         
-        const originalOnNodeMouseLeave = app.canvas.onNodeMouseLeave;
-        if (originalOnNodeMouseLeave) {
-            app.canvas.onNodeMouseLeave = function(node, e) {
-                try {
-                    connectionAnimation.setHoveredNode(null);
-                } catch (e) {
-                    console.warn("Connection Animation: Error clearing hovered node:", e);
-                }
-                return originalOnNodeMouseLeave?.call(this, node, e);
-            };
-        }
+        // 应用所有设置
+        applySettings(connectionAnimation);
         
-        // 重写 node_over 属性以捕获节点悬停
-        if (app.canvas && !app.canvas._connectionAnimationNodeOverPatched) {
-            let _node_over = app.canvas.node_over;
-            Object.defineProperty(app.canvas, 'node_over', {
-                get: () => _node_over,
-                set: (value) => {
-                    _node_over = value;
-                    try {
-                        connectionAnimation.setHoveredNode(value);
-                    } catch (e) {
-                        console.warn("Connection Animation: Error setting hovered node:", e);
-                    }
-                }
-            });
-            app.canvas._connectionAnimationNodeOverPatched = true;        }
+        // 设置节点悬停监听
+        setupNodeHoverListeners(connectionAnimation);
     },
     settings: [
         {
@@ -227,5 +223,3 @@ app.registerExtension({
         }
     ]
 });
-
-app.registerExtension(connectionAnimationExt);

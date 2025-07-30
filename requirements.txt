@@ -6,3 +6,4 @@ moviepy
 einops
 transformers
 safetensors
+openai

@@ -13,8 +13,12 @@ from .node.condition_switcher import NODE_CLASS_MAPPINGS as CONDITION_SWITCHER_N
 from .node.latent_switcher import NODE_CLASS_MAPPINGS as LATENT_SWITCHER_NODES
 from .node.image_stroke import NODE_CLASS_MAPPINGS as IMAGE_STROKE_NODES
 
+# 导入Qwen-MT翻译节点
+from .extensions.Qwen_MT.nodes import NODE_CLASS_MAPPINGS as QWEN_MT_NODES
+
 # 导入扩展功能API
 from .extensions.Prompt_Manager.prompt_api import prompt_manager_api
+from .extensions.Qwen_MT import api_routes
 
 # 节点类映射
 NODE_CLASS_MAPPINGS = {
@@ -32,6 +36,7 @@ NODE_CLASS_MAPPINGS = {
     **CONDITION_SWITCHER_NODES,
     **LATENT_SWITCHER_NODES,
     **IMAGE_STROKE_NODES,
+    **QWEN_MT_NODES,
 }
 
 # 节点显示名称映射（使用英文作为默认，中文通过locales提供）
@@ -50,6 +55,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ConditionSwitcher": "DD Condition Switcher",
     "DD-LatentSwitcher": "DD Latent Switcher",
     "DD-ImageStroke": "DD Image Stroke",
+    "DD-QwenMTTranslator": "DD Qwen-MT翻译",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'prompt_manager_api']

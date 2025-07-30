@@ -7,3 +7,4 @@ einops
 transformers
 safetensors
 openai
+aiohttp

@@ -16,6 +16,7 @@ export class ConnectionAnimation {
         this.effectExtra = true;        this.renderStyle = "曲线";        this.useGradient = true; 
         this.circuitBoardMap = null; 
         this.displayMode = "全部显示"; // 新增：动画显示模式
+        this.staticRenderMode = "独立渲染"; // 新增：静态渲染模式
         this._hoveredNode = null; // 追踪悬停节点
         
         // 初始化效果管理器
@@ -187,6 +188,16 @@ export class ConnectionAnimation {
         }
     }
     
+    // 设置静态渲染模式
+    setStaticRenderMode(mode) {
+        this.staticRenderMode = mode || "独立渲染";
+        
+        // 重新绘制以应用新的静态渲染模式
+        if (this.canvas) {
+            this.canvas.setDirty(true, true);
+        }
+    }
+    
     // 设置悬停节点
     setHoveredNode(node) {
         // 确保 node 是有效的节点对象或null
@@ -287,42 +298,177 @@ export class ConnectionAnimation {
         const links = this.canvas.graph.links;
         if (!links) return;
 
-        // 获取相关连线（悬停节点的连线）
-        const relevantLinks = this._getRelevantLinks();
-        const relevantLinkIds = new Set(relevantLinks.map(link => link.id));
-
-        // 第一步：绘制所有静态连线
-        this._drawAllStaticConnections(ctx, relevantLinkIds);
-
-        // 第二步：如果有悬停节点，绘制动画连线（叠加）
-        if (this._hoveredNode && relevantLinks.length > 0) {
-            // 更新时间和相位
-            const now = performance.now();
-            const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-            let phaseSpeed = speedMap[this.speed] || 0.002;
-            const isWave = this.effect === "波浪";
-            if (isWave) phaseSpeed *= 0.5;
-            if (!this._startTime) this._startTime = now;
-            this._phase = ((now - this._startTime) * phaseSpeed) % 1;
-            this._lastTime = now;
-
-            // 只计算相关连线的路径
-            const pathsData = this._calculatePaths(relevantLinks);
-
-            // 绘制动画连线
-            ctx.save();
-            const effectInstance = this.effectManager.getEffect(this.effect);
-            if (effectInstance) {
-                for (const pathData of pathsData) {
-                    effectInstance.draw(ctx, pathData, now, this._phase);
-                }
+        // 根据静态渲染模式选择基础连线绘制方式
+        if (this.staticRenderMode === "官方实现") {
+            // 官方实现：总是先绘制ComfyUI原生连线
+            if (this._originalDrawConnections) {
+                this._originalDrawConnections.call(this.canvas, ctx);
             }
-            ctx.restore();
+        } else {
+            // 独立渲染：绘制自定义静态连线（不排除任何连线）
+            this._drawIndependentStaticConnections(ctx, new Set());
+        }
+
+        // 如果有悬停节点，在基础连线上叠加动画效果
+        if (this._hoveredNode) {
+            const relevantLinks = this._getRelevantLinks();
+            if (relevantLinks.length > 0) {
+                // 更新时间和相位
+                const now = performance.now();
+                const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+                let phaseSpeed = speedMap[this.speed] || 0.002;
+                const isWave = this.effect === "波浪";
+                if (isWave) phaseSpeed *= 0.5;
+                if (!this._startTime) this._startTime = now;
+                this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+                this._lastTime = now;
+
+                // 只计算相关连线的路径
+                const pathsData = this._calculatePaths(relevantLinks);
+
+                // 绘制动画连线（叠加）
+                ctx.save();
+                const effectInstance = this.effectManager.getEffect(this.effect);
+                if (effectInstance) {
+                    for (const pathData of pathsData) {
+                        effectInstance.draw(ctx, pathData, now, this._phase);
+                    }
+                }
+                ctx.restore();
+            }
         }
     }
 
     // 绘制所有静态连线
     _drawAllStaticConnections(ctx, excludeIds = new Set()) {
+        const links = this.canvas.graph.links;
+        if (!links) return;
+
+        // 根据静态渲染模式选择渲染方式
+        if (this.staticRenderMode === "官方实现") {
+            // 使用ComfyUI官方默认连线渲染
+            this._drawOfficialStaticConnections(ctx, excludeIds);
+        } else {
+            // 使用独立渲染模式（原有逻辑）
+            this._drawIndependentStaticConnections(ctx, excludeIds);
+        }
+    }
+
+    // 绘制官方静态连线
+    _drawOfficialStaticConnections(ctx, excludeIds = new Set()) {
+        // 使用ComfyUI原生的连线渲染方法
+        if (this._originalDrawConnections && excludeIds.size === 0) {
+            // 如果没有需要排除的连线，直接使用原始方法
+            const wasEnabled = this.enabled;
+            this.enabled = false;
+            
+            try {
+                this._originalDrawConnections.call(this.canvas, ctx);
+            } catch (e) {
+                console.warn("官方连线渲染出错:", e);
+                this._drawIndependentStaticConnections(ctx, excludeIds);
+            }
+            
+            this.enabled = wasEnabled;
+        } else if (this._originalDrawConnections && excludeIds.size > 0) {
+            // 如果有需要排除的连线，需要手动渲染非排除的连线
+            this._drawFilteredOfficialConnections(ctx, excludeIds);
+        } else {
+            // 如果没有原始方法，回退到独立渲染
+            this._drawIndependentStaticConnections(ctx, excludeIds);
+        }
+    }
+
+    // 绘制过滤后的官方连线
+    _drawFilteredOfficialConnections(ctx, excludeIds) {
+        const links = this.canvas.graph.links;
+        if (!links) return;
+
+        ctx.save();
+        
+        // 遍历所有连线，使用用户设置的样式绘制非排除的连线
+        Object.values(links).forEach(link => {
+            if (excludeIds.has(link.id)) {
+                return; // 跳过需要排除的连线
+            }
+
+            // 获取节点和位置信息
+            const outNode = this.canvas.graph.getNodeById(link.origin_id);
+            const inNode = this.canvas.graph.getNodeById(link.target_id);
+            
+            if (!outNode || !inNode) return;
+
+            try {
+                const outPos = outNode.getConnectionPos(false, link.origin_slot);
+                const inPos = inNode.getConnectionPos(true, link.target_slot);
+                
+                // 获取连线颜色（使用ComfyUI官方的颜色逻辑）
+                const baseColor = (outNode.outputs && outNode.outputs[link.origin_slot] && outNode.outputs[link.origin_slot].color)
+                    || (this.canvas.default_connection_color_byType && 
+                        outNode.outputs && 
+                        outNode.outputs[link.origin_slot] && 
+                        this.canvas.default_connection_color_byType[outNode.outputs[link.origin_slot].type])
+                    || (this.canvas.default_connection_color && 
+                        this.canvas.default_connection_color.input_on)
+                    || "#ff0000";
+
+                // 使用用户设置的渲染样式计算路径
+                const currentStyle = this.styleManager.currentStyle;
+                if (currentStyle) {
+                    const pathData = currentStyle.calculatePath(outNode, inNode, outPos, inPos, link);
+                    if (pathData) {
+                        // 使用官方的线宽和透明度，但路径跟随用户设置
+                        ctx.strokeStyle = this.useGradient ? 
+                            this._makeFancyGradient(ctx, outPos, inPos, baseColor) : 
+                            baseColor;
+                        ctx.lineWidth = this.canvas.connections_width || 2;
+                        ctx.globalAlpha = 0.8;
+                        
+                        // 根据路径类型绘制
+                        ctx.beginPath();
+                        if (pathData.type === "bezier") {
+                            const [p0, p1, p2, p3] = pathData.points;
+                            ctx.moveTo(p0[0], p0[1]);
+                            ctx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+                        } else {
+                            // 直线或折线路径
+                            const points = pathData.points;
+                            if (points && points.length > 0) {
+                                ctx.moveTo(points[0][0], points[0][1]);
+                                for (let i = 1; i < points.length; i++) {
+                                    ctx.lineTo(points[i][0], points[i][1]);
+                                }
+                            }
+                        }
+                        ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                } else {
+                    // 如果没有样式管理器，回退到ComfyUI默认曲线
+                    ctx.strokeStyle = baseColor;
+                    ctx.lineWidth = this.canvas.connections_width || 2;
+                    ctx.globalAlpha = 0.8;
+                    
+                    const dist = Math.max(Math.abs(inPos[0] - outPos[0]), 40);
+                    const cp1 = [outPos[0] + dist * 0.5, outPos[1]];
+                    const cp2 = [inPos[0] - dist * 0.5, inPos[1]];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(outPos[0], outPos[1]);
+                    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], inPos[0], inPos[1]);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                }
+            } catch (e) {
+                console.warn("绘制单条官方连线时出错:", e);
+            }
+        });
+        
+        ctx.restore();
+    }
+
+    // 绘制独立静态连线（原有逻辑）
+    _drawIndependentStaticConnections(ctx, excludeIds = new Set()) {
         const links = this.canvas.graph.links;
         if (!links) return;
 
@@ -682,5 +828,6 @@ export const DEFAULT_CONFIG = {
     enabled: false,
     lineWidth: 3,
     effect: "流动",
-    displayMode: "全部显示"
+    displayMode: "全部显示",
+    staticRenderMode: "独立渲染"
 };

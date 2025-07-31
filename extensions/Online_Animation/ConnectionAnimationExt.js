@@ -20,6 +20,7 @@ function applySettings(connectionAnimation) {
     connectionAnimation.setRenderStyle(app.extensionManager.setting.get("ConnectionAnimation.renderStyle") ?? "曲线");
     connectionAnimation.setUseGradient(app.extensionManager.setting.get("ConnectionAnimation.useGradient") ?? true);
     connectionAnimation.setDisplayMode(app.extensionManager.setting.get("ConnectionAnimation.displayMode") ?? DEFAULT_CONFIG.displayMode);
+    connectionAnimation.setStaticRenderMode(app.extensionManager.setting.get("ConnectionAnimation.staticRenderMode") ?? "独立渲染");
 }
 
 // 设置节点悬停监听
@@ -217,6 +218,22 @@ app.registerExtension({
                 const connectionAnim = app.canvas?._connectionAnimation;
                 if (connectionAnim) {
                     connectionAnim.setDisplayMode(value);
+                    app.graph.setDirtyCanvas(true, true);
+                }
+            },
+        },
+        {
+            id: "ConnectionAnimation.staticRenderMode",
+            name: "静态渲染",
+            type: "combo",
+            options: ["官方实现", "独立渲染"],
+            defaultValue: "独立渲染",
+            tooltip: "控制悬停模式下的静态连线渲染方式：官方实现=使用ComfyUI官方默认连线渲染；独立渲染=使用独立静态+动态混合渲染",
+            category: ["🍺连线动画", "2·样式", "静态渲染"],
+            onChange(value) {
+                const connectionAnim = app.canvas?._connectionAnimation;
+                if (connectionAnim) {
+                    connectionAnim.setStaticRenderMode(value);
                     app.graph.setDirtyCanvas(true, true);
                 }
             },

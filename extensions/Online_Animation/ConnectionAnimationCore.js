@@ -298,45 +298,75 @@ export class ConnectionAnimation {
         const links = this.canvas.graph.links;
         if (!links) return;
 
-        // 根据静态渲染模式选择基础连线绘制方式
+        // 根据静态渲染模式选择不同的渲染策略
         if (this.staticRenderMode === "官方实现") {
-            // 官方实现：总是先绘制ComfyUI原生连线
-            if (this._originalDrawConnections) {
-                this._originalDrawConnections.call(this.canvas, ctx);
-            }
+            // 官方实现：原有逻辑（静态基础 + 叠加动画）
+            this._drawOfficialHybridMode(ctx);
         } else {
-            // 独立渲染：绘制自定义静态连线（不排除任何连线）
-            this._drawIndependentStaticConnections(ctx, new Set());
+            // 独立渲染：新逻辑（静态线 + 替换式动画线）
+            this._drawIndependentHybridMode(ctx);
+        }
+    }
+
+    // 官方实现的混合模式（保持原有逻辑）
+    _drawOfficialHybridMode(ctx) {
+        // 总是先绘制ComfyUI原生连线
+        if (this._originalDrawConnections) {
+            this._originalDrawConnections.call(this.canvas, ctx);
         }
 
         // 如果有悬停节点，在基础连线上叠加动画效果
         if (this._hoveredNode) {
             const relevantLinks = this._getRelevantLinks();
             if (relevantLinks.length > 0) {
-                // 更新时间和相位
-                const now = performance.now();
-                const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-                let phaseSpeed = speedMap[this.speed] || 0.002;
-                const isWave = this.effect === "波浪";
-                if (isWave) phaseSpeed *= 0.5;
-                if (!this._startTime) this._startTime = now;
-                this._phase = ((now - this._startTime) * phaseSpeed) % 1;
-                this._lastTime = now;
-
-                // 只计算相关连线的路径
-                const pathsData = this._calculatePaths(relevantLinks);
-
-                // 绘制动画连线（叠加）
-                ctx.save();
-                const effectInstance = this.effectManager.getEffect(this.effect);
-                if (effectInstance) {
-                    for (const pathData of pathsData) {
-                        effectInstance.draw(ctx, pathData, now, this._phase);
-                    }
-                }
-                ctx.restore();
+                this._drawAnimatedConnections(ctx, relevantLinks);
             }
         }
+    }
+
+    // 独立渲染的混合模式（新的视觉逻辑）
+    _drawIndependentHybridMode(ctx) {
+        if (this._hoveredNode) {
+            const relevantLinks = this._getRelevantLinks();
+            const relevantLinkIds = new Set(relevantLinks.map(link => link.id));
+
+            // 1. 绘制非相关连线的静态样式（排除悬停节点相关的连线）
+            this._drawIndependentStaticConnections(ctx, relevantLinkIds);
+
+            // 2. 绘制悬停节点相关连线的动画效果（完全替换，不叠加）
+            if (relevantLinks.length > 0) {
+                this._drawAnimatedConnections(ctx, relevantLinks);
+            }
+        } else {
+            // 无悬停时，所有连线都显示为静态样式
+            this._drawIndependentStaticConnections(ctx, new Set());
+        }
+    }
+
+    // 统一的动画连线绘制方法
+    _drawAnimatedConnections(ctx, relevantLinks) {
+        // 更新时间和相位
+        const now = performance.now();
+        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
+        let phaseSpeed = speedMap[this.speed] || 0.002;
+        const isWave = this.effect === "波浪";
+        if (isWave) phaseSpeed *= 0.5;
+        if (!this._startTime) this._startTime = now;
+        this._phase = ((now - this._startTime) * phaseSpeed) % 1;
+        this._lastTime = now;
+
+        // 只计算相关连线的路径
+        const pathsData = this._calculatePaths(relevantLinks);
+
+        // 绘制动画连线
+        ctx.save();
+        const effectInstance = this.effectManager.getEffect(this.effect);
+        if (effectInstance) {
+            for (const pathData of pathsData) {
+                effectInstance.draw(ctx, pathData, now, this._phase);
+            }
+        }
+        ctx.restore();
     }
 
     // 绘制所有静态连线

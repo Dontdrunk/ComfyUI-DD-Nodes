@@ -1,8 +1,7 @@
 import { StaticDirectStyle } from './StaticDirectStyle.js';
 import { StaticAngledStyle } from './StaticAngledStyle.js';
 import { StaticCurveStyle } from './StaticCurveStyle.js';
-import { StaticCircuitBoard1Style } from './StaticCircuitBoard1Style.js';
-import { StaticCircuitBoard2Style } from './StaticCircuitBoard2Style.js';
+import { StaticCircuitBoardStyle } from './StaticCircuitBoardStyle.js';
 
 /**
  * 静态连线渲染样式管理器
@@ -21,8 +20,7 @@ export class StaticStyleManager {
             "直线": StaticDirectStyle,
             "直角线": StaticAngledStyle,
             "曲线": StaticCurveStyle,
-            "电路板1": StaticCircuitBoard1Style,
-            "电路板2": StaticCircuitBoard2Style
+            "电路板": StaticCircuitBoardStyle
         };
         
         // 当前样式实例

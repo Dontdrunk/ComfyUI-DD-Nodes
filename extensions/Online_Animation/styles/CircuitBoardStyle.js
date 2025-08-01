@@ -1,11 +1,11 @@
 import { BaseStyle } from './BaseStyle.js';
 
 /**
- * 电路板2样式
+ * 电路板样式
  * 实现智能递归避障、优先90/45度的电路板连线风格
  * 基于 quick-connections 项目的 Liang-Barsky 线段裁剪算法
  */
-export class CircuitBoard2Style extends BaseStyle {
+export class CircuitBoardStyle extends BaseStyle {
     constructor(animationManager) {
         super(animationManager);
         this.paths = [];
@@ -36,7 +36,7 @@ export class CircuitBoard2Style extends BaseStyle {
      */
     calculatePath(outNode, inNode, outPos, inPos, link) {
         // 对于单条连线，使用简单的L型路径作为备选
-        // 电路板2主要通过getAllPaths批量计算路径
+        // 电路板主要通过getAllPaths批量计算路径
         const horzDistance = Math.abs(inPos[0] - outPos[0]);
         const vertDistance = Math.abs(inPos[1] - outPos[1]);
         
@@ -76,7 +76,7 @@ export class CircuitBoard2Style extends BaseStyle {
                 this.mapLinks.mapLinks(nodesByExecution);
                 return this.mapLinks.paths || [];
             } catch (err) {
-                console.error("电路板2路径计算错误:", err);
+                console.error("电路板路径计算错误:", err);
                 return [];
             }
         }

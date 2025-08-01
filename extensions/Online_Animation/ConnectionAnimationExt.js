@@ -180,9 +180,9 @@ app.registerExtension({
             id: "ConnectionAnimation.renderStyle",
             name: "渲染样式",
             type: "combo",
-            options: ["直线", "直角线", "曲线", "电路板1", "电路板2"],
+            options: ["直线", "直角线", "曲线", "电路板"],
             defaultValue: "曲线",
-            tooltip: "改变连线动画的渲染路径样式（直线/直角线/曲线/电路板1/电路板2）",
+            tooltip: "改变连线动画的渲染路径样式（直线/直角线/曲线/电路板）",
             category: ["🍺连线动画", "2·样式", "动画渲染"],
             onChange(value) {
                 const connectionAnim = app.canvas?._connectionAnimation;

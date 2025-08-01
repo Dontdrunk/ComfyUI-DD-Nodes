@@ -1,8 +1,7 @@
 import { DirectStyle } from './DirectStyle.js';
 import { AngledStyle } from './AngledStyle.js';
 import { CurveStyle } from './CurveStyle.js';
-import { CircuitBoard1Style } from './CircuitBoard1Style.js';
-import { CircuitBoard2Style } from './CircuitBoard2Style.js';
+import { CircuitBoardStyle } from './CircuitBoardStyle.js';
 
 /**
  * 连线渲染样式管理器
@@ -21,8 +20,7 @@ export class StyleManager {
             "直线": DirectStyle,
             "直角线": AngledStyle,
             "曲线": CurveStyle,
-            "电路板1": CircuitBoard1Style,
-            "电路板2": CircuitBoard2Style
+            "电路板": CircuitBoardStyle
         };
         
         // 当前样式实例
@@ -33,35 +31,19 @@ export class StyleManager {
      * 设置渲染样式
      * @param {string} styleName - 样式名称
      */    setStyle(styleName) {
-        // 特殊处理电路板样式之间的切换
+        // 样式未改变则返回
         if (styleName === this.currentStyleName) {
-            return; // 样式未改变
+            return; 
         }
 
-        const isCircuitBoard1 = this.currentStyleName === "电路板1";
-        const isCircuitBoard2 = this.currentStyleName === "电路板2";
-        const switchingBetweenCircuitBoards = 
-            (isCircuitBoard1 && styleName === "电路板2") || 
-            (isCircuitBoard2 && styleName === "电路板1");
-
-        // 当在两种电路板样式之间切换时，需要完全清理之前的样式
-        if (switchingBetweenCircuitBoards) {
-            // 强制进行彻底清理
-            if (this.currentStyle && this.currentStyle.cleanup) {
-                try {
-                    this.currentStyle.cleanup();
-                    // 确保mapLinks被完全清理
-                    if (this.currentStyle.mapLinks) {
-                        this.currentStyle.mapLinks = null;
-                    }
-                } catch (err) {
-                    console.error("清理电路板样式时出错:", err);
-                }
-            }
-        } else if (this.currentStyle) {
-            // 常规清理
+        // 清理之前的样式实例
+        if (this.currentStyle) {
             try {
                 this.currentStyle.cleanup();
+                // 确保mapLinks被完全清理
+                if (this.currentStyle.mapLinks) {
+                    this.currentStyle.mapLinks = null;
+                }
             } catch (err) {
                 console.error("清理样式时出错:", err);
             }
@@ -76,11 +58,11 @@ export class StyleManager {
                 this.currentStyle.init();
                 
                 // 对电路板样式，立即初始化以确保正确渲染
-                const isCircuitBoard = styleName === "电路板1" || styleName === "电路板2";
+                const isCircuitBoard = styleName === "电路板";
                 
                 if (isCircuitBoard && this.currentStyle.mapLinks && this.currentStyle.mapLinks.mapLinks) {
-                    // 对电路板2样式添加特殊标记
-                    if (styleName === "电路板2" && this.currentStyle.mapLinks) {
+                    // 对电路板样式添加特殊标记
+                    if (this.currentStyle.mapLinks) {
                         this.currentStyle.mapLinks._isMapLinks2 = true; 
                     }
                     
@@ -119,7 +101,7 @@ export class StyleManager {
         }
         
         // 对于电路板样式，仍然需要计算所有路径以保持布局一致性
-        if (this.currentStyleName === "电路板1" || this.currentStyleName === "电路板2") {
+        if (this.currentStyleName === "电路板") {
             const allPaths = this.currentStyle.getAllPaths();
             // 如果指定了特定连线，则只返回相关的路径
             if (specificLinks && specificLinks.length > 0) {

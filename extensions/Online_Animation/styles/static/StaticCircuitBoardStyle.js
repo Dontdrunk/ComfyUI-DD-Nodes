@@ -74,10 +74,10 @@ function liangBarsky(a, b, box, da, db) {
 }
 
 /**
- * 静态电路板2样式
- * 完全复制CircuitBoard2Style的复杂避障算法以确保路径完全一致
+ * 静态电路板样式
+ * 完全复制CircuitBoardStyle的复杂避障算法以确保路径完全一致
  */
-export class StaticCircuitBoard2Style extends StaticBaseStyle {
+export class StaticCircuitBoardStyle extends StaticBaseStyle {
     constructor(animationManager) {
         super(animationManager);
         this.paths = [];
@@ -145,7 +145,7 @@ export class StaticCircuitBoard2Style extends StaticBaseStyle {
                 this.mapLinks.mapLinks(nodesByExecution);
                 return this.mapLinks.paths || [];
             } catch (err) {
-                console.error("静态电路板2路径计算错误:", err);
+                console.error("静态电路板路径计算错误:", err);
                 return [];
             }
         }

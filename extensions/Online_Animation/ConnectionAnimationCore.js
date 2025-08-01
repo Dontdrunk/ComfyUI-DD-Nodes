@@ -505,7 +505,7 @@ export class ConnectionAnimation {
         ctx.save();
         
         // 对于电路板样式，使用批量路径计算
-        if (this.renderStyle === "电路板1" || this.renderStyle === "电路板2") {
+        if (this.renderStyle === "电路板") {
             this._drawBatchStaticConnections(ctx, excludeIds);
         } else {
             // 对于其他样式，逐个计算连线

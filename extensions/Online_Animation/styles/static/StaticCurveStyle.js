@@ -10,7 +10,7 @@ export class StaticCurveStyle extends StaticBaseStyle {
     }
 
     /**
-     * 计算贝塞尔曲线连接路径
+     * 计算贝塞尔曲线连接路径 (基于ComfyUI官方SPLINE_LINK算法)
      * @param {Object} outNode - 输出节点
      * @param {Object} inNode - 输入节点
      * @param {Array} outPos - 输出位置坐标 [x, y]
@@ -19,10 +19,18 @@ export class StaticCurveStyle extends StaticBaseStyle {
      * @returns {Object} 路径信息 { points: Array, type: String }
      */
     calculatePath(outNode, inNode, outPos, inPos, link) {
-        // 曲线：贝塞尔曲线控制点 - 与动画版本保持一致
-        const dist = Math.max(Math.abs(inPos[0] - outPos[0]), 40);
-        const cp1 = [outPos[0] + dist * 0.5, outPos[1]];
-        const cp2 = [inPos[0] - dist * 0.5, inPos[1]];
+        // 使用ComfyUI官方的SPLINE_LINK算法
+        // 计算实际距离 (官方使用欧几里得距离)
+        const dx = inPos[0] - outPos[0];
+        const dy = inPos[1] - outPos[1];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        // 使用官方的0.25因子计算控制点偏移
+        const offset = Math.max(dist * 0.25, 40);
+        
+        // 计算贝塞尔控制点
+        const cp1 = [outPos[0] + offset, outPos[1]];
+        const cp2 = [inPos[0] - offset, inPos[1]];
         const pathPoints = [outPos, cp1, cp2, inPos];
         
         return {

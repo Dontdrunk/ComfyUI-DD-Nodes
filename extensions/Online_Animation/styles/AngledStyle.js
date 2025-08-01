@@ -10,7 +10,7 @@ export class AngledStyle extends BaseStyle {
     }
 
     /**
-     * 计算直角线连接路径
+     * 计算直角线连接路径 (基于ComfyUI官方STRAIGHT_LINK算法)
      * @param {Object} outNode - 输出节点
      * @param {Object} inNode - 输入节点
      * @param {Array} outPos - 输出位置坐标 [x, y]
@@ -19,36 +19,26 @@ export class AngledStyle extends BaseStyle {
      * @returns {Object} 路径信息 { points: Array, type: String }
      */
     calculatePath(outNode, inNode, outPos, inPos, link) {
-        // 确保精确的90°角，增加计算逻辑以选择最佳路径
-        const horzDistance = Math.abs(inPos[0] - outPos[0]);
-        const vertDistance = Math.abs(inPos[1] - outPos[1]);
+        // 使用ComfyUI官方的STRAIGHT_LINK算法
+        // 控制点延伸长度为10像素
+        const l = 10;
         
-        let pathPoints;
-        if (horzDistance > vertDistance) {
-            // 先水平后垂直
-            // 使用三个点而不是两个转折点，确保完全的直角
-            const midX = inPos[0];
-            const midY = outPos[1];
-            pathPoints = [
-                outPos,              // 起点
-                [midX, outPos[1]],   // 水平线终点
-                [midX, midY],        // 转角点（确保精确90度）
-                [midX, inPos[1]],    // 垂直线起点
-                inPos                // 终点
-            ];
-        } else {
-            // 先垂直后水平
-            // 使用三个点而不是两个转折点，确保完全的直角
-            const midX = outPos[0];
-            const midY = inPos[1];
-            pathPoints = [
-                outPos,              // 起点
-                [outPos[0], midY],   // 垂直线终点
-                [midX, midY],        // 转角点（确保精确90度）
-                [inPos[0], midY],    // 水平线起点
-                inPos                // 终点
-            ];
-        }
+        // 计算控制点 (官方默认：输出向右，输入向左)
+        const innerA = [outPos[0] + l, outPos[1]];  // RIGHT方向
+        const innerB = [inPos[0] - l, inPos[1]];    // LEFT方向
+        
+        // 计算中点X坐标
+        const midX = (innerA[0] + innerB[0]) * 0.5;
+        
+        // 构建官方6点路径：起点 -> 控制点1 -> 中点水平 -> 中点垂直 -> 控制点2 -> 终点
+        const pathPoints = [
+            outPos,                    // 起点
+            innerA,                    // 控制点1 (向右延伸)  
+            [midX, innerA[1]],        // 中点水平线
+            [midX, innerB[1]],        // 中点垂直线
+            innerB,                    // 控制点2 (向左延伸)
+            inPos                      // 终点
+        ];
         
         return {
             points: pathPoints,

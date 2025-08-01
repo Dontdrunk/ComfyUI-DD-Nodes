@@ -30,7 +30,7 @@
 | 节点名称 | 功能描述 | 图片说明 |
 |---------|---------|---------|
 | **DD 图片描边** | 智能图片描边工具，支持透明图和普通图片的描边处理。提供外描边、内描边、居中描边三种模式，支持自定义颜色、大小、透明度和遮罩功能 | ![图片描边效果]( https://github.com/user-attachments/assets/5c4b6fc0-2f41-4c2d-8a18-fd6a7cdd5ca8) |
-| **DD Qwen-MT翻译** | 强大的多语言翻译节点，基于阿里云通义千问翻译服务。支持92种语言互译，提供通用翻译、术语翻译、领域翻译三种模式。| ![Qwen-MT翻译界面](https://github.com/user-attachments/assets/placeholder-qwen-mt-image) |
+| **DD Qwen-MT翻译** | 强大的多语言翻译节点，基于阿里云通义千问翻译服务。支持92种语言互译，提供通用翻译、术语翻译、领域翻译三种模式。| ![Qwen-MT翻译界面](https://github.com/user-attachments/assets/baf85914-ceab-4aac-9b2a-7ac331ffbacb) |
 | **DD 模型优化加载** | 高性能的模型加载优化器，支持智能加载和多种优化模式。内置智能模式可根据模型大小与电脑配置自动选择最佳加载方案，支持所有通过UNET节点进行加载的模型 | ![模型加载](https://github.com/user-attachments/assets/61fafb61-3f77-4154-bf89-ad82fb59c961) |
 | **DD 采样优化器** | 模型首次采样速度优化器，有效消除首次采样延迟，提升工作流响应速度和用户体验 | ![采样优化](https://github.com/user-attachments/assets/53a74ea8-2a37-479c-8ff9-99c9ceac345c) |
 | **DD 图片转视频帧** | 高效的图片转视频帧转换器，支持批量处理和多种输出格式，为视频生成工作流提供便利 | ![图片转视频帧界面](https://github.com/user-attachments/assets/66c05a9c-c33b-4813-b434-d3c5928067c5) |

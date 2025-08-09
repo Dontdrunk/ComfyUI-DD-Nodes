@@ -7,13 +7,10 @@ import os
 import json
 import torch
 import logging
-from typing import Dict, List, Any, Tuple, Optional
+import time
+import threading
+from typing import Dict, List, Any, Tuple, Optional, Callable
 from openai import OpenAI
-
-from .utils.language_utils import SUPPORTED_LANGUAGES
-from .utils.debug_utils import DebugUtils
-from .utils.resource_cache import ResourceCache
-from .utils.api_config import APIConfigManager
 
 # 禁用HTTP相关的详细日志记录，保持控制台简洁
 logging.getLogger("openai").setLevel(logging.WARNING)
@@ -21,12 +18,265 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+# Supported languages mapping based on official Qwen-MT documentation
+SUPPORTED_LANGUAGES = {
+    "英语": "en",
+    "简体中文": "zh", 
+    "繁体中文": "zh_tw",
+    "俄语": "ru",
+    "日语": "ja",
+    "韩语": "ko",
+    "西班牙语": "es",
+    "法语": "fr",
+    "葡萄牙语": "pt",
+    "德语": "de",
+    "意大利语": "it",
+    "泰语": "th",
+    "越南语": "vi",
+    "印度尼西亚语": "id",
+    "马来语": "ms",
+    "阿拉伯语": "ar",
+    "印地语": "hi",
+    "希伯来语": "he",
+    "缅甸语": "my",
+    "泰米尔语": "ta",
+    "乌尔都语": "ur",
+    "孟加拉语": "bn",
+    "波兰语": "pl",
+    "荷兰语": "nl",
+    "罗马尼亚语": "ro",
+    "土耳其语": "tr",
+    "高棉语": "km",
+    "老挝语": "lo",
+    "粤语": "yue",
+    "捷克语": "cs",
+    "希腊语": "el",
+    "瑞典语": "sv",
+    "匈牙利语": "hu",
+    "丹麦语": "da",
+    "芬兰语": "fi",
+    "乌克兰语": "uk",
+    "保加利亚语": "bg",
+    "塞尔维亚语": "sr",
+    "泰卢固语": "te",
+    "南非荷兰语": "af",
+    "亚美尼亚语": "hy",
+    "阿萨姆语": "as",
+    "阿斯图里亚斯语": "ast",
+    "巴斯克语": "eu",
+    "白俄罗斯语": "be",
+    "波斯尼亚语": "bs",
+    "加泰罗尼亚语": "ca",
+    "宿务语": "ceb",
+    "克罗地亚语": "hr",
+    "埃及阿拉伯语": "arz",
+    "爱沙尼亚语": "et",
+    "加利西亚语": "gl",
+    "格鲁吉亚语": "ka",
+    "古吉拉特语": "gu",
+    "冰岛语": "is",
+    "爪哇语": "jv",
+    "卡纳达语": "kn",
+    "哈萨克语": "kk",
+    "拉脱维亚语": "lv",
+    "立陶宛语": "lt",
+    "卢森堡语": "lb",
+    "马其顿语": "mk",
+    "马加希语": "mai",
+    "马耳他语": "mt",
+    "马拉地语": "mr",
+    "美索不达米亚阿拉伯语": "acm",
+    "摩洛哥阿拉伯语": "ary", 
+    "内志阿拉伯语": "ars",
+    "尼泊尔语": "ne",
+    "北阿塞拜疆语": "az",
+    "北黎凡特阿拉伯语": "apc",
+    "北乌兹别克语": "uz",
+    "书面语挪威语": "nb",
+    "新挪威语": "nn",
+    "奥克语": "oc",
+    "奥里亚语": "or",
+    "邦阿西楠语": "pag",
+    "西西里语": "scn",
+    "信德语": "sd",
+    "僧伽罗语": "si",
+    "斯洛伐克语": "sk",
+    "斯洛文尼亚语": "sl",
+    "南黎凡特阿拉伯语": "ajp",
+    "斯瓦希里语": "sw",
+    "他加禄语": "tl",
+    "塔伊兹-亚丁阿拉伯语": "acq",
+    "托斯克阿尔巴尼亚语": "sq",
+    "突尼斯阿拉伯语": "aeb",
+    "威尼斯语": "vec",
+    "瓦莱语": "war",
+    "威尔士语": "cy",
+    "西波斯语": "fa"
+}
+
+
+class DebugUtils:
+    """Debug utilities for plugin development."""
+    
+    DEBUG_ENABLED = False  # 默认关闭调试模式，保持控制台简洁
+    
+    @classmethod
+    def log(cls, message: str, level: str = "info") -> None:
+        """Log a debug message."""
+        if not cls.DEBUG_ENABLED:
+            return
+            
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        prefix = f"[{timestamp}] [ComfyUI-Qwen-MT] [{level.upper()}]"
+        print(f"{prefix} {message}")
+
+
+class ResourceCache:
+    """Thread-safe resource cache for expensive operations."""
+    
+    _cache: Dict[str, Any] = {}
+    _cache_timestamps: Dict[str, float] = {}
+    _cache_lock = threading.Lock()
+    _cache_ttl = 3600  # 1 hour default TTL
+    
+    @classmethod
+    def get(cls, key: str, factory: Callable[[], Any], ttl: Optional[int] = None) -> Any:
+        """Get a cached resource or create it if not exists."""
+        with cls._cache_lock:
+            current_time = time.time()
+            cache_ttl = ttl or cls._cache_ttl
+            
+            # Check if cache exists and is not expired
+            if (key in cls._cache and 
+                key in cls._cache_timestamps and
+                current_time - cls._cache_timestamps[key] < cache_ttl):
+                
+                return cls._cache[key]
+            
+            # Create new resource
+            resource = factory()
+            
+            # Store in cache
+            cls._cache[key] = resource
+            cls._cache_timestamps[key] = current_time
+            
+            return resource
+    
+    @classmethod
+    def get_api_client(cls, api_key: str, base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1") -> OpenAI:
+        """Get or create a cached API client."""
+        # Create cache key based on api_key hash and base_url
+        key = f"api_client:{hash(api_key)}:{base_url}"
+        
+        def factory():
+            # 禁用OpenAI客户端的HTTP日志记录
+            logging.getLogger("openai").setLevel(logging.WARNING)
+            logging.getLogger("httpx").setLevel(logging.WARNING)
+            logging.getLogger("httpcore").setLevel(logging.WARNING)
+            
+            return OpenAI(
+                api_key=api_key,
+                base_url=base_url
+            )
+        
+        return cls.get(key, factory, ttl=1800)  # 30 minutes TTL for API clients
+
+
+class APIConfigManager:
+    """Manages API configuration for Qwen-MT plugin."""
+    
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__), "qwen_mt_config.json")
+    DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    
+    @classmethod
+    def get_api_key(cls) -> Optional[str]:
+        """Get the stored API key."""
+        try:
+            if os.path.exists(cls.CONFIG_FILE):
+                with open(cls.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    return config.get('api_key')
+        except Exception as e:
+            DebugUtils.log(f"Failed to read API config: {e}", "error")
+        return None
+    
+    @classmethod
+    def set_api_key(cls, api_key: str) -> bool:
+        """Store the API key securely."""
+        try:
+            config = {}
+            if os.path.exists(cls.CONFIG_FILE):
+                with open(cls.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+            
+            config['api_key'] = api_key
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(cls.CONFIG_FILE), exist_ok=True)
+            
+            with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+            
+            DebugUtils.log("API key saved successfully")
+            return True
+            
+        except Exception as e:
+            DebugUtils.log(f"Failed to save API config: {e}", "error")
+            return False
+    
+    @classmethod
+    def clear_api_key(cls) -> bool:
+        """Clear the stored API key."""
+        try:
+            if os.path.exists(cls.CONFIG_FILE):
+                with open(cls.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                
+                if 'api_key' in config:
+                    del config['api_key']
+                    
+                    with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(config, f, ensure_ascii=False, indent=2)
+            
+            DebugUtils.log("API key cleared successfully")
+            return True
+            
+        except Exception as e:
+            DebugUtils.log(f"Failed to clear API config: {e}", "error")
+            return False
+    
+    @classmethod
+    def get_base_url(cls) -> str:
+        """Get the base URL for API requests."""
+        return cls.DEFAULT_BASE_URL
+    
+    @classmethod
+    def is_configured(cls) -> bool:
+        """Check if API is properly configured."""
+        api_key = cls.get_api_key()
+        return api_key is not None and api_key.strip() != ""
+    
+    @classmethod
+    def get_config_info(cls) -> Dict[str, str]:
+        """Get configuration information for display."""
+        api_key = cls.get_api_key()
+        is_configured = cls.is_configured()
+        
+        return {
+            "configured": is_configured,
+            "has_api_key": is_configured,
+            "api_key_preview": f"sk-***{api_key[-6:]}" if api_key and len(api_key) > 6 else "未配置",
+            "base_url": cls.get_base_url(),
+            "console_url": "https://bailian.console.aliyun.com/?tab=home#/home"
+        }
+
+
 class QwenMTTranslatorNode:
     """
     通义千问翻译节点 - 支持多种翻译模式
     """
     
-    CATEGORY = "🍺DD系列节点/🌐翻译"
+    CATEGORY = "🍺DD系列节点"
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -165,14 +415,16 @@ class QwenMTTranslatorNode:
             if translation_mode == "术语翻译" and mode_config.strip():
                 try:
                     term_list = json.loads(mode_config)
-                    translation_options["terms"] = term_list
+                    # 通义千问翻译API使用 "glossary" 参数进行术语翻译
+                    translation_options["glossary"] = term_list
                     # DebugUtils.log(f"使用术语翻译模式，包含 {len(term_list)} 个术语")
                 except json.JSONDecodeError:
                     # DebugUtils.log("术语配置格式错误，使用通用翻译模式", level="warning")
                     pass
             
             elif translation_mode == "领域翻译" and mode_config.strip():
-                translation_options["domains"] = mode_config.strip()
+                # 通义千问翻译API使用 "context" 参数进行领域翻译
+                translation_options["context"] = mode_config.strip()
                 # DebugUtils.log(f"使用领域翻译模式: {mode_config[:50]}...")
             
             else:

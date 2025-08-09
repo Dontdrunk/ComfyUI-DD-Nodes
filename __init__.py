@@ -55,7 +55,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-ConditionSwitcher": "DD Condition Switcher",
     "DD-LatentSwitcher": "DD Latent Switcher",
     "DD-ImageStroke": "DD Image Stroke",
-    "DD-QwenMTTranslator": "DD Qwen-MT翻译",
+    "DD-QwenMTTranslator": "DD Qwen-MT",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'prompt_manager_api']

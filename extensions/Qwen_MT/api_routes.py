@@ -6,8 +6,7 @@ Handles API key configuration requests from the frontend.
 import json
 from aiohttp import web
 from server import PromptServer
-from .utils.api_config import APIConfigManager
-from .utils.debug_utils import DebugUtils
+from .nodes import APIConfigManager, DebugUtils
 
 
 @PromptServer.instance.routes.get("/qwen_mt/config")

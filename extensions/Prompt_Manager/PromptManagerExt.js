@@ -31,7 +31,8 @@ const CLIP_TEXT_ENCODERS = [
     "easy hunyuanDiTLoader",
     "easy fluxLoader",
     "easy mochiLoader",
-    "easy promptAwait"
+    "easy promptAwait",
+    "TextEncodeQwenImageEdit"
 ];
 
 // 全局提示词管理器

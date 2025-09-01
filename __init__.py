@@ -16,6 +16,9 @@ from .node.image_stroke import NODE_CLASS_MAPPINGS as IMAGE_STROKE_NODES
 # 导入Qwen-MT翻译节点
 from .extensions.Qwen_MT.nodes import NODE_CLASS_MAPPINGS as QWEN_MT_NODES
 
+# 导入比例选择器节点
+from .extensions.Aspect_Ratio_Selector.nodes import NODE_CLASS_MAPPINGS as ASPECT_RATIO_NODES
+
 # 导入扩展功能API
 from .extensions.Prompt_Manager.prompt_api import prompt_manager_api
 from .extensions.Qwen_MT import api_routes
@@ -37,6 +40,7 @@ NODE_CLASS_MAPPINGS = {
     **LATENT_SWITCHER_NODES,
     **IMAGE_STROKE_NODES,
     **QWEN_MT_NODES,
+    **ASPECT_RATIO_NODES,
 }
 
 # 节点显示名称映射（使用英文作为默认，中文通过locales提供）
@@ -56,6 +60,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-LatentSwitcher": "DD Latent Switcher",
     "DD-ImageStroke": "DD Image Stroke",
     "DD-QwenMTTranslator": "DD Qwen-MT",
+    "DD-AspectRatioSelector": "DD Aspect Ratio Selector",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'prompt_manager_api']

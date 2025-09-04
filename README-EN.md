@@ -22,7 +22,6 @@
 | Node Name | Function Description | Image Description |
 |-----------|---------------------|-------------------|
 | **DD Model Optimizer** | High-performance model loading optimizer supporting intelligent loading and multiple optimization modes. Built-in Smart Mode automatically selects the best loading solution based on model size and hardware configuration, compatible with all models loaded through UNET nodes | ![Model Optimizer](https://github.com/user-attachments/assets/61fafb61-3f77-4154-bf89-ad82fb59c961) |
-| **DD Sampling Optimizer** | Model first-time sampling speed optimizer that effectively eliminates first sampling delay, improving workflow response speed and user experience | ![Sampling Optimizer](https://github.com/user-attachments/assets/53a74ea8-2a37-479c-8ff9-99c9ceac345c) |
 | **DD Image To Video** | Efficient image to video frame converter supporting batch processing and multiple output formats, providing convenience for video generation workflows | ![Image To Video Interface](https://github.com/user-attachments/assets/66c05a9c-c33b-4813-b434-d3c5928067c5) |
 | **DD Advanced Fusion** | Powerful image and video fusion processor supporting multiple fusion algorithms and parameter adjustments for professional-grade image composition effects | ![Advanced Fusion Demo](https://github.com/user-attachments/assets/2a50614f-1911-4fd8-bc2e-8d2bece91e73) |
 | **DD Dimension Calculator** | Minimalist image dimension calculator providing precise dimension calculation and ratio adjustment functions, ensuring output images meet expected specifications | ![Dimension Calculator](https://github.com/user-attachments/assets/f3b670d6-a471-4851-a2bf-49b8f174d83e) |
@@ -152,9 +151,6 @@ This extension now supports ComfyUI's native internationalization (i18n) system 
 
 - **v1.4.0** (2025-03-02)
   - Added empty Latent video (Wan2.1) [This node has been removed!]
-
-- **v1.3.0** (2025-03-01)
-  - Added sampling optimizer node for first sampling delay elimination and CLIP text encoding preheating
 
 - **v1.2.0** (2025-02-21)
   - Added model optimizer node for UNET model optimization

@@ -4,7 +4,6 @@ from .node.video_frame_extractor import NODE_CLASS_MAPPINGS as VIDEO_FRAME_EXTRA
 from .node.advanced_fusion import NODE_CLASS_MAPPINGS as FUSION_NODES
 from .node.simple_latent import NODE_CLASS_MAPPINGS as LATENT_NODES
 from .node.model_optimizer import NODE_CLASS_MAPPINGS as OPTIMIZER_NODES
-from .node.sampling_optimizer import NODE_CLASS_MAPPINGS as SAMPLING_NODES
 from .node.image_resize import NODE_CLASS_MAPPINGS as RESIZE_NODES
 from .node.mask_resize import NODE_CLASS_MAPPINGS as MASK_RESIZE_NODES
 from .node.image_size_limiter import NODE_CLASS_MAPPINGS as SIZE_LIMITER_NODES
@@ -31,7 +30,6 @@ NODE_CLASS_MAPPINGS = {
     **FUSION_NODES,
     **LATENT_NODES,
     **OPTIMIZER_NODES,
-    **SAMPLING_NODES,
     **RESIZE_NODES,
     **MASK_RESIZE_NODES,
     **SIZE_LIMITER_NODES,
@@ -51,7 +49,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DD-AdvancedFusion": "DD Advanced Fusion",
     "DD-SimpleLatent": "DD Simple Latent",
     "DD-ModelOptimizer": "DD Model Optimizer",
-    "DD-SamplingOptimizer": "DD Sampling Optimizer",
     "DD-ImageUniformSize": "DD Image Uniform Size",
     "DD-MaskUniformSize": "DD Mask Uniform Size",
     "DD-ImageSizeLimiter": "DD Image Size Limiter",

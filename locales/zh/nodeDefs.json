@@ -119,30 +119,6 @@
       }
     }
   },
-  "DD-SamplingOptimizer": {
-    "display_name": "DD 采样优化器",
-    "description": "优化采样过程性能",
-    "inputs": {
-      "模型": {
-        "name": "模型",
-        "tooltip": "要优化的模型"
-      },
-      "CLIP模型": {
-        "name": "CLIP模型",
-        "tooltip": "CLIP文本编码器"
-      }
-    },
-    "outputs": {
-      "0": {
-        "name": "优化模型",
-        "tooltip": "优化后的模型"
-      },
-      "1": {
-        "name": "优化CLIP",
-        "tooltip": "优化后的CLIP"
-      }
-    }
-  },
   "DD-ImageUniformSize": {
     "display_name": "DD 图像统一尺寸",
     "description": "统一调整图像尺寸",

@@ -119,30 +119,6 @@
       }
     }
   },
-  "DD-SamplingOptimizer": {
-    "display_name": "DD Sampling Optimizer",
-    "description": "Optimize sampling process performance",
-    "inputs": {
-      "模型": {
-        "name": "Model",
-        "tooltip": "Model to optimize"
-      },
-      "CLIP模型": {
-        "name": "CLIP Model",
-        "tooltip": "CLIP text encoder"
-      }
-    },
-    "outputs": {
-      "0": {
-        "name": "MODEL",
-        "tooltip": "Optimized model"
-      },
-      "1": {
-        "name": "CLIP",
-        "tooltip": "Optimized CLIP"
-      }
-    }
-  },
   "DD-ImageUniformSize": {
     "display_name": "DD Image Uniform Size",
     "description": "Uniformly resize images",

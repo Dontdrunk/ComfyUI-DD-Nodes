@@ -323,6 +323,38 @@
       }
     }
   },
+  "DD-ImageSplitter": {
+    "display_name": "DD Image Splitter",
+    "description": "Split image by ratio and output specified part",
+    "inputs": {
+      "图像": {
+        "name": "Image",
+        "tooltip": "Input image to be split"
+      },
+      "切分方向": {
+        "name": "Split Direction",
+        "tooltip": "Choose split direction: horizontal (left-right) or vertical (top-bottom)"
+      },
+      "切分份数": {
+        "name": "Split Count",
+        "tooltip": "Number of parts to split the image into (2-10)"
+      },
+      "输出位置": {
+        "name": "Output Position",
+        "tooltip": "Select which part to output (starting from 1)"
+      },
+      "切分比例": {
+        "name": "Split Ratio",
+        "tooltip": "Split ratio, e.g., '1:1' for equal split, '2:1' for 2:1 ratio split"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Image",
+        "tooltip": "Split image at specified position"
+      }
+    }
+  },
   "DD-VideoFrameExtractor": {
     "display_name": "DD Video Frame Extractor",
     "description": "Extract first or last frame from video",

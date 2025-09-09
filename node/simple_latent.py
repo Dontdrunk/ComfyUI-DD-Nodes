@@ -27,8 +27,8 @@ class DDSimpleLatent:
             }
         }
 
-    RETURN_TYPES = ("LATENT",)
-    RETURN_NAMES = ("潜空间",)
+    RETURN_TYPES = ("LATENT", "INT", "INT")
+    RETURN_NAMES = ("潜空间", "宽度", "高度")
     FUNCTION = "generate"
     CATEGORY = "🍺DD系列节点"
 
@@ -40,7 +40,7 @@ class DDSimpleLatent:
         # 创建一个填充零的 Latent
         latent = torch.zeros([1, 4, height // 8, width // 8])
         
-        return ({"samples": latent}, )
+        return ({"samples": latent}, width, height)
 
 # 节点映射
 NODE_CLASS_MAPPINGS = {

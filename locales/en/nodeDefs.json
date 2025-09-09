@@ -73,21 +73,29 @@
   },
   "DD-SimpleLatent": {
     "display_name": "DD Simple Latent",
-    "description": "Simplified latent space operation node",
+    "description": "Simplified latent space generator that creates empty latent of specified dimensions",
     "inputs": {
-      "模型": {
-        "name": "Model",
-        "tooltip": "Input model"
+      "宽度": {
+        "name": "Width",
+        "tooltip": "Width of the generated latent space (pixels)"
       },
-      "提示词": {
-        "name": "Prompt",
-        "tooltip": "Text prompt for image generation"
+      "高度": {
+        "name": "Height",
+        "tooltip": "Height of the generated latent space (pixels)"
       }
     },
     "outputs": {
       "0": {
         "name": "LATENT",
         "tooltip": "Generated latent representation"
+      },
+      "1": {
+        "name": "Width",
+        "tooltip": "Actual width used (aligned to multiples of 8)"
+      },
+      "2": {
+        "name": "Height",
+        "tooltip": "Actual height used (aligned to multiples of 8)"
       }
     }
   },

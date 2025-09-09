@@ -73,21 +73,29 @@
   },
   "DD-SimpleLatent": {
     "display_name": "DD 极简Latent",
-    "description": "简化的潜空间操作节点",
+    "description": "简化的潜空间生成器，生成指定尺寸的空潜空间",
     "inputs": {
-      "模型": {
-        "name": "模型",
-        "tooltip": "输入的模型"
+      "宽度": {
+        "name": "宽度",
+        "tooltip": "生成潜空间的宽度（像素）"
       },
-      "提示词": {
-        "name": "提示词",
-        "tooltip": "生成图像的提示词"
+      "高度": {
+        "name": "高度",
+        "tooltip": "生成潜空间的高度（像素）"
       }
     },
     "outputs": {
       "0": {
         "name": "潜空间",
         "tooltip": "生成的潜空间表示"
+      },
+      "1": {
+        "name": "宽度",
+        "tooltip": "实际使用的宽度（8的倍数对齐后）"
+      },
+      "2": {
+        "name": "高度",
+        "tooltip": "实际使用的高度（8的倍数对齐后）"
       }
     }
   },

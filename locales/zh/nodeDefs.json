@@ -410,5 +410,21 @@
         "tooltip": "输出的图像高度"
       }
     }
+  },
+  "DD-TxtFileMerger": {
+    "display_name": "DD TXT文件合并器",
+    "description": "将指定文件夹及其子文件夹中的所有TXT文件合并成一个文本内容",
+    "inputs": {
+      "input_folder": {
+        "name": "输入文件夹",
+        "tooltip": "包含TXT文件的文件夹路径，将递归扫描所有子文件夹"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "合并文本",
+        "tooltip": "合并后的完整文本内容，包含文件路径标识"
+      }
+    }
   }
 }

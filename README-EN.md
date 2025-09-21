@@ -31,6 +31,9 @@
 | **DD Image Size Limiter** | Smart image size limiter ensuring images are within specified maximum and minimum size ranges, preventing memory overflow and performance issues | ![Image Size Limiter Interface](https://github.com/user-attachments/assets/d2fac125-fad3-4f51-9b91-39d0be4c7753) |
 | **DD Switcher Series** | Includes condition switcher, latent switcher, model switcher and other switching nodes, simplifying workflows and improving processing flexibility | ![Switcher Series Interface](https://github.com/user-attachments/assets/54690c0c-3627-4970-9bc0-ef58ca4be2f7) |
 | **DD Video First Last Frame** | Professional video frame extraction tool that can precisely extract the first and last frames of videos, providing convenience for video processing workflows | ![Video First Last Frame](https://github.com/user-attachments/assets/243c4809-8c83-43a3-9c2b-768f16644ded) |
+| **DD Image Splitter** | Intelligent image splitting tool that supports splitting images into multiple parts by custom ratios. Supports horizontal (left-right) or vertical (top-bottom) splitting, supports unequal ratio splitting (like 2:1:3), and can output specified split results | ![Image Splitter Interface](To be added) |
+| **DD Aspect Ratio Selector** | Intelligent aspect ratio selection tool that provides recommended resolutions for different AI models (such as Qwen-image, Wan2.2). Supports three ratio categories: landscape, portrait, and square, automatically providing the most suitable size parameters for the model | ![Aspect Ratio Selector Interface](To be added) |
+| **DD TXT File Merger** | Powerful text file merging tool that can recursively scan all TXT files in specified folders and subfolders, merging them into a single text content. Automatically adds file path identifiers and supports multiple text encoding formats | ![TXT File Merger Interface](To be added) |
 
 ## 🎯 Extension Functions Overview
 
@@ -62,9 +65,11 @@ This extension now supports ComfyUI's native internationalization (i18n) system 
 ## 📈 Version History
 
 ### Latest Version
-- **v2.6.0** (2025-07-06)
-  - 🔧 Attempted to fix multi-system compatibility bugs in interface layout panel
-  - ➕ Added video first and last frame output node
+- **v3.1.0** (2025-09-21)
+- Added DD TXT File Merger node, supports recursive scanning of all TXT files in folders and subfolders and merging them into single text content
+
+- **v3.0.0** (2025-09-05)
+- Added DD Image Splitter node, supports splitting images by custom ratios and outputting specified parts
 
 ### Important Updates
 - **v2.5.1** (2025-07-02)

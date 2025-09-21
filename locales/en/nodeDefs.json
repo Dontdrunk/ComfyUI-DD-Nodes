@@ -382,5 +382,21 @@
         "tooltip": "Extracted single frame image"
       }
     }
+  },
+  "DD-TxtFileMerger": {
+    "display_name": "DD TXT File Merger",
+    "description": "Merge all TXT files from a folder and its subfolders into a single text content",
+    "inputs": {
+      "input_folder": {
+        "name": "Input Folder",
+        "tooltip": "Folder path containing TXT files, will recursively scan all subfolders"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Merged Text",
+        "tooltip": "Complete merged text content with file path identifiers"
+      }
+    }
   }
 }

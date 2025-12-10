@@ -22,6 +22,7 @@ class DDImageStroke:
             },
             "optional": {
                 "遮罩": ("MASK",),
+                "描边颜色HEX": ("STRING", {"default": "#FFFFFF"}),
             }
         }
     
@@ -250,7 +251,7 @@ class DDImageStroke:
         
         return result
     
-    def add_stroke(self, 图片, 关闭遮罩, 位置, 大小, 不透明度, 描边颜色, 遮罩=None):
+    def add_stroke(self, 图片, 关闭遮罩, 位置, 大小, 不透明度, 描边颜色, 遮罩=None, 描边颜色HEX=None):
         """
         为图片添加描边效果
         
@@ -285,9 +286,13 @@ class DDImageStroke:
                 # 转换为PIL图像，应用遮罩（默认反转）
                 pil_image, is_transparent_image = self.tensor_to_pil(图片[i:i+1], current_mask)
                 
-                # 解析描边颜色（支持COLOR类型、整数和字符串格式）
-                if isinstance(描边颜色, str):
-                    # COLOR类型会传入字符串格式的十六进制颜色
+                # 解析描边颜色（支持COLOR、整数、字符串以及兼容HEX输入）
+                override_hex = None
+                if isinstance(描边颜色HEX, str) and len(描边颜色HEX) > 0:
+                    override_hex = 描边颜色HEX
+                if override_hex is not None:
+                    stroke_rgb = self.hex_to_rgb(override_hex)
+                elif isinstance(描边颜色, str):
                     stroke_rgb = self.hex_to_rgb(描边颜色)
                 elif isinstance(描边颜色, (int, float)):
                     # 向后兼容整数格式

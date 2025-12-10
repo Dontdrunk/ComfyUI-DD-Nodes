@@ -1,7 +1,7 @@
 // 智能布局扩展
 import { app } from "/scripts/app.js";
 import { LayoutPanel, DEFAULT_CONFIG } from "./LayoutCore.js";
-import { registerTheme, getRegisteredThemes, setDefaultTheme, initDefaultThemes } from "./styles/UIStyles.js";
+import { getRegisteredThemes, initDefaultThemes } from "./styles/UIStyles.js";
 
 // 初始化默认主题
 try {

@@ -18,7 +18,7 @@ export class StaticCurveStyle extends StaticBaseStyle {
      * @param {Object} link - 连线数据
      * @returns {Object} 路径信息 { points: Array, type: String }
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, outPos, inPos, _link) {
         // 使用ComfyUI官方的SPLINE_LINK算法
         // 计算实际距离 (官方使用欧几里得距离)
         const dx = inPos[0] - outPos[0];

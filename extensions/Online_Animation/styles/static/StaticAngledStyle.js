@@ -18,7 +18,7 @@ export class StaticAngledStyle extends StaticBaseStyle {
      * @param {Object} link - 连线数据
      * @returns {Object} 路径信息 { points: Array, type: String }
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, outPos, inPos, _link) {
         // 使用ComfyUI官方的STRAIGHT_LINK算法
         // 控制点延伸长度为10像素
         const l = 10;

@@ -34,7 +34,7 @@ export class CircuitBoardStyle extends BaseStyle {
     /**
      * 计算单条连线路径
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, outPos, inPos, _link) {
         // 对于单条连线，使用简单的L型路径作为备选
         // 电路板主要通过getAllPaths批量计算路径
         const horzDistance = Math.abs(inPos[0] - outPos[0]);
@@ -516,7 +516,7 @@ class MapLinks {
     /**
      * 递归计算避开障碍的路径
      */
-    mapLink(outputXY, inputXY, targetNodeInfo, isBlocked, lastDirection) {
+    mapLink(outputXY, inputXY, targetNodeInfo, isBlocked, _lastDirection) {
         // 尝试简单路径
         const result = this.mapFinalLink(outputXY, inputXY);
         const { clippedHorz, clippedVert, path } = result;

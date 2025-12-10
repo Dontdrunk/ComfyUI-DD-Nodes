@@ -106,7 +106,7 @@ export class StaticCircuitBoardStyle extends StaticBaseStyle {
     /**
      * 计算单条连线路径 - 与原版保持一致
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, outPos, inPos, _link) {
         // 对于单条连线，使用简单的L型路径作为备选
         const horzDistance = Math.abs(inPos[0] - outPos[0]);
         const vertDistance = Math.abs(inPos[1] - outPos[1]);
@@ -504,7 +504,7 @@ class StaticMapLinks {
     /**
      * 递归计算避开障碍的路径 - 完全复制原版算法
      */
-    mapLink(outputXY, inputXY, targetNodeInfo, isBlocked, lastDirection) {
+    mapLink(outputXY, inputXY, targetNodeInfo, isBlocked, _lastDirection) {
         // 尝试简单路径
         const result = this.mapFinalLink(outputXY, inputXY);
         const { clippedHorz, clippedVert, path } = result;

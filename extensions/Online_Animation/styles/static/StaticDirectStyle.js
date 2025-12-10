@@ -18,7 +18,7 @@ export class StaticDirectStyle extends StaticBaseStyle {
      * @param {Object} link - 连线数据
      * @returns {Object} 路径信息 { points: Array, type: String }
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, outPos, inPos, _link) {
         // 直线：直接连接两点
         const pathPoints = [outPos, inPos];
         

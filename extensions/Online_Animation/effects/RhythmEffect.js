@@ -46,6 +46,7 @@ export class RhythmEffect extends BaseEffect {
         
         // 当前周期内的时间位置 (0-1)
         let t = ((now % period) / period);
+        t = (t + (phase || 0)) % 1;
         
         // 动态采样点数量
         const sampleCount = this.animationManager.getDynamicSampleCount("律动");

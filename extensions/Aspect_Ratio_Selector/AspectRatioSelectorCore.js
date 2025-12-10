@@ -1,5 +1,4 @@
 // ComfyUI 比例选择器核心模块
-import { api } from "/scripts/api.js";
 
 export class AspectRatioSelectorCore {
     constructor() {

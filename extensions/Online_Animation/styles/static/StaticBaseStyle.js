@@ -20,7 +20,7 @@ export class StaticBaseStyle {
      * @param {Object} link - 连线数据
      * @returns {Object} 包含路径点数组和类型的对象 { points: Array, type: String }
      */
-    calculatePath(outNode, inNode, outPos, inPos, link) {
+    calculatePath(_outNode, _inNode, _outPos, _inPos, _link) {
         throw new Error("子类必须实现calculatePath方法");
     }
 

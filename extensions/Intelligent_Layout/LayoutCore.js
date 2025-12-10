@@ -15,11 +15,8 @@ import {
   setButtonsOpacity,
   showNotification,
   adjustButtonsLayout,
-  registerTheme,
-  getRegisteredThemes,
   getTheme,
   applyTheme,
-  setDefaultTheme,
   getDefaultTheme,
   createCoinElement,
   showAtMousePosition

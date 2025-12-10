@@ -21,7 +21,10 @@ export class FlowEffect extends BaseEffect {
         // 虚线动画设置
         const dashLen = 24, gapLen = 18;
         const dashCycleLen = dashLen + gapLen;
-        const dashOffset = -phase * dashCycleLen;
+        const periods = { 1: 4000, 2: 2000, 3: 1000 };
+        const period = periods[this.animationManager.speed] || 2000;
+        const t = ((now % period) / period);
+        const dashOffset = -(((t + (phase || 0)) % 1) * dashCycleLen);
         ctx.setLineDash([dashLen, gapLen]);
         ctx.lineDashOffset = dashOffset;
         

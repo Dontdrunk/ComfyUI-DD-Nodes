@@ -22,7 +22,8 @@ export class PulseEffect extends BaseEffect {
         };
         const period = periods[this.animationManager.speed] || 2000;
         
-        const t = ((now % period) / period); // 0~1
+        let t = ((now % period) / period); // 0~1
+        t = (t + (phase || 0)) % 1;
         const waveCenter = t; // 脉冲中心位置
         const waveWidth = 0.18; // 脉冲宽度
         

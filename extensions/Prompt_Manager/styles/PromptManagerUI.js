@@ -7,7 +7,6 @@ import { PromptList } from './components/PromptList.js';
 import { PromptForm } from './components/PromptForm.js';
 import { DialogComponents } from './components/DialogComponents.js';
 import { TagManager } from './components/TagManager.js';
-import { globalTagColorManager } from './components/TagColorManager.js';
 
 export class PromptManagerUI {
     constructor(embedder) {

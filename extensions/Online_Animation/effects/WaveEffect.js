@@ -23,7 +23,10 @@ export class WaveEffect extends BaseEffect {
         // 波浪参数
         const amplitude = 8 * this.animationManager.lineWidth / 3;
         const freq = 1 + this.animationManager.lineWidth / 8;
-        const ph = phase;
+        const periods = { 1: 4000, 2: 2000, 3: 1000 };
+        const period = periods[this.animationManager.speed] || 2000;
+        const baseT = ((now % period) / period);
+        const ph = ((phase || 0) + baseT) % 1;
         
         // 计算路径长度
         const { totalLength, segLengths } = this.calculatePathLengths(sampledPoints);

@@ -68,6 +68,47 @@ function setupNodeHoverListeners(connectionAnimation) {
     }
 }
 
+// 设置节点选择监听
+function setupSelectionListeners(connectionAnimation) {
+    // 监听选择变化事件
+    const originalOnSelectionChange = app.canvas.onSelectionChange;
+    app.canvas.onSelectionChange = function(nodes) {
+        try {
+            // nodes 是 {node_id: node} 的对象，转为数组
+            const selectedNodes = nodes ? Object.values(nodes) : [];
+            connectionAnimation.setSelectedNodes(selectedNodes);
+        } catch (e) {
+            console.warn("Connection Animation: Error handling selection change:", e);
+        }
+        
+        if (originalOnSelectionChange) {
+            return originalOnSelectionChange.apply(this, arguments);
+        }
+    };
+
+    // 监听鼠标释放，处理框选等可能未触发 onSelectionChange 的情况
+    const originalOnMouseUp = app.canvas.onMouseUp;
+    app.canvas.onMouseUp = function(e) {
+        const result = originalOnMouseUp ? originalOnMouseUp.apply(this, arguments) : undefined;
+        
+        try {
+            // 延迟微小时间确保 LiteGraph 内部状态已更新
+            setTimeout(() => {
+                if (app.canvas.selected_nodes) {
+                    const selectedNodes = Object.values(app.canvas.selected_nodes);
+                    connectionAnimation.setSelectedNodes(selectedNodes);
+                } else {
+                    connectionAnimation.setSelectedNodes([]);
+                }
+            }, 10);
+        } catch (e) {
+            console.warn("Connection Animation: Error checking selection on mouse up:", e);
+        }
+        
+        return result;
+    };
+}
+
 app.registerExtension({
     name: "ComfyUI.ConnectionAnimation",
     setup() {
@@ -79,6 +120,9 @@ app.registerExtension({
         
         // 设置节点悬停监听
         setupNodeHoverListeners(connectionAnimation);
+
+        // 设置节点选择监听
+        setupSelectionListeners(connectionAnimation);
     },
     settings: [
         {
@@ -210,9 +254,9 @@ app.registerExtension({
             id: "ConnectionAnimation.displayMode",
             name: "动画显示",
             type: "combo",
-            options: ["全部显示", "悬停节点"],
+            options: ["全部显示", "悬停节点", "选中节点"],
             defaultValue: "全部显示",
-            tooltip: "控制动画连线的显示方式：全部显示=所有连线都显示动画；悬停节点=只有鼠标悬停节点的连线显示动画",
+            tooltip: "控制动画连线的显示方式：全部显示=所有连线都显示动画；悬停节点=只有鼠标悬停节点的连线显示动画；选中节点=只有选中节点的连线显示动画",
             category: ["🍺连线动画", "2·样式", "动画显示"],
             onChange(value) {
                 const connectionAnim = app.canvas?._connectionAnimation;

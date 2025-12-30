@@ -50,18 +50,20 @@ export class ConnectionAnimation {
                     relevantLinks.push(link);
                 }
             });
-        } else if (this.displayMode === "选中节点" && this._selectedNodes.length > 0) {
+        } else if (this.displayMode === "选中节点" && this.canvas.selected_nodes) {
             // 选中模式：只返回与选中节点相关的连线
-            const nodeIds = new Set(this._selectedNodes.map(n => n.id));
+            const selectedNodes = this.canvas.selected_nodes;
             Object.values(links).forEach(link => {
-                if (nodeIds.has(link.origin_id) || nodeIds.has(link.target_id)) {
+                if (selectedNodes[link.origin_id] || selectedNodes[link.target_id]) {
                     relevantLinks.push(link);
                 }
             });
         }
         
         return relevantLinks;
-    }// 检查是否应该运行动画循环
+    }
+
+    // 检查是否应该运行动画循环
     _shouldRunAnimation() {
         if (!this.enabled || !this.canvas) return false;
         
@@ -71,9 +73,9 @@ export class ConnectionAnimation {
                 
             case "悬停节点":
                 return this._hoveredNode !== null; // 只有悬停节点时才需要动画
-            
+
             case "选中节点":
-                return this._selectedNodes.length > 0; // 只有有选中节点时才需要动画
+                return this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
                 
             default:
                 return true;
@@ -225,17 +227,24 @@ export class ConnectionAnimation {
         }
     }
 
-    // 设置选中节点
-    setSelectedNodes(nodes) {
-        this._selectedNodes = Array.isArray(nodes) ? nodes : [];
-        
-        // 如果当前模式是"选中节点"，则需要更新动画循环和重绘
+    // 通知选择变化
+    notifySelectionChanged() {
         if (this.displayMode === "选中节点") {
             this._updateAnimationLoop();
             if (this.canvas) {
                 this.canvas.setDirty(true, true);
             }
         }
+    }
+
+    // 检查是否有活跃节点（悬停或选中）
+    _hasActiveNodes() {
+        if (this.displayMode === "悬停节点") {
+            return this._hoveredNode !== null;
+        } else if (this.displayMode === "选中节点") {
+            return this.canvas && this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+        }
+        return false;
     }
 
     // 检查连线是否应该显示动画
@@ -246,13 +255,18 @@ export class ConnectionAnimation {
         const targetNode = this.canvas.graph._nodes_by_id[link.target_id];
         
         if (!originNode || !targetNode) return false;
-          switch (this.displayMode) {
+        
+        switch (this.displayMode) {
             case "全部显示":
                 return true;
                 
             case "悬停节点":
                 return this._hoveredNode && 
                        (originNode === this._hoveredNode || targetNode === this._hoveredNode);
+
+            case "选中节点":
+                return this.canvas.selected_nodes && 
+                       (this.canvas.selected_nodes[originNode.id] || this.canvas.selected_nodes[targetNode.id]);
                 
             default:
                 return true;
@@ -283,7 +297,7 @@ export class ConnectionAnimation {
             // 全部显示模式：所有连线都使用动画渲染
             this._drawAllAnimatedConnections(ctx);
         } else if (this.displayMode === "悬停节点" || this.displayMode === "选中节点") {
-            // 悬停/选中模式：静态线 + 激活节点的动画线
+            // 悬停/选中模式：静态线 + 活跃节点的动画线
             this._drawHybridConnections(ctx);
         }
     }
@@ -319,7 +333,7 @@ export class ConnectionAnimation {
         ctx.restore();
     }
 
-    // 绘制混合连线（悬停模式）
+    // 绘制混合连线（悬停/选中模式）
     _drawHybridConnections(ctx) {
         const links = this.canvas.graph.links;
         if (!links) return;
@@ -341,11 +355,8 @@ export class ConnectionAnimation {
             this._originalDrawConnections.call(this.canvas, ctx);
         }
 
-        // 如果有悬停/选中节点，在基础连线上叠加动画效果
-        const hasActiveNodes = (this.displayMode === "悬停节点" && this._hoveredNode) || 
-                              (this.displayMode === "选中节点" && this._selectedNodes.length > 0);
-
-        if (hasActiveNodes) {
+        // 如果有活跃节点，在基础连线上叠加动画效果
+        if (this._hasActiveNodes()) {
             const relevantLinks = this._getRelevantLinks();
             if (relevantLinks.length > 0) {
                 this._drawAnimatedConnections(ctx, relevantLinks);
@@ -355,22 +366,19 @@ export class ConnectionAnimation {
 
     // 独立渲染的混合模式（新的视觉逻辑）
     _drawIndependentHybridMode(ctx) {
-        const hasActiveNodes = (this.displayMode === "悬停节点" && this._hoveredNode) || 
-                              (this.displayMode === "选中节点" && this._selectedNodes.length > 0);
-                              
-        if (hasActiveNodes) {
+        if (this._hasActiveNodes()) {
             const relevantLinks = this._getRelevantLinks();
             const relevantLinkIds = new Set(relevantLinks.map(link => link.id));
 
-            // 1. 绘制非相关连线的静态样式（排除激活节点相关的连线）
+            // 1. 绘制非相关连线的静态样式（排除活跃节点相关的连线）
             this._drawIndependentStaticConnections(ctx, relevantLinkIds);
 
-            // 2. 绘制激活节点相关连线的动画效果（完全替换，不叠加）
+            // 2. 绘制活跃节点相关连线的动画效果（完全替换，不叠加）
             if (relevantLinks.length > 0) {
                 this._drawAnimatedConnections(ctx, relevantLinks);
             }
         } else {
-            // 无激活节点时，所有连线都显示为静态样式
+            // 无活跃节点时，所有连线都显示为静态样式
             this._drawIndependentStaticConnections(ctx, new Set());
         }
     }

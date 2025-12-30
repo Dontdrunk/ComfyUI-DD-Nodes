@@ -69,42 +69,64 @@ function setupNodeHoverListeners(connectionAnimation) {
 }
 
 // 设置节点选择监听
-function setupSelectionListeners(connectionAnimation) {
-    // 监听选择变化事件
+function setupNodeSelectionListeners(connectionAnimation) {
+    if (!app.canvas) return;
+
+    // 监听选择变化
     const originalOnSelectionChange = app.canvas.onSelectionChange;
     app.canvas.onSelectionChange = function(nodes) {
         try {
-            // nodes 是 {node_id: node} 的对象，转为数组
-            const selectedNodes = nodes ? Object.values(nodes) : [];
-            connectionAnimation.setSelectedNodes(selectedNodes);
+            if (connectionAnimation.notifySelectionChanged) {
+                connectionAnimation.notifySelectionChanged();
+            }
         } catch (e) {
             console.warn("Connection Animation: Error handling selection change:", e);
         }
-        
-        if (originalOnSelectionChange) {
-            return originalOnSelectionChange.apply(this, arguments);
-        }
+        return originalOnSelectionChange?.call(this, nodes);
     };
 
-    // 监听鼠标释放，处理框选等可能未触发 onSelectionChange 的情况
-    const originalOnMouseUp = app.canvas.onMouseUp;
-    app.canvas.onMouseUp = function(e) {
-        const result = originalOnMouseUp ? originalOnMouseUp.apply(this, arguments) : undefined;
-        
+    // 某些情况下 onSelectionChange 可能不会被触发（取决于 LiteGraph 版本），
+    // 所以我们也 hook selectNode 和 deselectNode 作为备份
+    const originalSelectNode = app.canvas.selectNode;
+    app.canvas.selectNode = function(node, addToSelection) {
+        const result = originalSelectNode?.call(this, node, addToSelection);
         try {
-            // 延迟微小时间确保 LiteGraph 内部状态已更新
-            setTimeout(() => {
-                if (app.canvas.selected_nodes) {
-                    const selectedNodes = Object.values(app.canvas.selected_nodes);
-                    connectionAnimation.setSelectedNodes(selectedNodes);
-                } else {
-                    connectionAnimation.setSelectedNodes([]);
-                }
-            }, 10);
+            if (connectionAnimation.notifySelectionChanged) {
+                connectionAnimation.notifySelectionChanged();
+            }
         } catch (e) {
-            console.warn("Connection Animation: Error checking selection on mouse up:", e);
+            console.warn("Connection Animation: Error handling selectNode:", e);
         }
-        
+        return result;
+    };
+
+    const originalDeselectNode = app.canvas.deselectNode;
+    app.canvas.deselectNode = function(node) {
+        const result = originalDeselectNode?.call(this, node);
+        try {
+            if (connectionAnimation.notifySelectionChanged) {
+                connectionAnimation.notifySelectionChanged();
+            }
+        } catch (e) {
+            console.warn("Connection Animation: Error handling deselectNode:", e);
+        }
+        return result;
+    };
+    
+    // 同时也监听 processMouseUp 以处理框选
+    const originalProcessMouseUp = app.canvas.processMouseUp;
+    app.canvas.processMouseUp = function(e) {
+        const result = originalProcessMouseUp?.call(this, e);
+        try {
+            // 延迟一下以确保选择状态已更新
+            setTimeout(() => {
+                if (connectionAnimation.notifySelectionChanged) {
+                    connectionAnimation.notifySelectionChanged();
+                }
+            }, 0);
+        } catch (e) {
+            console.warn("Connection Animation: Error handling processMouseUp:", e);
+        }
         return result;
     };
 }
@@ -122,7 +144,7 @@ app.registerExtension({
         setupNodeHoverListeners(connectionAnimation);
 
         // 设置节点选择监听
-        setupSelectionListeners(connectionAnimation);
+        setupNodeSelectionListeners(connectionAnimation);
     },
     settings: [
         {

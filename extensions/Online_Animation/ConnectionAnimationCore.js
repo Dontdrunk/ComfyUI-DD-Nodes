@@ -288,8 +288,8 @@ export class ConnectionAnimation {
     _shouldShowAnimation(link) {
         if (!link || !this.canvas || !this.canvas.graph) return false;
         
-        const originNode = this.canvas.graph._nodes_by_id[link.origin_id];
-        const targetNode = this.canvas.graph._nodes_by_id[link.target_id];
+        const originNode = link.origin_id === -10 ? this.canvas.graph.inputNode : this.canvas.graph._nodes_by_id[link.origin_id];
+        const targetNode = link.target_id === -20 ? this.canvas.graph.outputNode : this.canvas.graph._nodes_by_id[link.target_id];
         
         if (!originNode || !targetNode) return false;
         
@@ -500,14 +500,14 @@ export class ConnectionAnimation {
             }
 
             // 获取节点和位置信息
-            const outNode = this.canvas.graph.getNodeById(link.origin_id);
-            const inNode = this.canvas.graph.getNodeById(link.target_id);
+            const outNode = link.origin_id === -10 ? this.canvas.graph.inputNode : this.canvas.graph.getNodeById(link.origin_id);
+            const inNode = link.target_id === -20 ? this.canvas.graph.outputNode : this.canvas.graph.getNodeById(link.target_id);
             
             if (!outNode || !inNode) return;
 
             try {
-                const outPos = outNode.getConnectionPos(false, link.origin_slot);
-                const inPos = inNode.getConnectionPos(true, link.target_slot);
+                const outPos = this._getConnectionPos(outNode, link.origin_slot, true);
+                const inPos = this._getConnectionPos(inNode, link.target_slot, false)
                 
                 // 获取连线颜色（使用ComfyUI官方的颜色逻辑）
                 const baseColor = (outNode.outputs && outNode.outputs[link.origin_slot] && outNode.outputs[link.origin_slot].color)
@@ -639,9 +639,9 @@ export class ConnectionAnimation {
         const graph = this.canvas.graph;
         if (!graph || !graph._nodes_by_id) return null;
 
-        const outNode = graph._nodes_by_id[link.origin_id];
-        const inNode = graph._nodes_by_id[link.target_id];
-        
+        const outNode = link.origin_id === -10 ? graph.inputNode : graph._nodes_by_id[link.origin_id];
+        const inNode = link.target_id === -20 ? graph.outputNode : graph._nodes_by_id[link.target_id];
+
         if (!outNode || !inNode) return null;
 
         // 计算连接点位置
@@ -655,7 +655,7 @@ export class ConnectionAnimation {
         if (!pathInfo) return null;
 
         // 获取基础颜色
-        const baseColor = this.staticStyleManager.getCurrentStyle()?.getBaseColor(outNode, link) || "#999999";
+        const baseColor = this.staticStyleManager.getCurrentStyle()?.getBaseColor(link.origin_id !== -10 ? outNode : inNode, link) || "#999999";
 
         return {
             path: pathInfo.points,
@@ -674,6 +674,12 @@ export class ConnectionAnimation {
         // 使用ComfyUI标准的连接点位置获取方法
         if (typeof node.getConnectionPos === 'function') {
             return node.getConnectionPos(!isOutput, slot); // 注意：getConnectionPos的第一个参数是isInput
+        }
+
+        if (node === this.canvas.graph.inputNode || node === this.canvas.graph.outputNode) {
+            if (node?.slots?.[slot]?.pos) {
+                return node.slots[slot].pos;
+            }
         }
         
         // 回退方法：如果node没有getConnectionPos方法，使用简化计算

@@ -1,0 +1,82 @@
+{
+  "LayoutPanel_shortcut": {
+    "name": "Shortcut",
+    "tooltip": "Keyboard shortcut to toggle the UI layout panel (e.g. Alt+X)."
+  },
+  "LayoutPanel_opacity": {
+    "name": "Background Opacity",
+    "tooltip": "Adjust the background opacity of the UI layout panel (0-100%)."
+  },
+  "LayoutPanel_buttonOpacity": {
+    "name": "Button Opacity",
+    "tooltip": "Adjust the button opacity inside the UI layout panel (0-100%)."
+  },
+  "LayoutPanel_theme": {
+    "name": "Panel Theme",
+    "tooltip": "Select a visual theme for the UI layout panel.",
+    "options": {
+      "ancient_gods_eye": "Ancient God's Eye"
+    }
+  },
+  "ConnectionAnimation_enabled": {
+    "name": "Enable Animation",
+    "tooltip": "Enable or disable connection animation."
+  },
+  "ConnectionAnimation_effectExtra": {
+    "name": "Extra Effects",
+    "tooltip": "Enable extra visual effects (glow, trails, etc.). May reduce performance on low-end hardware."
+  },
+  "ConnectionAnimation_useGradient": {
+    "name": "Gradient",
+    "tooltip": "Use gradient colors for connections. Turn off to use a solid base color."
+  },
+  "ConnectionAnimation_effect": {
+    "name": "Effect",
+    "tooltip": "Choose the animation effect style.",
+    "options": {
+      "flow": "Flow",
+      "wave": "Wave",
+      "rhythm": "Rhythm",
+      "pulse": "Pulse"
+    }
+  },
+  "ConnectionAnimation_renderStyle": {
+    "name": "Render Style",
+    "tooltip": "Choose how the connection path is rendered.",
+    "options": {
+      "straight": "Straight",
+      "orthogonal": "Orthogonal",
+      "curve": "Curve",
+      "circuit": "Circuit Board"
+    }
+  },
+  "ConnectionAnimation_displayMode": {
+    "name": "Display Mode",
+    "tooltip": "Control when animated connections are shown.",
+    "options": {
+      "all": "Show All",
+      "hover": "Hover Node",
+      "selected": "Selected Node"
+    }
+  },
+  "ConnectionAnimation_staticRenderMode": {
+    "name": "Static Render",
+    "tooltip": "Choose how static connections are rendered in hover/selected modes.",
+    "options": {
+      "official": "Official",
+      "independent": "Independent"
+    }
+  },
+  "ConnectionAnimation_lineWidth": {
+    "name": "Line Width",
+    "tooltip": "Adjust the animated connection thickness (1-3)."
+  },
+  "ConnectionAnimation_speed": {
+    "name": "Speed",
+    "tooltip": "Adjust the animation speed (0.5-3). Higher is faster."
+  },
+  "ConnectionAnimation_samplingLevel": {
+    "name": "Sampling",
+    "tooltip": "Control sampling density for all effects. Lower is faster, higher is smoother (1-3)."
+  }
+}

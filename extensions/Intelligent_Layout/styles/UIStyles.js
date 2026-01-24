@@ -10,14 +10,14 @@ import AncientGodTheme from "./AncientGodEye/AncientGodTheme.js";
 // 存储所有已注册的主题
 const registeredThemes = {};
 let currentTheme = null;
-let defaultTheme = '古神之眼';
+let defaultTheme = 'ancient_gods_eye';
 
 // 自动注册默认主题
 export function initDefaultThemes() {  try {
     // 注册主题
-    registerTheme('古神之眼', AncientGodTheme);
+    registerTheme('ancient_gods_eye', AncientGodTheme);
     
-    setDefaultTheme('古神之眼');
+    setDefaultTheme('ancient_gods_eye');
     console.log("默认主题已成功注册");
     return true;
   } catch (error) {

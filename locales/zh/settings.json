@@ -1,0 +1,82 @@
+{
+  "LayoutPanel_shortcut": {
+    "name": "快捷呼出",
+    "tooltip": "用于呼出/关闭界面布局面板的快捷键（例如 Alt+X）。"
+  },
+  "LayoutPanel_opacity": {
+    "name": "背景透明",
+    "tooltip": "调整界面布局面板背景透明度（0-100%）。"
+  },
+  "LayoutPanel_buttonOpacity": {
+    "name": "按钮透明",
+    "tooltip": "调整界面布局面板内按钮透明度（0-100%）。"
+  },
+  "LayoutPanel_theme": {
+    "name": "界面主题",
+    "tooltip": "选择界面布局面板的视觉主题。",
+    "options": {
+      "ancient_gods_eye": "古神之眼"
+    }
+  },
+  "ConnectionAnimation_enabled": {
+    "name": "动画开关",
+    "tooltip": "开启或关闭连线动画效果。"
+  },
+  "ConnectionAnimation_effectExtra": {
+    "name": "动效开关",
+    "tooltip": "是否启用额外的动画特效（如发光、尾迹等）。开启后可能带来更大的性能开销，低配置设备谨慎开启。"
+  },
+  "ConnectionAnimation_useGradient": {
+    "name": "连线渐变",
+    "tooltip": "开启后连线将使用渐变色彩，关闭则为纯主色。"
+  },
+  "ConnectionAnimation_effect": {
+    "name": "动画效果",
+    "tooltip": "选择连线动画的视觉样式。",
+    "options": {
+      "flow": "流动",
+      "wave": "波浪",
+      "rhythm": "律动",
+      "pulse": "脉冲"
+    }
+  },
+  "ConnectionAnimation_renderStyle": {
+    "name": "渲染样式",
+    "tooltip": "改变连线动画的渲染路径样式。",
+    "options": {
+      "straight": "直线",
+      "orthogonal": "直角线",
+      "curve": "曲线",
+      "circuit": "电路板"
+    }
+  },
+  "ConnectionAnimation_displayMode": {
+    "name": "动画显示",
+    "tooltip": "控制动画连线的显示方式。",
+    "options": {
+      "all": "全部显示",
+      "hover": "悬停节点",
+      "selected": "选中节点"
+    }
+  },
+  "ConnectionAnimation_staticRenderMode": {
+    "name": "静态渲染",
+    "tooltip": "控制悬停/选中模式下的静态连线渲染方式。",
+    "options": {
+      "official": "官方实现",
+      "independent": "独立渲染"
+    }
+  },
+  "ConnectionAnimation_lineWidth": {
+    "name": "动画大小",
+    "tooltip": "设置连线动画的粗细大小（1-3）。"
+  },
+  "ConnectionAnimation_speed": {
+    "name": "动画速度",
+    "tooltip": "设置连线动画的速度（0.5-3，数值越大越快）。"
+  },
+  "ConnectionAnimation_samplingLevel": {
+    "name": "采样强度",
+    "tooltip": "控制所有动画效果的采样点数量（1=极致性能，3=极致流畅）。采样点越少性能越高，采样点越多动画越细腻。"
+  }
+}

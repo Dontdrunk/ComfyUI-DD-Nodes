@@ -15,12 +15,9 @@ export class PulseEffect extends BaseEffect {
         const strokeStyle = this.getPathColor(ctx, pathData);
         
         // 脉冲周期
-        const periods = {
-            1: 4000,
-            2: 2000,
-            3: 1000
-        };
-        const period = periods[this.animationManager.speed] || 2000;
+        const speed = Math.max(0.5, Math.min(3, Number(this.animationManager.speed ?? 2)));
+        const exponent = speed - 1;
+        const period = 5000 / Math.pow(2, exponent);
         
         let t = ((now % period) / period); // 0~1
         t = (t + (phase || 0)) % 1;

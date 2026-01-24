@@ -655,8 +655,8 @@ function cleanupThemeLayers() {
 
 // 主题模块接口
 const AncientGodTheme = {
-  name: '古神之眼',
-  description: '一款融合秩序与混沌的主题，通过硬币翻转切换两种截然不同的视觉风格',
+  name: "Ancient God's Eye",
+  description: "A theme that blends order and chaos, switching between two distinct visual styles by flipping a coin.",
     // 初始化主题
   init(container, existingCoinEl) {
     panelContainer = container;

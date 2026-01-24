@@ -3,20 +3,56 @@ import { EffectManager } from './effects/EffectManager.js';
 import { StyleManager } from './styles/StyleManager.js';
 import { StaticStyleManager } from './styles/static/StaticStyleManager.js';
 
+function normalizeEffectValue(value) {
+    if (value === "flow") return "流动";
+    if (value === "wave") return "波浪";
+    if (value === "rhythm") return "律动";
+    if (value === "pulse") return "脉冲";
+    return value;
+}
+
+function normalizeRenderStyleValue(value) {
+    if (value === "straight") return "直线";
+    if (value === "orthogonal") return "直角线";
+    if (value === "curve") return "曲线";
+    if (value === "circuit") return "电路板";
+    return value;
+}
+
+function normalizeDisplayModeValue(value) {
+    if (value === "all") return "全部显示";
+    if (value === "hover") return "悬停节点";
+    if (value === "selected") return "选中节点";
+    return value;
+}
+
+function normalizeStaticRenderModeValue(value) {
+    if (value === "official") return "官方实现";
+    if (value === "independent") return "独立渲染";
+    return value;
+}
+
+function clampNumber(value, min, max) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return min;
+    return Math.max(min, Math.min(max, num));
+}
+
 export class ConnectionAnimation {
     constructor() {
-        this.enabled = false;
-        this.lineWidth = 3;
-        this.effect = "流动"; // 流动 | 波浪 | 律动 | 脉冲
+        this.enabled = DEFAULT_CONFIG.enabled;
+        this.lineWidth = DEFAULT_CONFIG.lineWidth;
+        this.effect = normalizeEffectValue(DEFAULT_CONFIG.effect);
         this.canvas = null;
         this._lastTime = 0;
         this._phase = 0;
         this._originalDrawConnections = null;
-        this._animating = false;        this.speed = 2; // 1~3
-        this.effectExtra = true;        this.renderStyle = "曲线";        this.useGradient = true; 
+        this._animating = false;
+        this.speed = 2; // 0.5~3
+        this.effectExtra = true;        this.renderStyle = normalizeRenderStyleValue(DEFAULT_CONFIG.renderStyle);        this.useGradient = true; 
         this.circuitBoardMap = null; 
-        this.displayMode = "全部显示"; // 新增：动画显示模式
-        this.staticRenderMode = "独立渲染"; // 新增：静态渲染模式
+        this.displayMode = normalizeDisplayModeValue(DEFAULT_CONFIG.displayMode);
+        this.staticRenderMode = normalizeStaticRenderModeValue(DEFAULT_CONFIG.staticRenderMode);
         this._hoveredNode = null; // 追踪悬停节点
         
         // 初始化效果管理器
@@ -167,17 +203,18 @@ export class ConnectionAnimation {
     }
     
     setEffect(effect) {
-        this.effect = effect;
+        this.effect = normalizeEffectValue(effect);
     }
     
     setSpeed(speed) {
-        this.speed = speed;
+        const raw = clampNumber(speed, 0.5, 3);
+        this.speed = clampNumber(Math.round(raw * 2) / 2, 0.5, 3);
     }
     
     setEffectExtra(flag) {
         this.effectExtra = !!flag;
     }      setRenderStyle(style) {
-        this.renderStyle = style || "曲线";
+        this.renderStyle = normalizeRenderStyleValue(style) || "曲线";
         // 使用样式管理器切换渲染样式
         this.styleManager.setStyle(this.renderStyle);
         
@@ -190,7 +227,7 @@ export class ConnectionAnimation {
         }
     }    setDisplayMode(mode) {
         const oldMode = this.displayMode;
-        this.displayMode = mode || "全部显示";
+        this.displayMode = normalizeDisplayModeValue(mode) || "全部显示";
         
         // 如果显示模式改变，重新评估是否需要动画循环
         if (oldMode !== this.displayMode) {
@@ -203,7 +240,7 @@ export class ConnectionAnimation {
     
     // 设置静态渲染模式
     setStaticRenderMode(mode) {
-        this.staticRenderMode = mode || "独立渲染";
+        this.staticRenderMode = normalizeStaticRenderModeValue(mode) || "独立渲染";
         
         // 重新绘制以应用新的静态渲染模式
         if (this.canvas) {
@@ -306,8 +343,8 @@ export class ConnectionAnimation {
     _drawAllAnimatedConnections(ctx) {
         // 更新时间和相位
         const now = performance.now();
-        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-        let phaseSpeed = speedMap[this.speed] || 0.002;
+        const exponent = this.speed - 1;
+        let phaseSpeed = 0.0008 * Math.pow(2, exponent);
         const isWave = this.effect === "波浪";
         if (isWave) phaseSpeed *= 0.5;
         if (!this._startTime) this._startTime = now;
@@ -387,8 +424,8 @@ export class ConnectionAnimation {
     _drawAnimatedConnections(ctx, relevantLinks) {
         // 更新时间和相位
         const now = performance.now();
-        const speedMap = {1: 0.001, 2: 0.002, 3: 0.004};
-        let phaseSpeed = speedMap[this.speed] || 0.002;
+        const exponent = this.speed - 1;
+        let phaseSpeed = 0.0008 * Math.pow(2, exponent);
         const isWave = this.effect === "波浪";
         if (isWave) phaseSpeed *= 0.5;
         if (!this._startTime) this._startTime = now;
@@ -897,7 +934,8 @@ export class ConnectionAnimation {
 export const DEFAULT_CONFIG = {
     enabled: false,
     lineWidth: 3,
-    effect: "流动",
-    displayMode: "全部显示",
-    staticRenderMode: "独立渲染"
+    effect: "flow",
+    renderStyle: "curve",
+    displayMode: "all",
+    staticRenderMode: "independent"
 };

@@ -1,5 +1,27 @@
 {
   "nodeCategories": {
     "🍺DD系列节点": "DD Series Nodes"
+  },
+  "settingsCategories": {
+    "DD_UI_LAYOUT": "🍺 UI Layout",
+    "DD_CONNECTION_ANIMATION": "🍺 Connection Animation",
+    "1_FEATURES": "1. Features",
+    "2_APPEARANCE": "2. Appearance",
+    "2_STYLE": "2. Style",
+    "3_SETTINGS": "3. Settings",
+    "SHORTCUT": "Shortcut",
+    "BACKGROUND_OPACITY": "Background Opacity",
+    "BUTTON_OPACITY": "Button Opacity",
+    "PANEL_THEME": "Panel Theme",
+    "ENABLE_ANIMATION": "Enable Animation",
+    "ANIMATION_SIZE": "Line Width",
+    "ANIMATION_EFFECT": "Effect",
+    "ANIMATION_SPEED": "Speed",
+    "SAMPLING_LEVEL": "Sampling",
+    "EXTRA_EFFECTS": "Extra Effects",
+    "RENDER_STYLE": "Render Style",
+    "USE_GRADIENT": "Gradient",
+    "DISPLAY_MODE": "Display Mode",
+    "STATIC_RENDER_MODE": "Static Render"
   }
 }

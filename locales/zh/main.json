@@ -1,5 +1,27 @@
 {
   "nodeCategories": {
     "🍺DD系列节点": "🍺DD系列节点"
+  },
+  "settingsCategories": {
+    "DD_UI_LAYOUT": "🍺界面布局",
+    "DD_CONNECTION_ANIMATION": "🍺连线动画",
+    "1_FEATURES": "1. 功能",
+    "2_APPEARANCE": "2. 外观",
+    "2_STYLE": "2. 样式",
+    "3_SETTINGS": "3. 设置",
+    "SHORTCUT": "快捷呼出",
+    "BACKGROUND_OPACITY": "背景透明",
+    "BUTTON_OPACITY": "按钮透明",
+    "PANEL_THEME": "界面主题",
+    "ENABLE_ANIMATION": "动画开关",
+    "ANIMATION_SIZE": "动画大小",
+    "ANIMATION_EFFECT": "动画效果",
+    "ANIMATION_SPEED": "动画速度",
+    "SAMPLING_LEVEL": "采样强度",
+    "EXTRA_EFFECTS": "动效开关",
+    "RENDER_STYLE": "渲染样式",
+    "USE_GRADIENT": "连线渐变",
+    "DISPLAY_MODE": "动画显示",
+    "STATIC_RENDER_MODE": "静态渲染"
   }
 }

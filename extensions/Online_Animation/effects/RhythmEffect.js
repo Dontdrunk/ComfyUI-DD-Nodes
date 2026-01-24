@@ -37,12 +37,9 @@ export class RhythmEffect extends BaseEffect {
         ctx.stroke();
         
         // 周期时间（毫秒），不同速度有不同的周期
-        const periods = {
-            1: 6000, // 更长的周期使低速更平滑
-            2: 3000,
-            3: 1500
-        };
-        const period = periods[this.animationManager.speed] || 3000;
+        const speed = Math.max(0.5, Math.min(3, Number(this.animationManager.speed ?? 2)));
+        const exponent = speed - 1;
+        const period = 7500 / Math.pow(2, exponent);
         
         // 当前周期内的时间位置 (0-1)
         let t = ((now % period) / period);
@@ -61,8 +58,7 @@ export class RhythmEffect extends BaseEffect {
         
         // 应用缓动函数，使运动更加平滑流畅
         // 低速度使用更强的缓动效果
-        const easingType = this.animationManager.speed === 1 ? 'easeInOutCubic' : 
-                           (this.animationManager.speed === 2 ? 'easeInOutQuad' : 'easeInOutSine');
+        const easingType = speed <= 1.5 ? 'easeInOutCubic' : (speed <= 2.5 ? 'easeInOutQuad' : 'easeInOutSine');
         t = this.applyEasing(t, easingType);
         
         // 根据路径长度精确计算小球位置

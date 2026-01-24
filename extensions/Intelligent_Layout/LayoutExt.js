@@ -15,6 +15,11 @@ try {
   console.error("主题系统初始化失败:", error);
 }
 
+function normalizeLayoutThemeId(themeId) {
+  if (themeId === "古神之眼") return "ancient_gods_eye";
+  return themeId;
+}
+
 // 确保全局唯一实例
 function getOrCreateLayoutInstance() {
   if (!app.canvas) {
@@ -81,7 +86,11 @@ export const layoutExt = {
       try {
         // 主要设置
         const shortcut = app.extensionManager?.setting?.get("LayoutPanel.shortcut") ?? DEFAULT_CONFIG.shortcut;
-        const theme = app.extensionManager?.setting?.get("LayoutPanel.theme") ?? DEFAULT_CONFIG.theme;
+        const rawTheme = app.extensionManager?.setting?.get("LayoutPanel.theme") ?? DEFAULT_CONFIG.theme;
+        const theme = normalizeLayoutThemeId(rawTheme);
+        if (rawTheme !== theme) {
+          app.extensionManager?.setting?.set?.("LayoutPanel.theme", theme)?.catch?.(() => {});
+        }
         
         // 透明度设置
         const opacity = app.extensionManager?.setting?.get("LayoutPanel.opacity") ?? 85;
@@ -119,13 +128,10 @@ export const layoutExt = {
 function getThemeOptions() {
   try {
     const themes = getRegisteredThemes();
-    return themes.map(theme => ({ 
-      text: theme.name, 
-      value: theme.id 
-    }));
+    return themes.map(theme => theme.id);
   } catch (e) {
     console.error("获取主题选项失败:", e);
-    return [{ text: '古神之眼', value: '古神之眼' }];
+    return ["ancient_gods_eye"];
   }
 }
 
@@ -150,7 +156,11 @@ app.registerExtension({
       
       // 然后应用所有保存的设置
       const shortcut = app.extensionManager?.setting?.get("LayoutPanel.shortcut") ?? DEFAULT_CONFIG.shortcut;
-      const theme = app.extensionManager?.setting?.get("LayoutPanel.theme") ?? DEFAULT_CONFIG.theme;
+      const rawTheme = app.extensionManager?.setting?.get("LayoutPanel.theme") ?? DEFAULT_CONFIG.theme;
+      const theme = normalizeLayoutThemeId(rawTheme);
+      if (rawTheme !== theme) {
+        app.extensionManager?.setting?.set?.("LayoutPanel.theme", theme)?.catch?.(() => {});
+      }
       const opacity = app.extensionManager?.setting?.get("LayoutPanel.opacity") ?? 85;
       const buttonOpacity = app.extensionManager?.setting?.get("LayoutPanel.buttonOpacity") ?? 90;
       
@@ -176,11 +186,11 @@ app.registerExtension({
     // 移除启用/禁用设置选项
     {      
       id: "LayoutPanel.shortcut",
-      name: "快捷呼出",
+      name: "Shortcut",
       type: "text",
       defaultValue: DEFAULT_CONFIG.shortcut,
-      tooltip: "弹出界面布局工具面板的快捷键（如alt+x）",
-      category: ["🍺界面布局", "1·功能", "快捷呼出"],
+      tooltip: "Keyboard shortcut to toggle the UI layout panel (e.g. Alt+X).",
+      category: ["DD_UI_LAYOUT", "1_FEATURES", "SHORTCUT"],
       onChange(value) {
         if (typeof value === 'string' && value.includes('+')) {
           const layoutPanel = getOrCreateLayoutInstance();
@@ -192,12 +202,12 @@ app.registerExtension({
     },
     {
       id: "LayoutPanel.opacity",
-      name: "背景透明",
+      name: "Background Opacity",
       type: "slider",
       defaultValue: 85,
       attrs: { min: 0, max: 100, step: 1 },
-      tooltip: "设置界面布局主面板背景的透明度（0~100%）",
-      category: ["🍺界面布局", "2·外观", "背景透明"],
+      tooltip: "Adjust the background opacity of the UI layout panel (0-100%).",
+      category: ["DD_UI_LAYOUT", "2_APPEARANCE", "BACKGROUND_OPACITY"],
       onChange(value) {
         const layoutPanel = getOrCreateLayoutInstance();
         if (layoutPanel && typeof layoutPanel.setOpacity === 'function') {
@@ -207,12 +217,12 @@ app.registerExtension({
     },
     {
       id: "LayoutPanel.buttonOpacity",
-      name: "按钮透明",
+      name: "Button Opacity",
       type: "slider",
       defaultValue: 90,
       attrs: { min: 0, max: 100, step: 1 },
-      tooltip: "设置界面布局面板中按钮的透明度（0~100%）",
-      category: ["🍺界面布局", "2·外观", "按钮透明"],
+      tooltip: "Adjust the button opacity inside the UI layout panel (0-100%).",
+      category: ["DD_UI_LAYOUT", "2_APPEARANCE", "BUTTON_OPACITY"],
       onChange(value) {
         const layoutPanel = getOrCreateLayoutInstance();
         if (layoutPanel && typeof layoutPanel.setButtonOpacity === 'function') {
@@ -222,16 +232,16 @@ app.registerExtension({
     },
     {
       id: "LayoutPanel.theme",
-      name: "界面主题",
+      name: "Panel Theme",
       type: "combo",
       defaultValue: DEFAULT_CONFIG.theme,
-      tooltip: "选择界面布局面板的视觉主题",
+      tooltip: "Select a visual theme for the UI layout panel.",
       options: getThemeOptions,
-      category: ["🍺界面布局", "2·外观", "界面主题"],
+      category: ["DD_UI_LAYOUT", "2_APPEARANCE", "PANEL_THEME"],
       onChange(value) {
         const layoutPanel = getOrCreateLayoutInstance();
         if (layoutPanel && typeof layoutPanel.setTheme === 'function') {
-          layoutPanel.setTheme(value);
+          layoutPanel.setTheme(normalizeLayoutThemeId(value));
         }
       }
     }

@@ -72,6 +72,10 @@ export class LayoutPanel {
     if (!this.container) {
       this._createPanel();
     }
+
+    if (themeId === '古神之眼') {
+      themeId = 'ancient_gods_eye';
+    }
     
     // 保存当前的透明度设置，以便应用主题后恢复
     const bgOpacity = this.container.dataset.bgOpacity;
@@ -628,5 +632,5 @@ export const DEFAULT_CONFIG = {
   shortcut: 'alt+x',
   colorMode: '完全随机', // 默认颜色模式
   continueIteration: false, // 默认应用颜色后关闭面板
-  theme: '古神之眼' // 默认主题
+  theme: 'ancient_gods_eye' // 默认主题
 };

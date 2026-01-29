@@ -94,7 +94,6 @@ class PromptManagerAPI:
                 if prompts_data:
                     prompts = prompts_data.get('prompts', [])
                     tags = prompts_data.get('tags', {})  # 获取标签数据
-                    logger.info(f"成功加载 {len(prompts)} 个提示词从JSON文件")
                     return web.json_response({
                         "success": True,
                         "data": prompts_data,
@@ -225,7 +224,7 @@ class PromptManagerAPI:
                 
                 if prompts_data:
                     tags = prompts_data.get('tags', {})
-                    logger.info(f"成功加载 {len(tags)} 个标签从JSON文件")
+                    # logger.info(f"成功加载 {len(tags)} 个标签从JSON文件")
                     return web.json_response({
                         "success": True,
                         "tags": tags,

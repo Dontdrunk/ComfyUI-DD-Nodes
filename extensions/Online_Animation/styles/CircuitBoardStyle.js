@@ -187,6 +187,22 @@ class MapLinks {
     }
 
     /**
+     * 获取输出端口位置（Vue nodes2.0 兼容）
+     */
+    _getOutputPos(node, slot, outArray) {
+        if (typeof node.getOutputPos === 'function') return node.getOutputPos(slot);
+        return node.getConnectionPos ? node.getConnectionPos(false, slot, outArray) : null;
+    }
+
+    /**
+     * 获取输入端口位置（Vue nodes2.0 兼容）
+     */
+    _getInputPos(node, slot, outArray) {
+        if (typeof node.getInputPos === 'function') return node.getInputPos(slot);
+        return node.getConnectionPos ? node.getConnectionPos(true, slot, outArray) : null;
+    }
+
+    /**
      * 检查点是否在某个节点内部
      */
     isInsideNode(xy) {
@@ -787,7 +803,7 @@ class MapLinks {
                 }
 
                 const linkPos = new Float32Array(2);
-                const outputXYConnection = node.getConnectionPos(false, slot, linkPos);
+                const outputXYConnection = this._getOutputPos(node, slot, linkPos);
                 const outputNodeInfo = this.nodesById[node.id];
                 let outputXY = Array.from(outputXYConnection);
                 
@@ -805,11 +821,7 @@ class MapLinks {
                     }
 
                     const inputLinkPos = new Float32Array(2);
-                    const inputXYConnection = targetNode.getConnectionPos(
-                        true,
-                        link.target_slot,
-                        inputLinkPos
-                    );
+                    const inputXYConnection = this._getInputPos(targetNode, link.target_slot, inputLinkPos);
                     const inputXY = Array.from(inputXYConnection);
                     const nodeInfo = this.nodesById[targetNode.id];
                     inputXY[0] = nodeInfo.linesArea[0] - 1;

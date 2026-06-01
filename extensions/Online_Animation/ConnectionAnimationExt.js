@@ -123,9 +123,68 @@ function setupNodeHoverListeners(connectionAnimation) {
     }
 }
 
+// Vue nodes2.0 模式下的悬停检测（LiteGraph 的 onNodeMouseEnter/Leave 在 Vue 模式下不触发）
+function setupVueModeHoverDetection(connectionAnimation) {
+    if (!app.canvas) return;
+    
+    const canvas = app.canvas;
+    const canvasEl = canvas.canvas;
+    if (!canvasEl) return;
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!window.LiteGraph?.vueNodesMode) return;
+        
+        const rect = canvasEl.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right ||
+            e.clientY < rect.top || e.clientY > rect.bottom) {
+            connectionAnimation.setHoveredNode(null);
+            return;
+        }
+        const graphPos = canvas.convertEventToCanvasOffset({ clientX: e.clientX, clientY: e.clientY });
+        let hoveredNode = null;
+        const graph = canvas.graph;
+        if (graph && graph._nodes) {
+            for (const node of Object.values(graph._nodes)) {
+                if (node.isPointInside && node.isPointInside(graphPos[0], graphPos[1])) {
+                    hoveredNode = node;
+                    break;
+                }
+            }
+        }
+        connectionAnimation.setHoveredNode(hoveredNode);
+    });
+}
+
 // 设置节点选择监听
 function setupNodeSelectionListeners(connectionAnimation) {
     if (!app.canvas) return;
+
+    // Vue nodes2.0 模式使用 select()/deselect()，不走 selectNode()/deselectNode()
+    const originalSelect = app.canvas.select;
+    app.canvas.select = function(item) {
+        const result = originalSelect?.call(this, item);
+        try {
+            if (connectionAnimation.notifySelectionChanged) {
+                connectionAnimation.notifySelectionChanged();
+            }
+        } catch (e) {
+            console.warn("Connection Animation: Error handling select:", e);
+        }
+        return result;
+    };
+
+    const originalDeselect = app.canvas.deselect;
+    app.canvas.deselect = function(item) {
+        const result = originalDeselect?.call(this, item);
+        try {
+            if (connectionAnimation.notifySelectionChanged) {
+                connectionAnimation.notifySelectionChanged();
+            }
+        } catch (e) {
+            console.warn("Connection Animation: Error handling deselect:", e);
+        }
+        return result;
+    };
 
     // 监听选择变化
     const originalOnSelectionChange = app.canvas.onSelectionChange;
@@ -197,6 +256,9 @@ app.registerExtension({
         
         // 设置节点悬停监听
         setupNodeHoverListeners(connectionAnimation);
+
+        // 设置 Vue nodes2.0 悬停检测（LiteGraph hover 在 Vue 模式不触发）
+        setupVueModeHoverDetection(connectionAnimation);
 
         // 设置节点选择监听
         setupNodeSelectionListeners(connectionAnimation);

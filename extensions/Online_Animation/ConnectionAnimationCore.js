@@ -1,4 +1,4 @@
-// 动画核心模块，只包含动画逻辑和默认配置
+﻿// 动画核心模块，只包含动画逻辑和默认配置
 import { EffectManager } from './effects/EffectManager.js';
 import { StyleManager } from './styles/StyleManager.js';
 import { StaticStyleManager } from './styles/static/StaticStyleManager.js';
@@ -671,7 +671,13 @@ export class ConnectionAnimation {
     _getConnectionPos(node, slot, isOutput) {
         if (!node || slot === undefined) return null;
         
-        // 使用ComfyUI标准的连接点位置获取方法
+        // 优先使用现代 API（Vue nodes2.0 模式下依赖 layoutStore，旧模式也能用）
+        if (isOutput) {
+            if (typeof node.getOutputPos === 'function') return node.getOutputPos(slot);
+        } else {
+            if (typeof node.getInputPos === 'function') return node.getInputPos(slot);
+        }
+        // 回退到 getConnectionPos
         if (typeof node.getConnectionPos === 'function') {
             return node.getConnectionPos(!isOutput, slot); // 注意：getConnectionPos的第一个参数是isInput
         }

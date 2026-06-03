@@ -56,7 +56,8 @@
     "options": {
       "all": "Show All",
       "hover": "Hover Node",
-      "selected": "Selected Node"
+      "selected": "Selected Node",
+      "hover_selected": "Hover & Selected"
     }
   },
   "ConnectionAnimation_staticRenderMode": {

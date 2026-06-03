@@ -21,6 +21,7 @@ function normalizeConnectionDisplayMode(value) {
     if (value === "全部显示") return "all";
     if (value === "悬停节点") return "hover";
     if (value === "选中节点") return "selected";
+    if (value === "悬停节点和选中节点") return "hover_selected";
     return value;
 }
 
@@ -393,7 +394,7 @@ app.registerExtension({
             id: "ConnectionAnimation.displayMode",
             name: "Display Mode",
             type: "combo",
-            options: ["all", "hover", "selected"],
+            options: ["all", "hover", "selected", "hover_selected"],
             defaultValue: DEFAULT_CONFIG.displayMode,
             tooltip: "Control when animated connections are shown.",
             category: ["DD_CONNECTION_ANIMATION", "2_STYLE", "DISPLAY_MODE"],

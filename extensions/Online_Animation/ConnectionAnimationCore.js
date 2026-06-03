@@ -23,6 +23,7 @@ function normalizeDisplayModeValue(value) {
     if (value === "all") return "全部显示";
     if (value === "hover") return "悬停节点";
     if (value === "selected") return "选中节点";
+    if (value === "hover_selected") return "悬停节点和选中节点";
     return value;
 }
 
@@ -86,12 +87,24 @@ export class ConnectionAnimation {
                     relevantLinks.push(link);
                 }
             });
-        } else if (this.displayMode === "选中节点" && this.canvas.selected_nodes) {
+        } else if ((this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") && this.canvas.selected_nodes) {
             // 选中模式：只返回与选中节点相关的连线
             const selectedNodes = this.canvas.selected_nodes;
             Object.values(links).forEach(link => {
                 if (selectedNodes[link.origin_id] || selectedNodes[link.target_id]) {
                     relevantLinks.push(link);
+                }
+            });
+        }
+        
+        if (this.displayMode === "悬停节点和选中节点" && this._hoveredNode) {
+            // 悬停节点和选中节点模式：额外添加与悬停节点相关的连线
+            const nodeId = this._hoveredNode.id;
+            Object.values(links).forEach(link => {
+                if (link.origin_id === nodeId || link.target_id === nodeId) {
+                    if (!relevantLinks.some(rl => rl.id === link.id)) {
+                        relevantLinks.push(link);
+                    }
                 }
             });
         }
@@ -112,6 +125,9 @@ export class ConnectionAnimation {
 
             case "选中节点":
                 return this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+
+            case "悬停节点和选中节点":
+                return (this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0) || this._hoveredNode !== null;
                 
             default:
                 return true;
@@ -252,7 +268,7 @@ export class ConnectionAnimation {
         const changed = this._hoveredNode !== newHoveredNode;
         this._hoveredNode = newHoveredNode;
         
-        if (changed && this.displayMode === "悬停节点") {
+        if (changed && (this.displayMode === "悬停节点" || this.displayMode === "悬停节点和选中节点")) {
             // 智能控制动画循环
             this._updateAnimationLoop();
             if (this.canvas) {
@@ -263,7 +279,7 @@ export class ConnectionAnimation {
 
     // 通知选择变化
     notifySelectionChanged() {
-        if (this.displayMode === "选中节点") {
+        if (this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
             this._updateAnimationLoop();
             if (this.canvas) {
                 this.canvas.setDirty(true, true);
@@ -275,8 +291,12 @@ export class ConnectionAnimation {
     _hasActiveNodes() {
         if (this.displayMode === "悬停节点") {
             return this._hoveredNode !== null;
-        } else if (this.displayMode === "选中节点") {
-            return this.canvas && this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+        } else if (this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
+            const hasSelected = this.canvas && this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+            if (this.displayMode === "悬停节点和选中节点") {
+                return hasSelected || this._hoveredNode !== null;
+            }
+            return hasSelected;
         }
         return false;
     }
@@ -299,9 +319,15 @@ export class ConnectionAnimation {
                        (originNode === this._hoveredNode || targetNode === this._hoveredNode);
 
             case "选中节点":
-                return this.canvas.selected_nodes && 
+            case "悬停节点和选中节点":
+                const isSelected = this.canvas.selected_nodes && 
                        (this.canvas.selected_nodes[originNode.id] || this.canvas.selected_nodes[targetNode.id]);
-                
+                if (this.displayMode === "悬停节点和选中节点") {
+                    return isSelected || (this._hoveredNode && 
+                           (originNode === this._hoveredNode || targetNode === this._hoveredNode));
+                }
+                return isSelected;
+
             default:
                 return true;
         }
@@ -333,15 +359,15 @@ export class ConnectionAnimation {
 
         if (this.displayMode === "全部显示") {
             // 全部显示模式：所有连线都使用动画渲染
-            this._drawAllAnimatedConnections(ctx);
-        } else if (this.displayMode === "悬停节点" || this.displayMode === "选中节点") {
+            this._drawAllAnimatedConnections(ctx, links);
+        } else if (this.displayMode === "悬停节点" || this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
             // 悬停/选中模式：静态线 + 活跃节点的动画线
-            this._drawHybridConnections(ctx);
+            this._drawHybridConnections(ctx, links);
         }
     }
 
     // 绘制所有动画连线（全部显示模式）
-    _drawAllAnimatedConnections(ctx) {
+    _drawAllAnimatedConnections(ctx, links) {
         // 更新时间和相位
         const now = performance.now();
         const exponent = this.speed - 1;
@@ -395,17 +421,15 @@ export class ConnectionAnimation {
     }
 
     // 绘制混合连线（悬停/选中模式）
-    _drawHybridConnections(ctx) {
-        const links = this.canvas.graph.links;
+    _drawHybridConnections(ctx, links) {
         if (!links) return;
 
-        // 根据静态渲染模式选择不同的渲染策略
         if (this.staticRenderMode === "官方实现") {
             // 官方实现：原有逻辑（静态基础 + 叠加动画）
-            this._drawOfficialHybridMode(ctx);
+            this._drawOfficialHybridMode(ctx, links);
         } else {
             // 独立渲染：新逻辑（静态线 + 替换式动画线）
-            this._drawIndependentHybridMode(ctx);
+            this._drawIndependentHybridMode(ctx, links);
         }
     }
 
@@ -427,7 +451,7 @@ export class ConnectionAnimation {
     }
 
     // 独立渲染的混合模式（新的视觉逻辑）
-    _drawIndependentHybridMode(ctx) {
+    _drawIndependentHybridMode(ctx, links) {
         if (this._hasActiveNodes()) {
             const relevantLinks = this._getRelevantLinks();
             const relevantLinkIds = new Set(relevantLinks.map(link => link.id));

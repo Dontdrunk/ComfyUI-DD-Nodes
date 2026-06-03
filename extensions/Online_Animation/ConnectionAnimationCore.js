@@ -146,17 +146,14 @@ export class ConnectionAnimation {
                 // 使用智能动画循环控制
                 this._updateAnimationLoop();
             } else {
-                if (this._originalDrawConnections) {
-                    // 兼容性修改：检查当前的 drawConnections 是否是我们设置的函数
-                    // 如果是，才恢复原始函数，否则可能是其他插件（如 cg-use-everywhere）设置的
-                    const currentDrawConnections = this.canvas.drawConnections;
-                    const isOurFunction = currentDrawConnections.toString().includes('self.drawAnimation');
-                    if (isOurFunction) {
-                        this.canvas.drawConnections = this._originalDrawConnections;
-                    }
-                    // 不再需要保持引用
-                    this._originalDrawConnections = null;
+                // 检查当前的 drawConnections 是否是我们设置的函数
+                const currentDrawConnections = this.canvas.drawConnections;
+                const isOurFunction = currentDrawConnections?.toString?.()?.includes?.('self.drawAnimation');
+                if (isOurFunction) {
+                    // 删除实例属性覆盖，让原型方法生效（包含其他扩展的补丁如 cg-use-everywhere）
+                    delete this.canvas.drawConnections;
                 }
+                this._originalDrawConnections = null;
                 this._animating = false;
             }
             this.canvas.setDirty(true, true);
@@ -327,8 +324,12 @@ export class ConnectionAnimation {
     // 总体动画绘制入口
     drawAnimation(ctx) {
         if (!this.canvas || !this.canvas.graph || !this.enabled) return;
-        const links = this.canvas.graph.links;
-        if (!links) return;
+
+        // 每帧检查动画循环是否需要启动（Vue nodes 模式下选中事件可能不走 LiteGraph 的 select/selectNode）
+        this._updateAnimationLoop();
+
+        const links = this.canvas.graph.links ? Object.values(this.canvas.graph.links) : [];
+        if (!links.length) return;
 
         if (this.displayMode === "全部显示") {
             // 全部显示模式：所有连线都使用动画渲染
@@ -367,7 +368,30 @@ export class ConnectionAnimation {
                 effectInstance.draw(ctx, pathData, now, this._phase);
             }
         }
-        ctx.restore();
+
+        // 调用原始 drawConnections 的覆盖层部分（如 cg-use-everywhere 的 UE 连线）
+        // 通过临时设置 links_render_mode = -1 (HIDDEN_LINK) 跳过原生连线绘制
+        this._drawOverlayLinks(ctx);
+    }
+
+    // 获取原型上的 drawConnections，避免因加载顺序导致 _originalDrawConnections 过时
+    _getProtoDrawConnections() {
+        return Object.getPrototypeOf(this.canvas).drawConnections;
+    }
+
+    // 仅绘制其他插件通过 drawConnections 追加的覆盖层（如 cg-use-everywhere）
+    // 通过 HIDDEN_LINK 模式跳过 ComfyUI 原生连线，只保留扩展插件的叠加层
+    _drawOverlayLinks(ctx) {
+        const canvas = this.canvas;
+        const protoDC = this._getProtoDrawConnections();
+        if (!protoDC) return;
+        const savedMode = canvas.links_render_mode;
+        canvas.links_render_mode = -1;
+        try {
+            protoDC.call(canvas, ctx);
+        } finally {
+            canvas.links_render_mode = savedMode;
+        }
     }
 
     // 绘制混合连线（悬停/选中模式）
@@ -386,10 +410,11 @@ export class ConnectionAnimation {
     }
 
     // 官方实现的混合模式（保持原有逻辑）
-    _drawOfficialHybridMode(ctx) {
-        // 总是先绘制ComfyUI原生连线
-        if (this._originalDrawConnections) {
-            this._originalDrawConnections.call(this.canvas, ctx);
+    _drawOfficialHybridMode(ctx, links) {
+        // 总是先绘制ComfyUI原生连线（从原型获取以兼容其他扩展的补丁）
+        const protoDC = this._getProtoDrawConnections();
+        if (protoDC) {
+            protoDC.call(this.canvas, ctx);
         }
 
         // 如果有活跃节点，在基础连线上叠加动画效果
@@ -418,6 +443,9 @@ export class ConnectionAnimation {
             // 无活跃节点时，所有连线都显示为静态样式
             this._drawIndependentStaticConnections(ctx, new Set());
         }
+
+        // 调用原始 drawConnections 的覆盖层部分
+        this._drawOverlayLinks(ctx);
     }
 
     // 统一的动画连线绘制方法
@@ -462,22 +490,23 @@ export class ConnectionAnimation {
     }
 
     // 绘制官方静态连线
-    _drawOfficialStaticConnections(ctx, excludeIds = new Set()) {
-        // 使用ComfyUI原生的连线渲染方法
-        if (this._originalDrawConnections && excludeIds.size === 0) {
+    _drawOfficialStaticConnections(ctx, excludeIds = new Set(), links) {
+        // 使用ComfyUI原生的连线渲染方法（从原型获取以兼容其他扩展的补丁）
+        const protoDC = this._getProtoDrawConnections();
+        if (protoDC && excludeIds.size === 0) {
             // 如果没有需要排除的连线，直接使用原始方法
             const wasEnabled = this.enabled;
             this.enabled = false;
             
             try {
-                this._originalDrawConnections.call(this.canvas, ctx);
+                protoDC.call(this.canvas, ctx);
             } catch (e) {
                 console.warn("官方连线渲染出错:", e);
                 this._drawIndependentStaticConnections(ctx, excludeIds);
             }
             
             this.enabled = wasEnabled;
-        } else if (this._originalDrawConnections && excludeIds.size > 0) {
+        } else if (protoDC && excludeIds.size > 0) {
             // 如果有需要排除的连线，需要手动渲染非排除的连线
             this._drawFilteredOfficialConnections(ctx, excludeIds);
         } else {

@@ -268,7 +268,7 @@ app.registerExtension({
             id: "ConnectionAnimation.enabled",
             name: "Enable Animation",
             type: "boolean",
-            defaultValue: true,
+            defaultValue: false,
             tooltip: "Enable or disable connection animation.",
             category: ["DD_CONNECTION_ANIMATION", "1_FEATURES", "ENABLE_ANIMATION"],
             onChange(value) {

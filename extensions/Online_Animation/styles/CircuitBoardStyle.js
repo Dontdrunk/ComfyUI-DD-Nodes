@@ -191,7 +191,9 @@ class MapLinks {
      */
     _getOutputPos(node, slot, outArray) {
         if (typeof node.getOutputPos === 'function') return node.getOutputPos(slot);
-        return node.getConnectionPos ? node.getConnectionPos(false, slot, outArray) : null;
+        if (typeof node.getConnectionPos === 'function') return node.getConnectionPos(false, slot, outArray);
+        if (node?.slots?.[slot]?.pos) return node.slots[slot].pos;
+        return null;
     }
 
     /**
@@ -199,7 +201,9 @@ class MapLinks {
      */
     _getInputPos(node, slot, outArray) {
         if (typeof node.getInputPos === 'function') return node.getInputPos(slot);
-        return node.getConnectionPos ? node.getConnectionPos(true, slot, outArray) : null;
+        if (typeof node.getConnectionPos === 'function') return node.getConnectionPos(true, slot, outArray);
+        if (node?.slots?.[slot]?.pos) return node.slots[slot].pos;
+        return null;
     }
 
     /**
@@ -889,8 +893,59 @@ class MapLinks {
             return false;
         });
         
+        // 处理 subgraph 输入输出连线
+        this._processSubgraphLinks();
+        
         // 记录计算时间
         this.lastCalculate = new Date().getTime();
         this.lastCalcTime = this.lastCalculate - startCalcTime;
+    }
+
+    /**
+     * 处理 subgraph 输入输出节点的连线
+     */
+    _processSubgraphLinks() {
+        const graph = this.canvas.graph;
+        if (!graph || (!graph.inputNode && !graph.outputNode)) return;
+
+        const allLinks = Object.values(graph.links || {});
+
+        allLinks.forEach(link => {
+            const isSubgraphOrigin = link.origin_id === -10;
+            const isSubgraphTarget = link.target_id === -20;
+            if (!isSubgraphOrigin && !isSubgraphTarget) return;
+
+            const outNode = isSubgraphOrigin ? graph.inputNode : graph._nodes_by_id[link.origin_id];
+            const inNode = isSubgraphTarget ? graph.outputNode : graph._nodes_by_id[link.target_id];
+            if (!outNode || !inNode) return;
+
+            const outPos = this._getOutputPos(outNode, link.origin_slot, new Float32Array(2));
+            const inPos = this._getInputPos(inNode, link.target_slot, new Float32Array(2));
+            if (!outPos || !inPos) return;
+
+            let pathFound = null;
+            try {
+                pathFound = this.mapLink(outPos, inPos, null, {}, null);
+            } catch(e) {}
+            const path = pathFound || [outPos, [inPos[0], outPos[1]], inPos];
+
+            const outType = isSubgraphOrigin ? outNode.slots?.[link.origin_slot]?.type : outNode.outputs?.[link.origin_slot]?.type;
+            const baseColor = (this.canvas.default_connection_color_byType?.[outType]) ||
+                (this.canvas.default_connection_color?.input_on) ||
+                "#ff0000";
+
+            this.paths.push({
+                path,
+                from: [...outPos],
+                to: [...inPos],
+                baseColor: link.color || baseColor,
+                originNode: outNode,
+                targetNode: inNode,
+                originSlot: link.origin_slot,
+                targetSlot: link.target_slot,
+                type: "angled",
+                link: { ...link }
+            });
+        });
     }
 }

@@ -1,4 +1,4 @@
-// 动画核心模块，只包含动画逻辑和默认配置
+﻿// 动画核心模块，只包含动画逻辑和默认配置
 import { EffectManager } from './effects/EffectManager.js';
 import { StyleManager } from './styles/StyleManager.js';
 import { StaticStyleManager } from './styles/static/StaticStyleManager.js';
@@ -23,6 +23,7 @@ function normalizeDisplayModeValue(value) {
     if (value === "all") return "全部显示";
     if (value === "hover") return "悬停节点";
     if (value === "selected") return "选中节点";
+    if (value === "hover_selected") return "悬停节点和选中节点";
     return value;
 }
 
@@ -86,12 +87,24 @@ export class ConnectionAnimation {
                     relevantLinks.push(link);
                 }
             });
-        } else if (this.displayMode === "选中节点" && this.canvas.selected_nodes) {
+        } else if ((this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") && this.canvas.selected_nodes) {
             // 选中模式：只返回与选中节点相关的连线
             const selectedNodes = this.canvas.selected_nodes;
             Object.values(links).forEach(link => {
                 if (selectedNodes[link.origin_id] || selectedNodes[link.target_id]) {
                     relevantLinks.push(link);
+                }
+            });
+        }
+        
+        if (this.displayMode === "悬停节点和选中节点" && this._hoveredNode) {
+            // 悬停节点和选中节点模式：额外添加与悬停节点相关的连线
+            const nodeId = this._hoveredNode.id;
+            Object.values(links).forEach(link => {
+                if (link.origin_id === nodeId || link.target_id === nodeId) {
+                    if (!relevantLinks.some(rl => rl.id === link.id)) {
+                        relevantLinks.push(link);
+                    }
                 }
             });
         }
@@ -112,6 +125,9 @@ export class ConnectionAnimation {
 
             case "选中节点":
                 return this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+
+            case "悬停节点和选中节点":
+                return (this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0) || this._hoveredNode !== null;
                 
             default:
                 return true;
@@ -146,17 +162,14 @@ export class ConnectionAnimation {
                 // 使用智能动画循环控制
                 this._updateAnimationLoop();
             } else {
-                if (this._originalDrawConnections) {
-                    // 兼容性修改：检查当前的 drawConnections 是否是我们设置的函数
-                    // 如果是，才恢复原始函数，否则可能是其他插件（如 cg-use-everywhere）设置的
-                    const currentDrawConnections = this.canvas.drawConnections;
-                    const isOurFunction = currentDrawConnections.toString().includes('self.drawAnimation');
-                    if (isOurFunction) {
-                        this.canvas.drawConnections = this._originalDrawConnections;
-                    }
-                    // 不再需要保持引用
-                    this._originalDrawConnections = null;
+                // 检查当前的 drawConnections 是否是我们设置的函数
+                const currentDrawConnections = this.canvas.drawConnections;
+                const isOurFunction = currentDrawConnections?.toString?.()?.includes?.('self.drawAnimation');
+                if (isOurFunction) {
+                    // 删除实例属性覆盖，让原型方法生效（包含其他扩展的补丁如 cg-use-everywhere）
+                    delete this.canvas.drawConnections;
                 }
+                this._originalDrawConnections = null;
                 this._animating = false;
             }
             this.canvas.setDirty(true, true);
@@ -255,7 +268,7 @@ export class ConnectionAnimation {
         const changed = this._hoveredNode !== newHoveredNode;
         this._hoveredNode = newHoveredNode;
         
-        if (changed && this.displayMode === "悬停节点") {
+        if (changed && (this.displayMode === "悬停节点" || this.displayMode === "悬停节点和选中节点")) {
             // 智能控制动画循环
             this._updateAnimationLoop();
             if (this.canvas) {
@@ -266,7 +279,7 @@ export class ConnectionAnimation {
 
     // 通知选择变化
     notifySelectionChanged() {
-        if (this.displayMode === "选中节点") {
+        if (this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
             this._updateAnimationLoop();
             if (this.canvas) {
                 this.canvas.setDirty(true, true);
@@ -278,8 +291,12 @@ export class ConnectionAnimation {
     _hasActiveNodes() {
         if (this.displayMode === "悬停节点") {
             return this._hoveredNode !== null;
-        } else if (this.displayMode === "选中节点") {
-            return this.canvas && this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+        } else if (this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
+            const hasSelected = this.canvas && this.canvas.selected_nodes && Object.keys(this.canvas.selected_nodes).length > 0;
+            if (this.displayMode === "悬停节点和选中节点") {
+                return hasSelected || this._hoveredNode !== null;
+            }
+            return hasSelected;
         }
         return false;
     }
@@ -288,8 +305,8 @@ export class ConnectionAnimation {
     _shouldShowAnimation(link) {
         if (!link || !this.canvas || !this.canvas.graph) return false;
         
-        const originNode = this.canvas.graph._nodes_by_id[link.origin_id];
-        const targetNode = this.canvas.graph._nodes_by_id[link.target_id];
+        const originNode = link.origin_id === -10 ? this.canvas.graph.inputNode : this.canvas.graph._nodes_by_id[link.origin_id];
+        const targetNode = link.target_id === -20 ? this.canvas.graph.outputNode : this.canvas.graph._nodes_by_id[link.target_id];
         
         if (!originNode || !targetNode) return false;
         
@@ -302,9 +319,15 @@ export class ConnectionAnimation {
                        (originNode === this._hoveredNode || targetNode === this._hoveredNode);
 
             case "选中节点":
-                return this.canvas.selected_nodes && 
+            case "悬停节点和选中节点":
+                const isSelected = this.canvas.selected_nodes && 
                        (this.canvas.selected_nodes[originNode.id] || this.canvas.selected_nodes[targetNode.id]);
-                
+                if (this.displayMode === "悬停节点和选中节点") {
+                    return isSelected || (this._hoveredNode && 
+                           (originNode === this._hoveredNode || targetNode === this._hoveredNode));
+                }
+                return isSelected;
+
             default:
                 return true;
         }
@@ -327,20 +350,24 @@ export class ConnectionAnimation {
     // 总体动画绘制入口
     drawAnimation(ctx) {
         if (!this.canvas || !this.canvas.graph || !this.enabled) return;
-        const links = this.canvas.graph.links;
-        if (!links) return;
+
+        // 每帧检查动画循环是否需要启动（Vue nodes 模式下选中事件可能不走 LiteGraph 的 select/selectNode）
+        this._updateAnimationLoop();
+
+        const links = this.canvas.graph.links ? Object.values(this.canvas.graph.links) : [];
+        if (!links.length) return;
 
         if (this.displayMode === "全部显示") {
             // 全部显示模式：所有连线都使用动画渲染
-            this._drawAllAnimatedConnections(ctx);
-        } else if (this.displayMode === "悬停节点" || this.displayMode === "选中节点") {
+            this._drawAllAnimatedConnections(ctx, links);
+        } else if (this.displayMode === "悬停节点" || this.displayMode === "选中节点" || this.displayMode === "悬停节点和选中节点") {
             // 悬停/选中模式：静态线 + 活跃节点的动画线
-            this._drawHybridConnections(ctx);
+            this._drawHybridConnections(ctx, links);
         }
     }
 
     // 绘制所有动画连线（全部显示模式）
-    _drawAllAnimatedConnections(ctx) {
+    _drawAllAnimatedConnections(ctx, links) {
         // 更新时间和相位
         const now = performance.now();
         const exponent = this.speed - 1;
@@ -367,29 +394,51 @@ export class ConnectionAnimation {
                 effectInstance.draw(ctx, pathData, now, this._phase);
             }
         }
-        ctx.restore();
+
+        // 调用原始 drawConnections 的覆盖层部分（如 cg-use-everywhere 的 UE 连线）
+        // 通过临时设置 links_render_mode = -1 (HIDDEN_LINK) 跳过原生连线绘制
+        this._drawOverlayLinks(ctx);
+    }
+
+    // 获取原型上的 drawConnections，避免因加载顺序导致 _originalDrawConnections 过时
+    _getProtoDrawConnections() {
+        return Object.getPrototypeOf(this.canvas).drawConnections;
+    }
+
+    // 仅绘制其他插件通过 drawConnections 追加的覆盖层（如 cg-use-everywhere）
+    // 通过 HIDDEN_LINK 模式跳过 ComfyUI 原生连线，只保留扩展插件的叠加层
+    _drawOverlayLinks(ctx) {
+        const canvas = this.canvas;
+        const protoDC = this._getProtoDrawConnections();
+        if (!protoDC) return;
+        const savedMode = canvas.links_render_mode;
+        canvas.links_render_mode = -1;
+        try {
+            protoDC.call(canvas, ctx);
+        } finally {
+            canvas.links_render_mode = savedMode;
+        }
     }
 
     // 绘制混合连线（悬停/选中模式）
-    _drawHybridConnections(ctx) {
-        const links = this.canvas.graph.links;
+    _drawHybridConnections(ctx, links) {
         if (!links) return;
 
-        // 根据静态渲染模式选择不同的渲染策略
         if (this.staticRenderMode === "官方实现") {
             // 官方实现：原有逻辑（静态基础 + 叠加动画）
-            this._drawOfficialHybridMode(ctx);
+            this._drawOfficialHybridMode(ctx, links);
         } else {
             // 独立渲染：新逻辑（静态线 + 替换式动画线）
-            this._drawIndependentHybridMode(ctx);
+            this._drawIndependentHybridMode(ctx, links);
         }
     }
 
     // 官方实现的混合模式（保持原有逻辑）
-    _drawOfficialHybridMode(ctx) {
-        // 总是先绘制ComfyUI原生连线
-        if (this._originalDrawConnections) {
-            this._originalDrawConnections.call(this.canvas, ctx);
+    _drawOfficialHybridMode(ctx, links) {
+        // 总是先绘制ComfyUI原生连线（从原型获取以兼容其他扩展的补丁）
+        const protoDC = this._getProtoDrawConnections();
+        if (protoDC) {
+            protoDC.call(this.canvas, ctx);
         }
 
         // 如果有活跃节点，在基础连线上叠加动画效果
@@ -402,7 +451,7 @@ export class ConnectionAnimation {
     }
 
     // 独立渲染的混合模式（新的视觉逻辑）
-    _drawIndependentHybridMode(ctx) {
+    _drawIndependentHybridMode(ctx, links) {
         if (this._hasActiveNodes()) {
             const relevantLinks = this._getRelevantLinks();
             const relevantLinkIds = new Set(relevantLinks.map(link => link.id));
@@ -418,6 +467,9 @@ export class ConnectionAnimation {
             // 无活跃节点时，所有连线都显示为静态样式
             this._drawIndependentStaticConnections(ctx, new Set());
         }
+
+        // 调用原始 drawConnections 的覆盖层部分
+        this._drawOverlayLinks(ctx);
     }
 
     // 统一的动画连线绘制方法
@@ -462,22 +514,23 @@ export class ConnectionAnimation {
     }
 
     // 绘制官方静态连线
-    _drawOfficialStaticConnections(ctx, excludeIds = new Set()) {
-        // 使用ComfyUI原生的连线渲染方法
-        if (this._originalDrawConnections && excludeIds.size === 0) {
+    _drawOfficialStaticConnections(ctx, excludeIds = new Set(), links) {
+        // 使用ComfyUI原生的连线渲染方法（从原型获取以兼容其他扩展的补丁）
+        const protoDC = this._getProtoDrawConnections();
+        if (protoDC && excludeIds.size === 0) {
             // 如果没有需要排除的连线，直接使用原始方法
             const wasEnabled = this.enabled;
             this.enabled = false;
             
             try {
-                this._originalDrawConnections.call(this.canvas, ctx);
+                protoDC.call(this.canvas, ctx);
             } catch (e) {
                 console.warn("官方连线渲染出错:", e);
                 this._drawIndependentStaticConnections(ctx, excludeIds);
             }
             
             this.enabled = wasEnabled;
-        } else if (this._originalDrawConnections && excludeIds.size > 0) {
+        } else if (protoDC && excludeIds.size > 0) {
             // 如果有需要排除的连线，需要手动渲染非排除的连线
             this._drawFilteredOfficialConnections(ctx, excludeIds);
         } else {
@@ -500,14 +553,14 @@ export class ConnectionAnimation {
             }
 
             // 获取节点和位置信息
-            const outNode = this.canvas.graph.getNodeById(link.origin_id);
-            const inNode = this.canvas.graph.getNodeById(link.target_id);
+            const outNode = link.origin_id === -10 ? this.canvas.graph.inputNode : this.canvas.graph.getNodeById(link.origin_id);
+            const inNode = link.target_id === -20 ? this.canvas.graph.outputNode : this.canvas.graph.getNodeById(link.target_id);
             
             if (!outNode || !inNode) return;
 
             try {
-                const outPos = outNode.getConnectionPos(false, link.origin_slot);
-                const inPos = inNode.getConnectionPos(true, link.target_slot);
+                const outPos = this._getConnectionPos(outNode, link.origin_slot, true);
+                const inPos = this._getConnectionPos(inNode, link.target_slot, false)
                 
                 // 获取连线颜色（使用ComfyUI官方的颜色逻辑）
                 const baseColor = (outNode.outputs && outNode.outputs[link.origin_slot] && outNode.outputs[link.origin_slot].color)
@@ -639,9 +692,9 @@ export class ConnectionAnimation {
         const graph = this.canvas.graph;
         if (!graph || !graph._nodes_by_id) return null;
 
-        const outNode = graph._nodes_by_id[link.origin_id];
-        const inNode = graph._nodes_by_id[link.target_id];
-        
+        const outNode = link.origin_id === -10 ? graph.inputNode : graph._nodes_by_id[link.origin_id];
+        const inNode = link.target_id === -20 ? graph.outputNode : graph._nodes_by_id[link.target_id];
+
         if (!outNode || !inNode) return null;
 
         // 计算连接点位置
@@ -655,7 +708,7 @@ export class ConnectionAnimation {
         if (!pathInfo) return null;
 
         // 获取基础颜色
-        const baseColor = this.staticStyleManager.getCurrentStyle()?.getBaseColor(outNode, link) || "#999999";
+        const baseColor = this.staticStyleManager.getCurrentStyle()?.getBaseColor(link.origin_id !== -10 ? outNode : inNode, link) || "#999999";
 
         return {
             path: pathInfo.points,
@@ -671,9 +724,21 @@ export class ConnectionAnimation {
     _getConnectionPos(node, slot, isOutput) {
         if (!node || slot === undefined) return null;
         
-        // 使用ComfyUI标准的连接点位置获取方法
+        // 优先使用现代 API（Vue nodes2.0 模式下依赖 layoutStore，旧模式也能用）
+        if (isOutput) {
+            if (typeof node.getOutputPos === 'function') return node.getOutputPos(slot);
+        } else {
+            if (typeof node.getInputPos === 'function') return node.getInputPos(slot);
+        }
+        // 回退到 getConnectionPos
         if (typeof node.getConnectionPos === 'function') {
             return node.getConnectionPos(!isOutput, slot); // 注意：getConnectionPos的第一个参数是isInput
+        }
+
+        if (node === this.canvas.graph.inputNode || node === this.canvas.graph.outputNode) {
+            if (node?.slots?.[slot]?.pos) {
+                return node.slots[slot].pos;
+            }
         }
         
         // 回退方法：如果node没有getConnectionPos方法，使用简化计算

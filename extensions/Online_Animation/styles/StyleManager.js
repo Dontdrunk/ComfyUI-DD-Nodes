@@ -89,7 +89,23 @@ export class StyleManager {
             this.currentStyleName = "曲线";
         }
     }
-      /**
+    /**
+     * 获取输出端口位置（Vue nodes2.0 兼容）
+     */
+    _getOutputPos(node, slot, outArray) {
+        if (typeof node.getOutputPos === 'function') return node.getOutputPos(slot);
+        return node.getConnectionPos ? node.getConnectionPos(false, slot, outArray) : null;
+    }
+
+    /**
+     * 获取输入端口位置（Vue nodes2.0 兼容）
+     */
+    _getInputPos(node, slot, outArray) {
+        if (typeof node.getInputPos === 'function') return node.getInputPos(slot);
+        return node.getConnectionPos ? node.getConnectionPos(true, slot, outArray) : null;
+    }
+
+    /**
      * 计算指定连线的路径
      * @param {Array} specificLinks - 要计算的特定连线数组，如果为null则计算所有连线
      * @returns {Array} 路径数据数组
@@ -119,15 +135,15 @@ export class StyleManager {
         
         // 处理指定的连线
         linksToProcess.forEach(link => {
-            const outNode = this.animationManager.canvas.graph.getNodeById(link.origin_id);
-            const inNode = this.animationManager.canvas.graph.getNodeById(link.target_id);
+            const outNode = link.origin_id === -10 ? this.animationManager.canvas.graph.inputNode : this.animationManager.canvas.graph.getNodeById(link.origin_id);
+            const inNode = link.target_id === -20 ? this.animationManager.canvas.graph.outputNode : this.animationManager.canvas.graph.getNodeById(link.target_id);
             if (!outNode || !inNode) return;
             
-            const outPos = outNode.getConnectionPos(false, link.origin_slot);
-            const inPos = inNode.getConnectionPos(true, link.target_slot);
+            const outPos = link.origin_id === -10 ? outNode.slots[link.origin_slot].pos : this._getOutputPos(outNode, link.origin_slot);
+            const inPos = link.target_id === -20 ? inNode.slots[link.target_slot].pos : this._getInputPos(inNode, link.target_slot);
             
             // 使用统一的getBaseColor方法获取颜色
-            const baseColor = this.currentStyle.getBaseColor(outNode, link);
+            const baseColor = this.currentStyle.getBaseColor(link.origin_id !== -10 ? outNode : inNode, link);
             
             // 计算路径点和类型
             const pathInfo = this.currentStyle.calculatePath(outNode, inNode, outPos, inPos, link);

@@ -318,8 +318,8 @@ app.registerExtension({
             name: "Speed",
             type: "slider",
             defaultValue: 2,
-            attrs: { min: 0.5, max: 3, step: 0.5 },
-            tooltip: "Adjust the animation speed (0.5-3). Higher is faster.",
+            attrs: { min: 1, max: 3, step: 1 },
+            tooltip: "Adjust the animation speed (1-3). Higher is faster.",
             category: ["DD_CONNECTION_ANIMATION", "3_SETTINGS", "ANIMATION_SPEED"],
             onChange(value) {
                 const connectionAnim = app.canvas?._connectionAnimation;

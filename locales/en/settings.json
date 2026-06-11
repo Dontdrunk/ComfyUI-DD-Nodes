@@ -74,7 +74,7 @@
   },
   "ConnectionAnimation_speed": {
     "name": "Speed",
-    "tooltip": "Adjust the animation speed (0.5-3). Higher is faster."
+    "tooltip": "Adjust the animation speed (1-3). Higher is faster."
   },
   "ConnectionAnimation_samplingLevel": {
     "name": "Sampling",

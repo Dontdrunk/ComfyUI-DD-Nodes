@@ -23,7 +23,7 @@ export class WaveEffect extends BaseEffect {
         // 波浪参数
         const amplitude = 8 * this.animationManager.lineWidth / 3;
         const freq = 1 + this.animationManager.lineWidth / 8;
-        const speed = Math.max(0.5, Math.min(3, Number(this.animationManager.speed ?? 2)));
+        const speed = Math.max(1, Math.min(3, Number(this.animationManager.speed ?? 2)));
         const exponent = speed - 1;
         const period = 5000 / Math.pow(2, exponent);
         const baseT = ((now % period) / period);

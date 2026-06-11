@@ -49,7 +49,7 @@ export class ConnectionAnimation {
         this._phase = 0;
         this._originalDrawConnections = null;
         this._animating = false;
-        this.speed = 2; // 0.5~3
+        this.speed = 2; // 1~3
         this.effectExtra = true;        this.renderStyle = normalizeRenderStyleValue(DEFAULT_CONFIG.renderStyle);        this.useGradient = true; 
         this.circuitBoardMap = null; 
         this.displayMode = normalizeDisplayModeValue(DEFAULT_CONFIG.displayMode);
@@ -220,8 +220,7 @@ export class ConnectionAnimation {
     }
     
     setSpeed(speed) {
-        const raw = clampNumber(speed, 0.5, 3);
-        this.speed = clampNumber(Math.round(raw * 2) / 2, 0.5, 3);
+        this.speed = Math.max(1, Math.min(3, Math.round(Number(speed))));
     }
     
     setEffectExtra(flag) {

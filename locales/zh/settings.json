@@ -74,7 +74,7 @@
   },
   "ConnectionAnimation_speed": {
     "name": "动画速度",
-    "tooltip": "设置连线动画的速度（0.5-3，数值越大越快）。"
+    "tooltip": "设置连线动画的速度（1-3，数值越大越快）。"
   },
   "ConnectionAnimation_samplingLevel": {
     "name": "采样强度",

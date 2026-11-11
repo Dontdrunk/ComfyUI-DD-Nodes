@@ -2,6 +2,7 @@
 import { app } from "/scripts/app.js";
 import { LayoutPanel, DEFAULT_CONFIG } from "./LayoutCore.js";
 import { getRegisteredThemes, initDefaultThemes } from "./styles/UIStyles.js";
+import { isVueNodesMode } from "./styles/UIUtils.js";
 
 // 初始化默认主题
 try {
@@ -21,23 +22,26 @@ function normalizeLayoutThemeId(themeId) {
 }
 
 // 确保全局唯一实例
+// Nodes 2.0 下画布实例可能被重建，因此实例不能只挂在 app.canvas 上
+let layoutPanelInstance = null;
+
 function getOrCreateLayoutInstance() {
-  if (!app.canvas) {
-    console.warn("界面布局：app.canvas未初始化");
-    return null;
+  if (!layoutPanelInstance) {
+    layoutPanelInstance = new LayoutPanel();
   }
-  
-  if (!app.canvas._layoutPanel) {
-    app.canvas._layoutPanel = new LayoutPanel();
+
+  // 兼容旧调用：仍然同步一份到 app.canvas._layoutPanel
+  const canvas = app.canvas || app.canvasOrUndefined;
+  if (canvas && canvas._layoutPanel !== layoutPanelInstance) {
+    canvas._layoutPanel = layoutPanelInstance;
   }
-  return app.canvas._layoutPanel;
+
+  return layoutPanelInstance;
 }
 
 // 处理快捷键
 function handleShortcut(e) {
-  // 确保app.canvas已初始化
-  if (!app.canvas) return;
-  
+  // 面板是纯 DOM 实现，不依赖画布是否就绪（Nodes 2.0 下画布初始化时机有变化）
   const layoutPanel = getOrCreateLayoutInstance();
   if (!layoutPanel) return;
   
@@ -60,20 +64,7 @@ document.addEventListener('keydown', handleShortcut, true);
 export const layoutExt = {
   name: "layout-panel",
   init() {
-    // 确保app.canvas已初始化再进行操作
-    if (!app.canvas) {
-      console.warn("智能布局：初始化时app.canvas未准备好");
-      // 延迟初始化
-      setTimeout(() => {
-        if (app.canvas) {
-          this.initLayoutPanel();
-        } else {
-          console.error("智能布局：无法获取app.canvas，初始化失败");
-        }
-      }, 1000);
-      return;
-    }
-    
+    // 面板是纯 DOM 实现，画布未就绪时也先初始化，避免 Nodes 2.0 下设置项迟迟不生效
     this.initLayoutPanel();
   },
   initLayoutPanel() {
@@ -139,13 +130,7 @@ function getThemeOptions() {
 app.registerExtension({
   name: "ComfyUI.LayoutPanel.Settings",
   setup() {
-    // 确保app.canvas已初始化
-    if (!app.canvas) {
-      console.warn("智能布局设置：app.canvas未准备好");
-      return;
-    }
-    
-    // 初始化布局面板
+    // 初始化布局面板（面板不依赖画布实例，Nodes 2.0 下同样可用）
     const layoutPanel = getOrCreateLayoutInstance();
     if (!layoutPanel) return;
     
@@ -256,12 +241,11 @@ app.registerExtension({
       console.log("正在初始化智能布局面板...");
       // 延迟初始化，确保其他扩展已经加载
       setTimeout(() => {
-        if (app.canvas) {
-          layoutExt.init();
-          console.log("智能布局面板初始化完成");
-        } else {
-          console.error("智能布局：延迟初始化失败，app.canvas仍未准备好");
-        }
+        layoutExt.init();
+        console.log(
+          "智能布局面板初始化完成（渲染模式：" +
+          (isVueNodesMode() ? "Nodes 2.0" : "经典画布") + "）"
+        );
       }, 1000);
     } catch (e) {
       console.error("初始化智能布局面板时出错:", e);

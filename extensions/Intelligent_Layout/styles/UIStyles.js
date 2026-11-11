@@ -6,6 +6,8 @@
 
 // 导入主题模块
 import AncientGodTheme from "./AncientGodEye/AncientGodTheme.js";
+// 导入面板定位计算（浏览器端没有 CommonJS 的 require，必须用 ESM 静态导入）
+import { calculatePanelPosition } from "./UIUtils.js";
 
 // 存储所有已注册的主题
 const registeredThemes = {};
@@ -797,9 +799,7 @@ export function flipCoin(coinElement) {
 export function showAtMousePosition(container, mousePosition) {
   if (!container) return;
   
-  // 修改导入路径 - 从相对路径调整为同目录导入
   try {
-    const { calculatePanelPosition } = require('./UIUtils.js');
     const position = calculatePanelPosition(mousePosition, container);
     
     container.style.left = `${position.left}px`;

@@ -67,6 +67,9 @@ This extension now supports ComfyUI's native internationalization (i18n) system 
 ## 📈 Version History
 
 ### Latest Version
+- **v3.1.6** (2026-11-11)
+- UI layout tool now supports the Nodes 2.0 node system: node/group selection, node coloring, and size/position syncing all work with the new frontend
+
 - **v3.1.3** (2025-01-24)
 - Connection animation speed changed from 3 levels to 6 levels
 - Text in the settings panel now switches with language (currently only Chinese and English)

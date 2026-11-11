@@ -30,7 +30,10 @@ import {
   getRandomColor,
   syncNodeSize,
   syncNodeWidthHeight,
-  alignNodes
+  alignNodes,
+  applyNodeColor,
+  applyGroupColor,
+  refreshCanvas
 } from './styles/UIUtils.js';
 
 // 导入内嵌颜色选择器组件
@@ -105,10 +108,9 @@ export class LayoutPanel {
     
     // 检查控制区域是否存在
     const existingControls = this.container.querySelector('.layout-controls-container');
-    const existingColorPicker = this.container.querySelector('.layout-inline-color-picker');
     
-    // 如果控制区域不存在，重新创建
-    if (!existingControls || !this.controlsContainer) {
+    // 如果控制区域不存在（或已被主题重建掉），则重新创建
+    if (!existingControls || !this.controlsContainer || !this.container.contains(this.controlsContainer)) {
       console.log('🔧 智能布局：检测到控制区域丢失，正在重新创建...');
       this._createControlElements();
       console.log('✅ 智能布局：控制区域已重新创建');
@@ -184,6 +186,15 @@ export class LayoutPanel {
   _createPanel() {
     if (this.container) return;
     
+    // 清理历史实例残留的面板节点，避免 Nodes 2.0 切换 / 画布重建后出现重复面板
+    try {
+      document.querySelectorAll('.layout-panel').forEach((element) => {
+        if (element.parentNode) element.parentNode.removeChild(element);
+      });
+    } catch (e) {
+      // 忽略清理失败
+    }
+
     // 使用外部样式模块创建面板
     this.container = createPanelElement(mousePosition);
     
@@ -275,7 +286,22 @@ export class LayoutPanel {
   }
 
   // 新增方法：创建所有控制元素（按钮、选择器等）
+  // 注意：主题切换 / 重复调用时会重建控制区，这里必须先移除旧节点，
+  // 否则会在面板里残留若干空容器，表现为面板底部出现大片空白
   _createControlElements() {
+    if (this.container) {
+      try {
+        this.container.querySelectorAll('.layout-controls-container').forEach((element) => {
+          if (element.parentNode) element.parentNode.removeChild(element);
+        });
+        this.container.querySelectorAll('.layout-inline-color-picker').forEach((element) => {
+          if (element.parentNode) element.parentNode.removeChild(element);
+        });
+      } catch (e) {
+        // 忽略清理失败
+      }
+    }
+
     // 创建按钮容器
     this.buttonsContainer = createButtonsContainer();
     
@@ -442,34 +468,37 @@ export class LayoutPanel {
         return;
       }
 
-      // 根据颜色模式应用颜色
+      let applied = 0;
+
+      // 根据颜色模式应用颜色（applyNodeColor/applyGroupColor 内部已兼容 Nodes 2.0）
       if (this.colorMode === '统一随机') {
         // 统一随机模式 - 所有节点和组使用同一个随机颜色
         const uniformColor = getRandomColor();
-        
         selectedNodes.forEach(node => {
-          node.color = uniformColor;
+          if (applyNodeColor(node, uniformColor)) applied++;
         });
-        
         selectedGroups.forEach(group => {
-          group.color = uniformColor;
+          if (applyGroupColor(group, uniformColor)) applied++;
         });
-        
-        showNotification("已应用统一随机颜色", "info");
       } else {
         // 完全随机模式 - 每个节点和组使用不同的随机颜色
         selectedNodes.forEach(node => {
-          const randomColor = getRandomColor();
-          node.color = randomColor;
+          if (applyNodeColor(node, getRandomColor())) applied++;
         });
-        
         selectedGroups.forEach(group => {
-          group.color = getRandomColor();
+          if (applyGroupColor(group, getRandomColor())) applied++;
         });
-        
-        showNotification("已应用完全随机颜色", "info");
       }
-      app.graph.setDirtyCanvas(true, true);
+
+      // 兼容新旧渲染：刷新画布图层（Nodes 2.0 的节点由响应式状态驱动，不会重复绘制）
+      refreshCanvas(app);
+
+      if (applied === 0) {
+        showNotification("颜色应用失败：没有可着色的对象");
+        return;
+      }
+      const modeName = this.colorMode === '统一随机' ? '统一随机颜色' : '完全随机颜色';
+      showNotification("已应用" + modeName + "（" + applied + " 个）", "info");
     } catch (error) {
       showNotification(`设置随机颜色失败: ${error.message}`);
     }
@@ -539,17 +568,23 @@ export class LayoutPanel {
   // 应用颜色到选中的节点和组
   _applyColorToSelectedNodes(color, selectedNodes, selectedGroups, app) {
     try {
-      // 应用颜色到节点和组
+      // 应用颜色到节点和组（兼容 Nodes 2.0 的响应式节点状态）
+      let applied = 0;
       selectedNodes.forEach(node => {
-        node.color = color;
+        if (applyNodeColor(node, color)) applied++;
       });
 
       selectedGroups.forEach(group => {
-        group.color = color;
+        if (applyGroupColor(group, color)) applied++;
       });
 
-      app.graph.setDirtyCanvas(true, true);
-      showNotification("已应用自定义颜色", "info");
+      refreshCanvas(app);
+
+      if (applied === 0) {
+        showNotification("应用颜色失败：没有可着色的对象");
+        return;
+      }
+      showNotification("已应用自定义颜色（" + applied + " 个）", "info");
     } catch (error) {
       showNotification(`应用颜色失败: ${error.message}`);
     }
@@ -571,26 +606,37 @@ export class LayoutPanel {
       }
       
       let result;
-      
+      let message = '';
+
       if (mode === 'size') {
         // 大小同步：统一为最大宽高
         result = syncNodeSize(selectedNodes);
-        showNotification('已同步为统一大小', 'info');
+        message = '已同步为统一大小';
       } else if (mode === 'wh') {
         // 宽高同步：判断排列方向
         result = syncNodeWidthHeight(selectedNodes);
         const direction = result.direction === 'horizontal' ? '横向排列' : '纵向排列';
         const dimension = result.direction === 'horizontal' ? '高度' : '宽度';
-        showNotification(`已同步${dimension}（${direction}）`, 'info');
+        message = "已同步" + dimension + "（" + direction + "）";
       } else if (mode === 'align') {
         // 同步对齐：自动排列节点
         result = alignNodes(selectedNodes);
         const alignment = result.direction === 'horizontal' ? 'Y轴对齐' : 'X轴对齐';
         const direction = result.direction === 'horizontal' ? '横向' : '纵向';
-        showNotification(`已${direction}对齐（${alignment}）`, 'info');
+        message = "已" + direction + "对齐（" + alignment + "）";
       }
-      
-      app.graph.setDirtyCanvas(true, true);
+
+      // 新旧前端都通过 applied 判断是否真正写入成功，避免“看起来成功但没有任何变化”
+      if (result && result.applied === 0) {
+        showNotification('节点同步失败：没有可写入的节点');
+        return;
+      }
+
+      if (message) {
+        showNotification(message, 'info');
+      }
+
+      refreshCanvas(app);
     } catch (e) {
       showNotification('节点同步失败: ' + e.message);
     }
